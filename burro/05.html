@@ -82,11 +82,17 @@
     .path-dash {
       fill: none;
       stroke: var(--run);
-      stroke-width: 0.48;
+      stroke-width: 0.42;
       stroke-linecap: round;
       stroke-linejoin: round;
-      stroke-dasharray: 0.7 0.46;
+      stroke-dasharray: 0.78 0.52;
       animation: march 0.9s linear infinite;
+    }
+
+    .path-dash.is-full {
+      stroke-width: 0.26;
+      stroke-dasharray: 0.55 0.42;
+      opacity: 0.92;
     }
 
     .node-done { fill: #b8bcc8; }
@@ -564,9 +570,15 @@
       }
 
       function targetView() {
-        if (mode === "open" || mode === "empty") return Object.assign({}, FULL);
-        if (mode === "zen") return Object.assign({}, FULL);
-        return bbox(activeLeg(here));
+        if (mode !== "run") return Object.assign({}, FULL);
+        const hereP = points[Math.min(here, points.length - 1)];
+        const nearby = [hereP];
+        activeLeg(here).forEach(function (p) {
+          if (Math.hypot(p.x - hereP.x, p.y - hereP.y) <= 3.1) nearby.push(p);
+        });
+        const box = bbox(nearby);
+        box.h += 2.6;
+        return box;
       }
 
       function paintMap() {
@@ -600,7 +612,7 @@
         }
 
         if (mode === "open") {
-          svg.appendChild(el("polyline", { class: "path-dash", points: pts(fullPath) }));
+          svg.appendChild(el("polyline", { class: "path-dash is-full", points: pts(fullPath) }));
         } else if (mode === "run") {
           const leg = activeLeg(here);
           if (leg.length > 1) {
