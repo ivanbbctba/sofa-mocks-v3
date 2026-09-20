@@ -85,30 +85,30 @@
 
     .tile {
       position: relative;
-      width: 56px;
-      height: 56px;
-      border-radius: 16px;
-      background: var(--accent-soft);
+      width: 64px;
+      height: 64px;
+      border-radius: 18px;
+      background: var(--accent);
       display: grid;
       place-items: center;
-      box-shadow: 0 1px 0 rgba(18, 20, 26, 0.03);
+      box-shadow: 0 8px 18px rgba(99, 91, 255, 0.22);
     }
 
     .tile .glyph {
-      width: 24px;
-      height: 24px;
-      color: var(--accent);
-      margin-bottom: 5px;
+      width: 26px;
+      height: 26px;
+      color: #fff;
+      margin-bottom: 6px;
     }
 
     .meter {
       position: absolute;
-      left: 10px;
-      right: 10px;
-      bottom: 8px;
-      height: 3px;
+      left: 12px;
+      right: 12px;
+      bottom: 10px;
+      height: 3.5px;
       border-radius: 999px;
-      background: rgba(99, 91, 255, 0.16);
+      background: rgba(255, 255, 255, 0.28);
       overflow: hidden;
     }
 
@@ -116,11 +116,11 @@
       display: block;
       height: 100%;
       border-radius: inherit;
-      background: var(--accent);
+      background: #fff;
     }
 
     .remain {
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 600;
       font-variant-numeric: tabular-nums;
       color: var(--ink-2);
@@ -134,10 +134,13 @@
       color: var(--mute);
     }
 
-    body.is-paused .tile { background: #eceef3; }
-    body.is-paused .tile .glyph { color: var(--mute); }
-    body.is-paused .meter { background: #d8dbe3; }
-    body.is-paused .meter i { background: var(--mute); }
+    body.is-paused .tile {
+      background: #c5c7d1;
+      box-shadow: none;
+    }
+    body.is-paused .tile .glyph { color: #f4f5f7; }
+    body.is-paused .meter { background: rgba(255, 255, 255, 0.28); }
+    body.is-paused .meter i { background: #f4f5f7; }
     body.is-paused .remain,
     body.is-paused .remain em { color: var(--mute); }
 
