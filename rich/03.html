@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Onda #1042 — anel de progresso</title>
+  <style>
+    :root {
+      --accent: #635bff;
+      --accent-soft: rgba(99, 91, 255, 0.16);
+      --here: #1f9d55;
+      --here-ring: rgba(31, 157, 85, 0.28);
+      --ink: #1a1b1a;
+      --mute: #6d706c;
+      --floor: #eef2f7;
+      --aisle: rgba(148, 160, 176, 0.38);
+      --feito: #16181d;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: #d8dee8;
+      color: var(--ink);
+      font: 16px/1.3 system-ui, -apple-system, "SF Pro Text", "Segoe UI", sans-serif;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    .phone {
+      position: relative;
+      width: min(390px, 100%);
+      height: 100dvh;
+      max-height: 844px;
+      margin: 0 auto;
+      overflow: hidden;
+      background: var(--floor);
+    }
+
+    @media (min-height: 860px) {
+      body { padding: 24px 0; }
+      .phone {
+        height: 844px;
+        border-radius: 28px;
+        box-shadow: 0 18px 48px rgba(22, 24, 29, 0.16);
+      }
+    }
+
+    .map {
+      position: absolute;
+      inset: 0;
+    }
+
+    .map svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .aisle {
+      fill: var(--aisle);
+    }
+
+    .ghost-dot {
+      fill: rgba(148, 160, 176, 0.45);
+    }
+
+    .path-rest {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 7;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: 0.18;
+    }
+
+    .path-ahead {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 10 12;
+      opacity: 0.38;
+    }
+
+    .path-done {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 10;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .path-leg {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 10;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .path-leg.is-play {
+      stroke-dasharray: var(--len);
+      stroke-dashoffset: var(--len);
+      animation: draw-leg 1.15s ease-out forwards;
+    }
+
+    .node {
+      fill: rgba(26, 27, 26, 0.18);
+    }
+
+    .node.is-done {
+      fill: var(--accent);
+    }
+
+    .here-halo {
+      fill: none;
+      stroke: var(--here);
+      stroke-width: 3;
+    }
+
+    .here-core {
+      fill: var(--here);
+    }
+
+    .here-core.is-live {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: here-pulse 2.4s ease-in-out infinite;
+    }
+
+    .chrome {
+      position: absolute;
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .chrome > * { pointer-events: auto; }
+
+    .top {
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: calc(12px + env(safe-area-inset-top, 0px)) 14px 0;
+    }
+
+    .mesa {
+      margin-top: 8px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.78);
+      color: var(--ink);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 550;
+      letter-spacing: -0.02em;
+      box-shadow: 0 1px 4px rgba(22, 24, 29, 0.06);
+    }
+
+    .completeness {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+    }
+
+    .ring {
+      position: relative;
+      width: 52px;
+      height: 52px;
+    }
+
+    .ring svg {
+      display: block;
+      width: 52px;
+      height: 52px;
+      transform: rotate(-90deg);
+    }
+
+    .ring-track {
+      fill: none;
+      stroke: rgba(99, 91, 255, 0.16);
+      stroke-width: 4;
+    }
+
+    .ring-fill {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-dasharray: 138.2;
+      stroke-dashoffset: 138.2;
+      transition: stroke-dashoffset 0.45s ease;
+    }
+
+    .ring-num {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .ring-meta {
+      margin: 0;
+      color: var(--mute);
+      font-size: 11px;
+      letter-spacing: -0.01em;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .orders {
+      margin: 0;
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 550;
+      letter-spacing: -0.02em;
+    }
+
+    .hud {
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      gap: 12px;
+      padding: 56px 20px calc(22px + var(--safe-bottom));
+      background: linear-gradient(
+        180deg,
+        rgba(238, 242, 247, 0) 0%,
+        rgba(238, 242, 247, 0.88) 42%,
+        var(--floor) 100%
+      );
+    }
+
+    .qty {
+      margin: 0;
+      font-size: 72px;
+      font-weight: 650;
+      letter-spacing: -0.07em;
+      line-height: 0.84;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .loc {
+      margin: 8px 0 0;
+      font-size: 18px;
+      font-weight: 650;
+      letter-spacing: -0.03em;
+    }
+
+    .next {
+      margin: 3px 0 0;
+      color: var(--mute);
+      font-size: 14px;
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-bottom: 6px;
+    }
+
+    .voltar,
+    .feito {
+      border: 0;
+      cursor: pointer;
+      font: inherit;
+    }
+
+    .voltar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.8);
+      color: var(--ink);
+      font-size: 28px;
+      line-height: 1;
+      box-shadow: 0 2px 8px rgba(22, 24, 29, 0.08);
+    }
+
+    .voltar[hidden] { display: none; }
+
+    .feito {
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      background: var(--feito);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 650;
+      letter-spacing: -0.03em;
+    }
+
+    .feito:active,
+    .voltar:active {
+      transform: scale(0.97);
+    }
+
+    .feito:disabled {
+      opacity: 0.45;
+    }
+
+    .done-copy {
+      display: none;
+    }
+
+    .phone.is-complete .qty,
+    .phone.is-complete .loc,
+    .phone.is-complete .next,
+    .phone.is-complete .voltar,
+    .phone.is-complete .feito {
+      display: none;
+    }
+
+    .phone.is-complete .done-copy {
+      display: block;
+    }
+
+    .done-copy h1 {
+      margin: 0;
+      font-size: 34px;
+      letter-spacing: -0.05em;
+    }
+
+    .done-copy p {
+      margin: 8px 0 16px;
+      color: var(--mute);
+    }
+
+    .done-copy a {
+      display: inline-block;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: var(--feito);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 550;
+    }
+
+    @keyframes draw-leg {
+      to { stroke-dashoffset: 0; }
+    }
+
+    @keyframes here-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.55; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .path-leg.is-play,
+      .here-core.is-live,
+      .ring-fill {
+        animation: none !important;
+        transition: none !important;
+      }
+      .path-leg.is-play {
+        stroke-dashoffset: 0 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="phone" id="stage">
+    <div class="map" aria-hidden="true">
+      <svg viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <linearGradient id="aisleFade" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#c5ced8" stop-opacity="0" />
+            <stop offset="0.18" stop-color="#c5ced8" stop-opacity="0.55" />
+            <stop offset="0.82" stop-color="#c5ced8" stop-opacity="0.55" />
+            <stop offset="1" stop-color="#c5ced8" stop-opacity="0" />
+          </linearGradient>
+        </defs>
+        <rect width="390" height="844" fill="#eef2f7" />
+        <g id="aisles"></g>
+        <path id="path-rest" class="path-rest" />
+        <path id="path-ahead" class="path-ahead" />
+        <path id="path-done" class="path-done" />
+        <path id="path-leg" class="path-leg" />
+        <g id="ghosts"></g>
+        <g id="nodes"></g>
+      </svg>
+    </div>
+
+    <header class="chrome top">
+      <a class="mesa" href="../desk/03.html">Mesa</a>
+      <div class="completeness" id="completeness" aria-live="polite">
+        <div class="ring" aria-hidden="true">
+          <svg viewBox="0 0 52 52">
+            <circle class="ring-track" cx="26" cy="26" r="22" />
+            <circle class="ring-fill" id="ring-fill" cx="26" cy="26" r="22" />
+          </svg>
+          <span class="ring-num" id="ring-num">6</span>
+        </div>
+        <p class="ring-meta" id="ring-meta">de 18 paradas</p>
+        <p class="orders">7 pedidos</p>
+      </div>
+    </header>
+
+    <footer class="chrome hud">
+      <div>
+        <p class="qty" id="qty">6</p>
+        <p class="loc" id="loc">C-08</p>
+        <p class="next" id="next">depois E-04</p>
+        <div class="done-copy">
+          <h1>Onda feita</h1>
+          <p>18 de 18 paradas · 7 pedidos</p>
+          <a href="../desk/03.html">Voltar à mesa</a>
+        </div>
+      </div>
+      <div class="actions">
+        <button type="button" class="voltar" id="voltar" aria-label="Parada anterior">‹</button>
+        <button type="button" class="feito" id="feito">Feito</button>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    (() => {
+      const TOTAL = 18;
+      const AISLES = [48, 96, 144, 192, 240, 288, 336];
+      const STOPS = [
+        { code: "A-01", qty: 10, x: 48, y: 640 },
+        { code: "C-02", qty: 4, x: 144, y: 520 },
+        { code: "B-07", qty: 2, x: 96, y: 360 },
+        { code: "D-03", qty: 8, x: 192, y: 280 },
+        { code: "F-02", qty: 42, x: 288, y: 420 },
+        { code: "H-09", qty: 1, x: 336, y: 220 },
+        { code: "C-08", qty: 6, x: 144, y: 200 },
+        { code: "E-04", qty: 3, x: 240, y: 140 },
+        { code: "A-14", qty: 12, x: 48, y: 160 },
+        { code: "B-18", qty: 5, x: 96, y: 80 },
+        { code: "D-11", qty: 7, x: 192, y: 80 },
+        { code: "F-10", qty: 9, x: 288, y: 600 },
+        { code: "G-04", qty: 2, x: 336, y: 480 },
+        { code: "E-19", qty: 1, x: 240, y: 700 },
+        { code: "D-09", qty: 8, x: 192, y: 560 },
+        { code: "B-02", qty: 3, x: 96, y: 700 },
+        { code: "C-16", qty: 5, x: 144, y: 760 },
+        { code: "A-20", qty: 4, x: 48, y: 80 }
+      ];
+
+      const GHOSTS = [
+        [48, 420], [48, 280], [96, 240], [96, 520], [144, 80],
+        [144, 360], [192, 160], [192, 400], [240, 300], [240, 520],
+        [288, 80], [288, 240], [336, 80], [336, 360], [336, 640]
+      ];
+
+      const stage = document.getElementById("stage");
+      const qtyEl = document.getElementById("qty");
+      const locEl = document.getElementById("loc");
+      const nextEl = document.getElementById("next");
+      const ringNum = document.getElementById("ring-num");
+      const ringMeta = document.getElementById("ring-meta");
+      const ringFill = document.getElementById("ring-fill");
+      const completeness = document.getElementById("completeness");
+      const voltar = document.getElementById("voltar");
+      const feito = document.getElementById("feito");
+      const pathRest = document.getElementById("path-rest");
+      const pathAhead = document.getElementById("path-ahead");
+      const pathDone = document.getElementById("path-done");
+      const pathLeg = document.getElementById("path-leg");
+      const nodes = document.getElementById("nodes");
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const FRONT = 80;
+      const BACK = 760;
+
+      let index = 6;
+      let complete = false;
+
+      function aisleWalk(points) {
+        if (!points.length) return "";
+        let d = `M ${points[0].x} ${points[0].y}`;
+        for (let i = 1; i < points.length; i += 1) {
+          const a = points[i - 1];
+          const b = points[i];
+          if (a.x === b.x) {
+            d += ` L ${b.x} ${b.y}`;
+            continue;
+          }
+          const viaFront = Math.abs(a.y - FRONT) + Math.abs(b.y - FRONT);
+          const viaBack = Math.abs(a.y - BACK) + Math.abs(b.y - BACK);
+          const y = viaFront <= viaBack ? FRONT : BACK;
+          d += ` L ${a.x} ${y} L ${b.x} ${y} L ${b.x} ${b.y}`;
+        }
+        return d;
+      }
+
+      function stopPath(toIndex) {
+        const end = Math.max(0, Math.min(toIndex, STOPS.length - 1));
+        return aisleWalk(STOPS.slice(0, end + 1));
+      }
+
+      function legPath(fromIndex, toIndex) {
+        const a = Math.max(0, Math.min(fromIndex, STOPS.length - 1));
+        const b = Math.max(0, Math.min(toIndex, STOPS.length - 1));
+        if (a === b) return aisleWalk([STOPS[a]]);
+        const lo = Math.min(a, b);
+        const hi = Math.max(a, b);
+        return aisleWalk(STOPS.slice(lo, hi + 1));
+      }
+
+      function paintAisles() {
+        const g = document.getElementById("aisles");
+        AISLES.forEach((x) => {
+          const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+          rect.setAttribute("class", "aisle");
+          rect.setAttribute("x", String(x - 7));
+          rect.setAttribute("y", "36");
+          rect.setAttribute("width", "14");
+          rect.setAttribute("height", "772");
+          rect.setAttribute("rx", "7");
+          rect.setAttribute("fill", "url(#aisleFade)");
+          g.appendChild(rect);
+        });
+        const ghosts = document.getElementById("ghosts");
+        GHOSTS.forEach(([x, y]) => {
+          const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+          c.setAttribute("class", "ghost-dot");
+          c.setAttribute("cx", String(x));
+          c.setAttribute("cy", String(y));
+          c.setAttribute("r", "3.5");
+          ghosts.appendChild(c);
+        });
+      }
+
+      function setRing(done) {
+        const circ = 138.2;
+        const offset = circ - (done / TOTAL) * circ;
+        ringFill.style.strokeDashoffset = String(offset);
+        ringNum.textContent = String(done);
+        ringMeta.textContent = `de ${TOTAL} paradas`;
+        completeness.setAttribute(
+          "aria-label",
+          `${done} de ${TOTAL} paradas, 7 pedidos`
+        );
+      }
+
+      function paintNodes() {
+        nodes.replaceChildren();
+        STOPS.forEach((stop, i) => {
+          if (i === index && !complete) {
+            const halo = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            halo.setAttribute("class", "here-halo");
+            halo.setAttribute("cx", String(stop.x));
+            halo.setAttribute("cy", String(stop.y));
+            halo.setAttribute("r", "13");
+            nodes.appendChild(halo);
+            const core = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            core.setAttribute("class", "here-core" + (reduce ? "" : " is-live"));
+            core.setAttribute("cx", String(stop.x));
+            core.setAttribute("cy", String(stop.y));
+            core.setAttribute("r", "7");
+            nodes.appendChild(core);
+            return;
+          }
+          const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+          c.setAttribute("class", i < index || complete ? "node is-done" : "node");
+          c.setAttribute("cx", String(stop.x));
+          c.setAttribute("cy", String(stop.y));
+          c.setAttribute("r", i < index || complete ? "4.5" : "3.5");
+          nodes.appendChild(c);
+        });
+      }
+
+      function paintPaths(fromIndex, toIndex, animate) {
+        pathRest.setAttribute("d", aisleWalk(STOPS));
+        const aheadFrom = complete ? STOPS.length - 1 : toIndex;
+        pathAhead.setAttribute("d", aisleWalk(STOPS.slice(aheadFrom)));
+        const settled = complete ? TOTAL - 1 : (animate ? fromIndex : toIndex);
+        pathDone.setAttribute("d", stopPath(settled));
+        pathLeg.classList.remove("is-play");
+        pathLeg.removeAttribute("d");
+        if (complete) {
+          pathDone.setAttribute("d", aisleWalk(STOPS));
+          return;
+        }
+        if (animate && !reduce && fromIndex !== toIndex) {
+          pathLeg.setAttribute("d", legPath(fromIndex, toIndex));
+          requestAnimationFrame(() => {
+            const len = pathLeg.getTotalLength();
+            pathLeg.style.setProperty("--len", `${len}`);
+            pathLeg.classList.add("is-play");
+            pathLeg.addEventListener("animationend", () => {
+              pathDone.setAttribute("d", stopPath(toIndex));
+              pathLeg.removeAttribute("d");
+              pathLeg.classList.remove("is-play");
+            }, { once: true });
+          });
+        }
+      }
+
+      function paintHud() {
+        const stop = STOPS[Math.min(index, STOPS.length - 1)];
+        const next = STOPS[index + 1];
+        qtyEl.textContent = String(stop.qty);
+        locEl.textContent = stop.code;
+        nextEl.textContent = next ? `depois ${next.code}` : "última parada";
+        voltar.hidden = index === 0 || complete;
+        feito.disabled = complete;
+        stage.classList.toggle("is-complete", complete);
+        setRing(complete ? TOTAL : index);
+        document.title = complete
+          ? "Onda #1042 — feita"
+          : `${stop.code} · ${index} de ${TOTAL}`;
+      }
+
+      function render(fromIndex, animate) {
+        paintPaths(fromIndex, index, animate);
+        paintNodes();
+        paintHud();
+      }
+
+      function go(nextIndex) {
+        if (complete) return;
+        const from = index;
+        if (nextIndex < 0) return;
+        if (nextIndex >= STOPS.length) {
+          index = STOPS.length - 1;
+          complete = true;
+          render(from, true);
+          return;
+        }
+        index = nextIndex;
+        render(from, nextIndex > from);
+      }
+
+      feito.addEventListener("click", () => go(index + 1));
+      voltar.addEventListener("click", () => go(index - 1));
+
+      paintAisles();
+      render(0, true);
+    })();
+  </script>
+</body>
+</html>
