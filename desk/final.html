@@ -1,0 +1,1706 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f4f6f8" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>Mesa · Pisoly</title>
+  <style>
+    :root {
+      --ink: #0a2540;
+      --muted: #425466;
+      --faint: #6b7c93;
+      --paper: #f4f6f8;
+      --surface: #ffffff;
+      --glass: rgba(255, 255, 255, 0.86);
+      --line: rgba(10, 37, 64, 0.08);
+      --edge: rgba(10, 37, 64, 0.12);
+      --accent: #635bff;
+      --accent-soft: rgba(99, 91, 255, 0.12);
+      --go: #0f766e;
+      --go-soft: rgba(15, 118, 110, 0.12);
+      --warn: #b45309;
+      --floor: #efe8dc;
+    }
+
+    :root {
+      --stage-h: 360px;
+      --actions-h: 62px;
+      --radius: 18px;
+      --fail: #c41e3a;
+      --safe-t: env(safe-area-inset-top, 0px);
+      --safe-b: env(safe-area-inset-bottom, 0px);
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    html {
+      -webkit-text-size-adjust: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      margin: 0;
+      height: 100dvh;
+      overflow: hidden;
+      overscroll-behavior: none;
+      font-family: "SF Pro Text", "Segoe UI Variable", system-ui, sans-serif;
+      font-size: 15px;
+      line-height: 1.4;
+      color: var(--ink);
+      background: var(--paper);
+    }
+
+    button,
+    a {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    .app {
+      width: min(100%, 390px);
+      height: 100dvh;
+      margin: 0 auto;
+      padding: calc(16px + var(--safe-t)) 20px calc(72px + var(--safe-b));
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chrome {
+      flex: 0 0 auto;
+      display: grid;
+      grid-template-rows: auto var(--stage-h) var(--actions-h);
+      align-items: stretch;
+    }
+
+    .stage {
+      min-height: 0;
+      height: var(--stage-h);
+      position: relative;
+      background: var(--floor);
+      border-radius: var(--radius);
+    }
+
+    .stage > section {
+      height: 100%;
+    }
+
+    .chrome-actions {
+      height: var(--actions-h);
+      display: flex;
+      align-items: flex-end;
+    }
+
+    .chrome-actions .actions {
+      width: 100%;
+      margin-top: 0;
+    }
+
+    .top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -0.04em;
+    }
+
+    .live {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      margin: 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 0 rgba(99, 91, 255, 0.5);
+      animation: live-ping 2.2s ease-out infinite;
+    }
+
+    body.is-paused .live-dot {
+      background: var(--muted);
+      box-shadow: none;
+      animation: none;
+    }
+
+    .factory {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      height: 100%;
+      padding: 4px 0 0;
+    }
+
+    .orb-btn {
+      appearance: none;
+      border: none;
+      background: transparent;
+      padding: 0;
+      color: inherit;
+      cursor: pointer;
+    }
+
+    .orb-btn:active {
+      transform: scale(0.985);
+    }
+
+    .orb-wrap {
+      position: relative;
+      width: 236px;
+      height: 236px;
+      display: grid;
+      place-items: center;
+    }
+
+    .orb {
+      position: relative;
+      width: 216px;
+      height: 216px;
+      border-radius: 50%;
+      background: var(--surface);
+      display: grid;
+      place-items: center;
+    }
+
+    .orb svg.ring {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+
+    .orb-track {
+      fill: none;
+      stroke: var(--accent-soft);
+      stroke-width: 7;
+    }
+
+    .orb-fill {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 7;
+      stroke-linecap: round;
+      stroke-dasharray: 100;
+      stroke-dashoffset: 25;
+      transition: stroke-dashoffset 0.45s ease;
+    }
+
+    body.is-paused .orb-fill {
+      stroke: var(--muted);
+    }
+
+    .orb-core {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+
+    .countdown {
+      margin: 0;
+      font-size: 52px;
+      font-weight: 620;
+      letter-spacing: -0.05em;
+      font-variant-numeric: tabular-nums;
+      line-height: 0.95;
+    }
+
+    .countdown-label {
+      margin: 8px 0 0;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--faint);
+    }
+
+    .plates {
+      appearance: none;
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      margin: 12px 0 0;
+      padding: 0;
+      border: none;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .plates:active {
+      transform: scale(0.985);
+    }
+
+    .plate {
+      width: 76px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 4px 9px;
+      border-radius: 999px;
+      background: var(--surface);
+      box-shadow: 0 0 0 1px var(--line);
+    }
+
+    .plate[hidden] {
+      display: none;
+    }
+
+    .dial {
+      position: relative;
+      width: 48px;
+      height: 48px;
+    }
+
+    .dial svg.ring {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+
+    .dial .track {
+      fill: none;
+      stroke: var(--accent-soft);
+      stroke-width: 3.2;
+    }
+
+    .dial .fill {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 3.4;
+      stroke-linecap: round;
+      stroke-dasharray: 100;
+    }
+
+    .glyph {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: var(--accent);
+    }
+
+    .glyph svg {
+      display: block;
+      width: 20px;
+      height: 20px;
+    }
+
+    body.is-paused .dial .fill {
+      stroke: var(--muted);
+    }
+
+    body.is-paused .glyph {
+      color: var(--muted);
+    }
+
+    .remain {
+      font-size: 12px;
+      font-weight: 620;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+
+    .kind {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--faint);
+      line-height: 1;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+      margin-top: 16px;
+    }
+
+    .btn {
+      appearance: none;
+      flex: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 46px;
+      padding: 10px 14px;
+      border: none;
+      border-radius: 14px;
+      font: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      cursor: pointer;
+    }
+
+    .btn:active {
+      transform: scale(0.985);
+    }
+
+    .btn-primary {
+      background: #635bff;
+      color: #fff;
+    }
+
+    .btn-ghost {
+      background: var(--surface);
+      color: var(--ink);
+      box-shadow: inset 0 0 0 1px var(--line);
+    }
+
+    .waves {
+      margin-top: 18px;
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .waves h2 {
+      flex: 0 0 auto;
+      margin: 0 0 8px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .wave-list {
+      list-style: none;
+      margin: 0;
+      padding: 0 0 8px;
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
+
+    body.is-active .wave-list {
+      background: var(--surface);
+      border: 1px solid var(--edge);
+      border-radius: var(--radius);
+    }
+
+    .wave {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .wave-list li:last-child .wave,
+    .wave-list > .wave:last-child {
+      border-bottom: none;
+    }
+
+    .wave-link {
+      appearance: none;
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 15px 0;
+      border: none;
+      background: transparent;
+      font: inherit;
+      text-align: left;
+      text-decoration: none;
+      color: inherit;
+      cursor: pointer;
+    }
+
+    body.is-active .wave-link {
+      padding: 15px 14px 15px 16px;
+    }
+
+    .wave-link .title {
+      display: block;
+      font-size: 16px;
+      font-weight: 580;
+      letter-spacing: -0.02em;
+    }
+
+    .wave-link .sub {
+      display: block;
+      margin-top: 3px;
+      font-size: 13px;
+      color: var(--faint);
+    }
+
+    .wave-link .stat {
+      flex-shrink: 0;
+      font-size: 14px;
+      font-variant-numeric: tabular-nums;
+      color: var(--ink);
+    }
+
+    .wave.is-live .stat {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .wave.is-fail {
+      box-shadow: inset 3px 0 0 var(--fail);
+    }
+
+    .wave.is-fail .stat {
+      color: var(--fail);
+    }
+
+    .pill.is-fail {
+      background: #fde8ea;
+      color: var(--fail);
+    }
+
+    .pill {
+      display: inline-block;
+      margin-left: 6px;
+      padding: 1px 7px;
+      border-radius: 6px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .share {
+      appearance: none;
+      flex: 0 0 40px;
+      width: 40px;
+      height: 40px;
+      margin-right: 2px;
+      border: none;
+      border-radius: 50%;
+      background: var(--accent-soft);
+      color: var(--accent);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    body.is-active .share {
+      margin-right: 10px;
+    }
+
+    .share:active {
+      transform: scale(0.96);
+    }
+
+    .share svg {
+      display: block;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      height: 100%;
+      margin: 0;
+      align-items: stretch;
+    }
+
+    .panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      height: 100%;
+      padding: 14px 12px 12px;
+      background: var(--surface);
+      border: 1px solid var(--edge);
+      border-radius: var(--radius);
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .panel.agora,
+    .panel.proxima {
+      appearance: none;
+      width: 100%;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .panel.agora {
+      background: linear-gradient(180deg, var(--accent-soft) 0%, var(--surface) 56%);
+    }
+
+    .panel.agora:active,
+    .panel.proxima:active {
+      transform: scale(0.985);
+    }
+
+    .panel.agora.is-fail {
+      background: linear-gradient(180deg, #fde8ea 0%, var(--surface) 56%);
+      border-color: rgba(196, 30, 58, 0.28);
+      box-shadow: 0 0 0 2px rgba(196, 30, 58, 0.16);
+    }
+
+    .panel.agora.is-fail .go-dot {
+      background: var(--fail);
+      box-shadow: 0 0 0 4px rgba(196, 30, 58, 0.16);
+    }
+
+    .fail-pill {
+      display: none;
+      margin-left: 6px;
+      padding: 1px 7px;
+      border-radius: 6px;
+      background: #fde8ea;
+      color: var(--fail);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      text-transform: none;
+    }
+
+    .panel.agora.is-fail .fail-pill,
+    .fail-pill.is-on {
+      display: inline-block;
+    }
+
+    .kicker {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 0 0 10px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .go-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--go);
+      box-shadow: 0 0 0 4px var(--go-soft);
+    }
+
+    .pulse-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 2.4s ease-in-out infinite;
+    }
+
+    body.is-paused .pulse-dot {
+      animation: none;
+      opacity: 0.35;
+    }
+
+    .panel h2 {
+      margin: 0 0 2px;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .panel .hint {
+      margin: 0 0 12px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .big {
+      margin: auto 0 10px;
+      font-size: 36px;
+      font-weight: 700;
+      letter-spacing: -0.05em;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .big span {
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      color: var(--muted);
+    }
+
+    .meta {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.4;
+      color: var(--ink);
+    }
+
+    .meta strong {
+      font-weight: 600;
+    }
+
+    .glances {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px 6px;
+      margin-top: auto;
+    }
+
+    .glance {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      min-width: 0;
+    }
+
+    .glance .dial {
+      width: 64px;
+      height: 64px;
+    }
+
+    .glance .dial .track {
+      stroke-width: 5.5;
+    }
+
+    .glance .dial .fill {
+      stroke-width: 5.5;
+    }
+
+    .glance .glyph svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .glance-val {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums;
+      text-align: center;
+      line-height: 1.15;
+    }
+
+    .glance-val span {
+      display: block;
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    .scrim {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 37, 64, 0.28);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.22s ease;
+      z-index: 20;
+    }
+
+    .scrim.is-on {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .sheet {
+      position: fixed;
+      left: 50%;
+      bottom: 0;
+      width: min(100%, 390px);
+      transform: translate(-50%, 110%);
+      background: var(--surface);
+      border-radius: 24px 24px 0 0;
+      padding: 14px 20px calc(22px + var(--safe-b));
+      z-index: 21;
+      transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .sheet.is-on {
+      transform: translate(-50%, 0);
+    }
+
+    .grab {
+      width: 36px;
+      height: 4px;
+      border-radius: 999px;
+      background: var(--line);
+      margin: 0 auto 16px;
+    }
+
+    .sheet h2 {
+      margin: 0 0 6px;
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+    }
+
+    .sheet > p {
+      margin: 0 0 14px;
+      color: var(--ink);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .sheet-meters {
+      list-style: none;
+      margin: 0 0 16px;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .sheet-meters li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+    }
+
+    .sheet-meters .dial {
+      width: 34px;
+      height: 34px;
+    }
+
+    .sheet-meters .dial .track,
+    .sheet-meters .dial .fill {
+      stroke-width: 2.6;
+    }
+
+    .sheet-meters .glyph svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .sheet-meters strong {
+      display: block;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .sheet-meters span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .sheet-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .sheet-actions .btn {
+      flex: none;
+      width: 100%;
+      min-height: 48px;
+    }
+
+    .sheet-actions .btn-ghost {
+      background: var(--paper);
+    }
+
+    .run-fails {
+      list-style: none;
+      margin: 4px 0 0;
+      padding: 10px 0 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .run-fails li {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .run-fails li:last-child {
+      border-bottom: none;
+    }
+
+    .run-fails strong {
+      display: block;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .run-fails span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .sheet-meters .dial.is-go .fill { stroke: var(--accent); }
+    .sheet-meters .dial.is-go .glyph { color: var(--go); }
+    .sheet-meters .dial.is-fail .fill { stroke: var(--fail); }
+    .sheet-meters .dial.is-fail .glyph { color: var(--fail); }
+    .sheet-meters .dial.is-wait .fill { stroke: var(--faint); }
+    .sheet-meters .dial.is-wait .glyph { color: var(--faint); }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(78px + var(--safe-b));
+      transform: translate(-50%, 12px);
+      background: var(--ink);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 10px 16px;
+      border-radius: 999px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      z-index: 30;
+      white-space: nowrap;
+    }
+
+    .toast.is-on {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    .demo {
+      position: fixed;
+      left: 50%;
+      bottom: calc(16px + var(--safe-b));
+      transform: translateX(-50%);
+      z-index: 15;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px;
+      border-radius: 999px;
+      background: var(--glass);
+      box-shadow: 0 0 0 1px var(--edge), 0 8px 24px rgba(10, 37, 64, 0.08);
+    }
+
+    .demo span {
+      padding: 0 8px 0 10px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .demo button {
+      appearance: none;
+      min-height: 28px;
+      padding: 0 12px;
+      border: none;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--ink);
+      font: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .demo button[aria-pressed="true"] {
+      background: #635bff;
+      color: #fff;
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @keyframes live-ping {
+      0% { box-shadow: 0 0 0 0 rgba(99, 91, 255, 0.5); }
+      70% { box-shadow: 0 0 0 7px rgba(99, 91, 255, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(99, 91, 255, 0); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.45; transform: scale(0.86); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .live-dot,
+      .pulse-dot,
+      .sheet,
+      .scrim,
+      .toast {
+        animation: none;
+        transition: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="chrome">
+    <header class="top">
+      <h1>Mesa</h1>
+      <p class="live"><span class="live-dot" aria-hidden="true"></span><span id="liveLabel">Fábrica ligada</span></p>
+    </header>
+
+    <div class="stage">
+    <section class="factory" id="idleView" aria-label="Próxima onda automática">
+      <button type="button" class="orb-btn" id="orbOpen" aria-haspopup="dialog" aria-controls="factorySheet" aria-label="Abrir gatilhos da próxima onda">
+        <div class="orb-wrap">
+          <div class="orb">
+            <svg class="ring" viewBox="0 0 216 216" aria-hidden="true">
+              <circle class="orb-track" cx="108" cy="108" r="100"></circle>
+              <circle class="orb-fill" id="orbFill" cx="108" cy="108" r="100" pathLength="100"></circle>
+            </svg>
+            <div class="orb-core">
+              <p class="countdown" id="countdown" aria-live="polite">01:13</p>
+              <p class="countdown-label" id="countdownLabel">até a próxima onda</p>
+            </div>
+          </div>
+        </div>
+      </button>
+
+      <button type="button" class="plates" id="idlePlates" aria-haspopup="dialog" aria-controls="factorySheet" aria-label="Gatilhos automáticos ligados"></button>
+    </section>
+
+    <section id="activeView" hidden aria-label="Agora e próxima">
+      <div class="split">
+        <button type="button" class="panel agora" id="agoraPanel" aria-haspopup="dialog" aria-controls="runSheet">
+          <p class="kicker">
+            <span class="go-dot" aria-hidden="true"></span> Agora
+            <span class="fail-pill" id="agoraFailPill">não achei</span>
+          </p>
+          <h2>Onda #1042</h2>
+          <p class="hint" id="agoraHint">em andamento</p>
+          <p class="big">10 <span>de 18</span></p>
+          <p class="meta" id="agoraMeta">parada <strong>C-08</strong><br />depois F-10</p>
+        </button>
+        <button type="button" class="panel proxima" id="proximaPanel" aria-haspopup="dialog" aria-controls="factorySheet">
+          <p class="kicker"><span class="pulse-dot" aria-hidden="true"></span> Próxima</p>
+          <h2 id="proximaTitle">Auto-onda</h2>
+          <p class="hint" id="proximaHint">gatilhos ligados</p>
+          <div class="glances" id="activeGlances" aria-label="Medidores da fábrica"></div>
+        </button>
+      </div>
+    </section>
+    </div>
+
+    <div class="chrome-actions">
+      <div class="actions" id="idleActions">
+        <button type="button" class="btn btn-primary" id="anticipateIdle">Antecipar</button>
+        <button type="button" class="btn btn-ghost" id="pauseIdle">Pausar</button>
+      </div>
+      <div class="actions" id="activeActions" hidden>
+        <button type="button" class="btn btn-primary" id="endWave">Terminar Onda</button>
+        <button type="button" class="btn btn-ghost" id="pauseActive">Pausar</button>
+      </div>
+    </div>
+    </div>
+
+    <section class="waves" aria-label="Ondas">
+      <h2>Ondas</h2>
+      <ul class="wave-list" id="waveList"></ul>
+    </section>
+  </div>
+
+  <div class="demo" role="group" aria-label="Estado do mock">
+    <span>Mock</span>
+    <button type="button" id="modeIdle" aria-pressed="true">Idle</button>
+    <button type="button" id="modeActive" aria-pressed="false">Ativa</button>
+    <button type="button" id="modeFail" aria-pressed="false">Falha</button>
+  </div>
+
+  <div class="scrim" id="scrim" hidden></div>
+  <div class="sheet" id="factorySheet" role="dialog" aria-modal="true" aria-labelledby="factoryTitle" hidden>
+    <div class="grab" aria-hidden="true"></div>
+    <h2 id="factoryTitle">Próxima onda automática</h2>
+    <p id="factoryCopy">Quatro gatilhos ligados. A onda sai no primeiro que zerar.</p>
+    <ul class="sheet-meters" id="sheetMeters"></ul>
+    <div class="sheet-actions">
+      <button type="button" class="btn btn-primary" id="anticipateSheet">Antecipar Pedidos do dia</button>
+      <button type="button" class="btn btn-ghost" id="pauseSheet">Pausar automático</button>
+    </div>
+  </div>
+  <div class="sheet" id="runSheet" role="dialog" aria-modal="true" aria-labelledby="runTitle" hidden>
+    <div class="grab" aria-hidden="true"></div>
+    <h2 id="runTitle">Onda</h2>
+    <p id="runCopy">Paradas desta onda.</p>
+    <ul class="sheet-meters" id="runMeters"></ul>
+    <ul class="run-fails" id="runFails" hidden></ul>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (function () {
+      var RICH = "../rich/01.html";
+      var WINDOW = 5 * 60;
+      var ICONS = {
+        orders:
+          '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">' +
+          '<rect x="3.4" y="3.6" width="13.2" height="3.4" rx="1.1" stroke="currentColor" stroke-width="1.6"/>' +
+          '<rect x="3.4" y="8.3" width="13.2" height="3.4" rx="1.1" stroke="currentColor" stroke-width="1.6"/>' +
+          '<rect x="3.4" y="13" width="13.2" height="3.4" rx="1.1" stroke="currentColor" stroke-width="1.6"/>' +
+          "</svg>",
+        units:
+          '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">' +
+          '<path d="M10 3.2 16.4 6.6v6.8L10 16.8 3.6 13.4V6.6L10 3.2Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>' +
+          '<path d="M3.6 6.6 10 10l6.4-3.4M10 10v6.8" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>' +
+          "</svg>",
+        clock:
+          '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">' +
+          '<circle cx="10" cy="10.2" r="6.4" stroke="currentColor" stroke-width="1.6"/>' +
+          '<path d="M10 7.2v3.2l2.3 1.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>' +
+          "</svg>",
+        elapsed:
+          '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">' +
+          '<path d="M7.2 3.4h5.6M10 3.4v1.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>' +
+          '<circle cx="10" cy="11.2" r="5.4" stroke="currentColor" stroke-width="1.6"/>' +
+          '<path d="M10 11.2V8.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>' +
+          "</svg>"
+      };
+
+      var IDLE_TRIGGERS = [
+        { id: "orders", enabled: true, name: "Pedidos", detail: "Quantidade de pedidos", remain: "3", unit: "pedidos", sheetRemain: "3 pedidos", fill: 0.75 },
+        { id: "units", enabled: true, name: "Unidades", detail: "Peças / linhas", remain: "12", unit: "unid.", sheetRemain: "12 un.", fill: 0.76 },
+        { id: "clock", enabled: true, name: "Horário", detail: "Horário · 16:00", remain: "16:00", unit: "hora", sheetRemain: "16:00", fill: 0.68 },
+        { id: "elapsed", enabled: true, name: "Tempo", detail: "Desde a última onda", remain: "01:13", unit: "tempo", sheetRemain: "01:13", fill: 0.76 }
+      ];
+
+      var ACTIVE_TRIGGERS = [
+        { id: "orders", enabled: true, name: "Pedidos", detail: "Quantidade de pedidos", remain: "8", unit: "ped.", sheetRemain: "8 pedidos", fill: 0.62 },
+        { id: "units", enabled: true, name: "Unidades", detail: "Peças / linhas", remain: "24", unit: "un.", sheetRemain: "16 un.", fill: 0.48 },
+        { id: "clock", enabled: true, name: "Horário", detail: "Horário · 14:00", remain: "18", unit: "min", sheetRemain: "18 min", fill: 0.4 },
+        { id: "elapsed", enabled: true, name: "Tempo", detail: "Desde a última onda", remain: "12", unit: "min", sheetRemain: "12 min", fill: 0.6 }
+      ];
+
+      var STATUS_ICONS = {
+        feito:
+          '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">' +
+          '<path d="M4.6 10.4 8.2 14l7.2-8.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>' +
+          "</svg>",
+        "nao-achei":
+          '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">' +
+          '<path d="M6 6l8 8M14 6l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>' +
+          "</svg>",
+        pendente:
+          '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">' +
+          '<circle cx="10" cy="10" r="5.4" stroke="currentColor" stroke-width="1.6"/>' +
+          "</svg>"
+      };
+
+      var mode = "idle";
+      var paused = false;
+      var failDemo = false;
+      var remaining = 73;
+      var nextWave = 1045;
+      var toastTimer = 0;
+      var sheetOpen = false;
+      var openSheetId = "";
+
+      var idleWaves = [
+        { id: "1042", title: "Onda #1042", sub: "pronta", stat: "14 ped.", live: false },
+        { id: "1043", title: "Onda #1043", sub: "pronta", stat: "14 ped.", live: false },
+        { id: "1044", title: "Onda #1044", sub: "pronta", stat: "9 ped.", live: false },
+        { id: "1041", title: "Onda #1041", sub: "pronta", stat: "11 ped.", live: false },
+        { id: "1040", title: "Onda #1040", sub: "pronta", stat: "16 ped.", live: false },
+        { id: "1039", title: "Onda #1039", sub: "pronta", stat: "7 ped.", live: false }
+      ];
+
+      var activeWaves = [
+        { id: "1042", title: "Onda #1042", sub: "em andamento · C-08", stat: "10/18", live: true, pill: "setup" },
+        { id: "1043", title: "Onda #1043", sub: "pronta", stat: "14 ped.", live: false },
+        { id: "1044", title: "Onda #1044", sub: "pronta", stat: "9 ped.", live: false },
+        { id: "1041", title: "Onda #1041", sub: "pronta", stat: "11 ped.", live: false },
+        { id: "1040", title: "Onda #1040", sub: "pronta", stat: "16 ped.", live: false },
+        { id: "1039", title: "Onda #1039", sub: "pronta", stat: "7 ped.", live: false }
+      ];
+
+      var FINISHED_RUNS = {
+        "1042": {
+          title: "Onda #1042",
+          live: false,
+          done: 18,
+          total: 18,
+          counts: { feito: 17, fail: 1, pendente: 0 },
+          fails: [{ item: "Fronha percal 50×70", place: "C-08", detail: "Não achei na gôndola" }]
+        },
+        "1043": {
+          title: "Onda #1043",
+          live: false,
+          done: 14,
+          total: 14,
+          counts: { feito: 14, fail: 0, pendente: 0 },
+          fails: []
+        },
+        "1044": {
+          title: "Onda #1044",
+          live: false,
+          done: 9,
+          total: 9,
+          counts: { feito: 8, fail: 1, pendente: 0 },
+          fails: [{ item: "Lençol casal 180", place: "A-04", detail: "Não achei na gôndola" }]
+        }
+      };
+
+      var LIVE_OK = {
+        title: "Onda #1042",
+        live: true,
+        done: 10,
+        total: 18,
+        counts: { feito: 10, fail: 0, pendente: 8 },
+        fails: []
+      };
+
+      var LIVE_FAIL = {
+        title: "Onda #1042",
+        live: true,
+        done: 10,
+        total: 18,
+        counts: { feito: 9, fail: 1, pendente: 8 },
+        fails: [{ item: "Fronha percal 50×70", place: "C-08", detail: "Não achei na gôndola" }]
+      };
+
+      var liveLabel = document.getElementById("liveLabel");
+      var countdownEl = document.getElementById("countdown");
+      var countdownLabel = document.getElementById("countdownLabel");
+      var orbFill = document.getElementById("orbFill");
+      var idlePlates = document.getElementById("idlePlates");
+      var activeGlances = document.getElementById("activeGlances");
+      var waveList = document.getElementById("waveList");
+      var idleView = document.getElementById("idleView");
+      var activeView = document.getElementById("activeView");
+      var idleActions = document.getElementById("idleActions");
+      var activeActions = document.getElementById("activeActions");
+      var proximaTitle = document.getElementById("proximaTitle");
+      var proximaHint = document.getElementById("proximaHint");
+      var sheet = document.getElementById("factorySheet");
+      var scrim = document.getElementById("scrim");
+      var sheetMeters = document.getElementById("sheetMeters");
+      var factoryCopy = document.getElementById("factoryCopy");
+      var toastEl = document.getElementById("toast");
+      var pauseIdle = document.getElementById("pauseIdle");
+      var pauseActive = document.getElementById("pauseActive");
+      var pauseSheet = document.getElementById("pauseSheet");
+      var modeIdleBtn = document.getElementById("modeIdle");
+      var modeActiveBtn = document.getElementById("modeActive");
+      var modeFailBtn = document.getElementById("modeFail");
+      var agoraPanel = document.getElementById("agoraPanel");
+      var agoraHint = document.getElementById("agoraHint");
+      var agoraFailPill = document.getElementById("agoraFailPill");
+      var runSheet = document.getElementById("runSheet");
+      var runTitle = document.getElementById("runTitle");
+      var runCopy = document.getElementById("runCopy");
+      var runMeters = document.getElementById("runMeters");
+      var runFails = document.getElementById("runFails");
+
+      function pad(n) {
+        return n < 10 ? "0" + n : String(n);
+      }
+
+      function formatTime(sec) {
+        return pad(Math.floor(sec / 60)) + ":" + pad(sec % 60);
+      }
+
+      function triggers() {
+        return mode === "active" ? ACTIVE_TRIGGERS : IDLE_TRIGGERS;
+      }
+
+      function onTriggers() {
+        return triggers().filter(function (t) { return t.enabled; });
+      }
+
+      function triggerById(id) {
+        var list = triggers();
+        for (var i = 0; i < list.length; i += 1) {
+          if (list[i].id === id) return list[i];
+        }
+        return null;
+      }
+
+      function countCopy(n) {
+        if (paused) {
+          return "Fábrica pausada. Os medidores continuam; nada dispara até retomar.";
+        }
+        switch (n) {
+          case 0:
+            return "Nenhum gatilho ligado.";
+          case 1:
+            return "Um gatilho ligado. A onda sai quando ele zerar.";
+          case 2:
+            return "Dois gatilhos ligados. A onda sai no primeiro que zerar.";
+          case 3:
+            return "Três gatilhos ligados. A onda sai no primeiro que zerar.";
+          case 4:
+            return "Quatro gatilhos ligados. A onda sai no primeiro que zerar.";
+          default:
+            return n + " gatilhos ligados. A onda sai no primeiro que zerar.";
+        }
+      }
+
+      function syncElapsed() {
+        var elapsed = triggerById("elapsed");
+        if (!elapsed || mode !== "idle") return;
+        elapsed.remain = formatTime(remaining);
+        elapsed.sheetRemain = formatTime(remaining);
+        elapsed.fill = 1 - remaining / WINDOW;
+      }
+
+      function setOrb(fill) {
+        var spent = Math.max(0, Math.min(1, fill));
+        orbFill.style.strokeDashoffset = String(100 * (1 - spent));
+      }
+
+      function dialHtml(trigger, size) {
+        var r = size === "sheet" ? 14 : 22;
+        var vb = size === "sheet" ? 34 : 52;
+        var spent = Math.max(0, Math.min(1, Number(trigger.fill) || 0));
+        var offset = (100 * (1 - spent)).toFixed(2);
+        var icon = ICONS[trigger.id] || ICONS.orders;
+        return (
+          '<span class="dial">' +
+            '<svg class="ring" viewBox="0 0 ' + vb + " " + vb + '" aria-hidden="true">' +
+              '<circle class="track" cx="' + (vb / 2) + '" cy="' + (vb / 2) + '" r="' + r + '"></circle>' +
+              '<circle class="fill" cx="' + (vb / 2) + '" cy="' + (vb / 2) + '" r="' + r + '" pathLength="100" style="stroke-dashoffset:' + offset + '"></circle>' +
+            "</svg>" +
+            '<span class="glyph">' + icon + "</span>" +
+          "</span>"
+        );
+      }
+
+      function renderIdlePlates() {
+        syncElapsed();
+        var html = "";
+        onTriggers().forEach(function (trigger) {
+          html +=
+            '<span class="plate" data-kind="' + trigger.id + '">' +
+              dialHtml(trigger, "plate") +
+              '<span class="remain">' + trigger.remain + "</span>" +
+              '<span class="kind">' + trigger.unit + "</span>" +
+            "</span>";
+        });
+        idlePlates.innerHTML = html;
+        countdownEl.textContent = formatTime(remaining);
+        setOrb(1 - remaining / WINDOW);
+        countdownLabel.textContent = paused ? "automático pausado" : "até a próxima onda";
+      }
+
+      function renderActiveGlances() {
+        var html = "";
+        onTriggers().forEach(function (trigger) {
+          html +=
+            '<div class="glance" data-kind="' + trigger.id + '">' +
+              '<span class="visually-hidden">' + trigger.name + "</span>" +
+              dialHtml(trigger, "glance") +
+              '<p class="glance-val">' + trigger.remain + "<span>" + trigger.unit + "</span></p>" +
+            "</div>";
+        });
+        activeGlances.innerHTML = html;
+        if (paused) {
+          proximaTitle.textContent = "Pausada";
+          proximaHint.textContent = "medidores no lugar";
+        } else {
+          proximaTitle.textContent = "Auto-onda";
+          proximaHint.textContent = "gatilhos ligados";
+        }
+      }
+
+      function waves() {
+        return mode === "active" ? activeWaves : idleWaves;
+      }
+
+      function runFor(id) {
+        if (mode === "active" && id === "1042") {
+          return failDemo ? LIVE_FAIL : LIVE_OK;
+        }
+        if (FINISHED_RUNS[id]) return FINISHED_RUNS[id];
+        return {
+          title: "Onda #" + id,
+          live: false,
+          done: 12,
+          total: 12,
+          counts: { feito: 12, fail: 0, pendente: 0 },
+          fails: []
+        };
+      }
+
+      function renderAgora() {
+        agoraPanel.classList.toggle("is-fail", failDemo);
+        agoraFailPill.classList.toggle("is-on", failDemo);
+        agoraHint.textContent = failDemo ? "1 não achei · em andamento" : "em andamento";
+        var live = activeWaves[0];
+        if (live && live.id === "1042") {
+          live.pill = failDemo ? "não achei" : "setup";
+          live.fail = failDemo;
+        }
+      }
+
+      function renderWaves() {
+        var html = "";
+        waves().forEach(function (wave) {
+          var share = "";
+          if (wave.live) {
+            share =
+              '<button type="button" class="share" data-wave="' + wave.title + '" aria-label="Compartilhar no WhatsApp ' + wave.title + '">' +
+                '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">' +
+                  '<path d="M8 10.2V2.6M8 2.6 5.2 5.3M8 2.6l2.8 2.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>' +
+                  '<path d="M3.2 8.4v4.2A1.2 1.2 0 0 0 4.4 13.8h7.2a1.2 1.2 0 0 0 1.2-1.2V8.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>' +
+                "</svg>" +
+              "</button>";
+          }
+          var pill = wave.pill
+            ? '<span class="pill' + (wave.fail ? " is-fail" : "") + '">' + wave.pill + "</span>"
+            : "";
+          html +=
+            '<li class="wave' + (wave.live ? " is-live" : "") + (wave.fail ? " is-fail" : "") + '">' +
+              '<button type="button" class="wave-link" data-run="' + wave.id + '">' +
+                "<span>" +
+                  '<span class="title">' + wave.title + pill + "</span>" +
+                  '<span class="sub">' + wave.sub + "</span>" +
+                "</span>" +
+                '<span class="stat">' + wave.stat + "</span>" +
+              "</button>" +
+              share +
+            "</li>";
+        });
+        waveList.innerHTML = html;
+      }
+
+      function renderSheet() {
+        var list = onTriggers();
+        factoryCopy.textContent = countCopy(list.length);
+        pauseSheet.textContent = paused ? "Retomar automático" : "Pausar automático";
+        var html = "";
+        list.forEach(function (trigger) {
+          html +=
+            "<li>" +
+              '<span class="glance">' + dialHtml(trigger, "sheet") + "</span>" +
+              "<div><strong>" + trigger.sheetRemain + "</strong><span>" + trigger.detail + "</span></div>" +
+            "</li>";
+        });
+        sheetMeters.innerHTML = html;
+      }
+
+      function setPaused(next) {
+        paused = next;
+        document.body.classList.toggle("is-paused", paused);
+        liveLabel.textContent = paused ? "Fábrica pausada" : "Fábrica ligada";
+        pauseIdle.textContent = paused ? "Retomar" : "Pausar";
+        pauseActive.textContent = paused ? "Retomar" : "Pausar";
+        renderIdlePlates();
+        renderActiveGlances();
+        renderSheet();
+      }
+
+      function setMode(next, withFail) {
+        failDemo = Boolean(withFail);
+        mode = next === "active" || failDemo ? "active" : "idle";
+        document.body.classList.toggle("is-active", mode === "active");
+        idleView.hidden = mode !== "idle";
+        activeView.hidden = mode !== "active";
+        idleActions.hidden = mode !== "idle";
+        activeActions.hidden = mode !== "active";
+        modeIdleBtn.setAttribute("aria-pressed", mode === "idle" && !failDemo ? "true" : "false");
+        modeActiveBtn.setAttribute("aria-pressed", mode === "active" && !failDemo ? "true" : "false");
+        modeFailBtn.setAttribute("aria-pressed", failDemo ? "true" : "false");
+        if (mode === "idle") {
+          renderIdlePlates();
+        } else {
+          renderAgora();
+          renderActiveGlances();
+        }
+        renderWaves();
+        renderSheet();
+      }
+
+      function toast(msg) {
+        toastEl.textContent = msg;
+        toastEl.classList.add("is-on");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () {
+          toastEl.classList.remove("is-on");
+        }, 2200);
+      }
+
+      function statusDial(kind, fill) {
+        var offset = (100 * (1 - fill)).toFixed(2);
+        var tone = kind === "feito" ? "is-go" : kind === "nao-achei" ? "is-fail" : "is-wait";
+        return (
+          '<span class="dial ' + tone + '">' +
+            '<svg class="ring" viewBox="0 0 34 34" aria-hidden="true">' +
+              '<circle class="track" cx="17" cy="17" r="14"></circle>' +
+              '<circle class="fill" cx="17" cy="17" r="14" pathLength="100" style="stroke-dashoffset:' + offset + '"></circle>' +
+            "</svg>" +
+            '<span class="glyph">' + STATUS_ICONS[kind] + "</span>" +
+          "</span>"
+        );
+      }
+
+      function renderRunSheet(run) {
+        runTitle.textContent = run.title;
+        if (run.live) {
+          runCopy.textContent = run.counts.fail
+            ? run.counts.fail + "/" + run.total + " falhadas · " + run.done + " de " + run.total + " feitas até agora."
+            : run.done + " de " + run.total + " · em andamento.";
+        } else {
+          runCopy.textContent = run.counts.fail
+            ? "Onda pronta. " + run.counts.fail + " parada sem item."
+            : "Onda pronta. Todas as paradas conferidas.";
+        }
+        var total = Math.max(1, run.total);
+        var rows = [
+          { kind: "feito", label: run.counts.feito + " feito", detail: "Separadas e conferidas", fill: run.counts.feito / total },
+          { kind: "nao-achei", label: run.counts.fail + " não achei", detail: "Item sem estoque na gôndola", fill: run.counts.fail / total },
+          { kind: "pendente", label: run.counts.pendente + " pendente", detail: run.live ? "Ainda na rota" : "Nada em aberto", fill: run.counts.pendente / total }
+        ];
+        var html = "";
+        rows.forEach(function (row) {
+          html +=
+            "<li>" +
+              '<span class="glance">' + statusDial(row.kind, row.fill) + "</span>" +
+              "<div><strong>" + row.label + "</strong><span>" + row.detail + "</span></div>" +
+            "</li>";
+        });
+        runMeters.innerHTML = html;
+        if (run.fails.length) {
+          runFails.hidden = false;
+          runFails.innerHTML = run.fails.map(function (item) {
+            return "<li><strong>" + item.item + "</strong><span>" + item.place + " · " + item.detail + "</span></li>";
+          }).join("");
+        } else {
+          runFails.hidden = true;
+          runFails.innerHTML = "";
+        }
+      }
+
+      function showScrim() {
+        scrim.hidden = false;
+        requestAnimationFrame(function () {
+          scrim.classList.add("is-on");
+        });
+      }
+
+      function openSheet() {
+        closeRunOnly();
+        sheet.hidden = false;
+        showScrim();
+        renderSheet();
+        requestAnimationFrame(function () {
+          sheet.classList.add("is-on");
+          sheetOpen = true;
+          openSheetId = "factory";
+        });
+      }
+
+      function openRunSheet(id) {
+        closeFactoryOnly();
+        renderRunSheet(runFor(id));
+        runSheet.hidden = false;
+        showScrim();
+        requestAnimationFrame(function () {
+          runSheet.classList.add("is-on");
+          sheetOpen = true;
+          openSheetId = "run";
+        });
+      }
+
+      function closeFactoryOnly() {
+        sheet.classList.remove("is-on");
+        setTimeout(function () {
+          if (openSheetId !== "factory") sheet.hidden = true;
+        }, 280);
+      }
+
+      function closeRunOnly() {
+        runSheet.classList.remove("is-on");
+        setTimeout(function () {
+          if (openSheetId !== "run") runSheet.hidden = true;
+        }, 280);
+      }
+
+      function closeSheet() {
+        sheet.classList.remove("is-on");
+        runSheet.classList.remove("is-on");
+        scrim.classList.remove("is-on");
+        sheetOpen = false;
+        openSheetId = "";
+        setTimeout(function () {
+          if (!sheetOpen) {
+            sheet.hidden = true;
+            runSheet.hidden = true;
+            scrim.hidden = true;
+          }
+        }, 280);
+      }
+
+      function resetIdleTriggers() {
+        var orders = triggerById("orders");
+        var units = triggerById("units");
+        var clock = triggerById("clock");
+        if (orders) {
+          orders.remain = "12";
+          orders.sheetRemain = "12 pedidos";
+          orders.fill = 0.08;
+        }
+        if (units) {
+          units.remain = "50";
+          units.sheetRemain = "50 un.";
+          units.fill = 0.08;
+        }
+        if (clock) {
+          clock.remain = "18:00";
+          clock.sheetRemain = "18:00";
+          clock.detail = "Horário · 18:00";
+          clock.fill = 0.05;
+        }
+        remaining = WINDOW;
+      }
+
+      function anticipate() {
+        if (mode === "idle") {
+          resetIdleTriggers();
+          var name = "Onda #" + nextWave;
+          nextWave += 1;
+          idleWaves.unshift({
+            id: String(nextWave - 1),
+            title: name,
+            sub: "pronta",
+            stat: "12 ped.",
+            live: false
+          });
+          renderIdlePlates();
+          renderWaves();
+          toast(name + " antecipada");
+        } else {
+          ACTIVE_TRIGGERS.forEach(function (trigger) {
+            trigger.remain = "0";
+            trigger.sheetRemain = trigger.id === "clock" ? "0 min" : "0";
+            trigger.fill = 1;
+          });
+          ACTIVE_TRIGGERS[0].sheetRemain = "0 pedidos";
+          ACTIVE_TRIGGERS[1].sheetRemain = "0 un.";
+          renderActiveGlances();
+          toast("Onda antecipada");
+        }
+        closeSheet();
+      }
+
+      async function shareWave(name) {
+        var url = new URL(RICH, window.location.href).href;
+        var text = "Pisoly · " + name + " — " + url;
+        var payload = { title: "Pisoly · " + name, text: text, url: url };
+        if (navigator.share) {
+          try {
+            await navigator.share(payload);
+            return;
+          } catch (err) {
+            if (err && err.name === "AbortError") return;
+          }
+        }
+        window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank", "noopener");
+      }
+
+      document.getElementById("orbOpen").addEventListener("click", openSheet);
+      idlePlates.addEventListener("click", openSheet);
+      document.getElementById("proximaPanel").addEventListener("click", openSheet);
+      agoraPanel.addEventListener("click", function () {
+        openRunSheet("1042");
+      });
+      document.getElementById("anticipateIdle").addEventListener("click", anticipate);
+      document.getElementById("anticipateSheet").addEventListener("click", anticipate);
+      scrim.addEventListener("click", closeSheet);
+
+      function togglePause() {
+        setPaused(!paused);
+        closeSheet();
+        toast(paused ? "Fábrica pausada" : "Fábrica retomada");
+      }
+
+      pauseIdle.addEventListener("click", togglePause);
+      pauseActive.addEventListener("click", togglePause);
+      pauseSheet.addEventListener("click", togglePause);
+
+      document.getElementById("endWave").addEventListener("click", function () {
+        toast("Onda #1042 encerrada");
+        setMode("idle");
+      });
+
+      waveList.addEventListener("click", function (event) {
+        var shareBtn = event.target.closest(".share");
+        if (shareBtn) {
+          event.preventDefault();
+          event.stopPropagation();
+          shareWave(shareBtn.getAttribute("data-wave"));
+          return;
+        }
+        var row = event.target.closest("[data-run]");
+        if (!row) return;
+        openRunSheet(row.getAttribute("data-run"));
+      });
+
+      modeIdleBtn.addEventListener("click", function () {
+        setMode("idle");
+      });
+
+      modeActiveBtn.addEventListener("click", function () {
+        setMode("active");
+      });
+
+      modeFailBtn.addEventListener("click", function () {
+        setMode("active", true);
+      });
+
+      document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && sheetOpen) closeSheet();
+      });
+
+      function tick() {
+        if (mode !== "idle" || paused || remaining <= 0) return;
+        remaining -= 1;
+        if (remaining <= 0) {
+          remaining = 0;
+          toast("Onda automática pronta");
+        }
+        renderIdlePlates();
+      }
+
+      if (location.hash === "#falha") setMode("active", true);
+      else if (location.hash === "#ativa") setMode("active");
+      else setMode("idle");
+      if (location.hash === "#factory") openSheet();
+      if (location.hash.indexOf("#run=") === 0) {
+        openRunSheet(location.hash.slice(5) || "1042");
+      }
+
+      setInterval(tick, 1000);
+    })();
+  </script>
+</body>
+</html>
