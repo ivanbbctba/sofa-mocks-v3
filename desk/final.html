@@ -249,7 +249,6 @@
       stroke-width: 3.4;
       stroke-linecap: round;
       stroke-dasharray: 100;
-      stroke-dashoffset: 100;
     }
 
     .glyph {
@@ -1035,7 +1034,7 @@
 
       function setOrb(fill) {
         var spent = Math.max(0, Math.min(1, fill));
-        orbFill.setAttribute("stroke-dashoffset", String(100 * (1 - spent)));
+        orbFill.style.strokeDashoffset = String(100 * (1 - spent));
       }
 
       function dialHtml(trigger, size) {
@@ -1048,7 +1047,7 @@
           '<span class="dial">' +
             '<svg class="ring" viewBox="0 0 ' + vb + " " + vb + '" aria-hidden="true">' +
               '<circle class="track" cx="' + (vb / 2) + '" cy="' + (vb / 2) + '" r="' + r + '"></circle>' +
-              '<circle class="fill" cx="' + (vb / 2) + '" cy="' + (vb / 2) + '" r="' + r + '" pathLength="100" stroke-dasharray="100" stroke-dashoffset="' + offset + '"></circle>' +
+              '<circle class="fill" cx="' + (vb / 2) + '" cy="' + (vb / 2) + '" r="' + r + '" pathLength="100" style="stroke-dashoffset:' + offset + '"></circle>' +
             "</svg>" +
             '<span class="glyph">' + icon + "</span>" +
           "</span>"
