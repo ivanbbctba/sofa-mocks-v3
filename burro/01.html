@@ -762,9 +762,6 @@
           const tour = currentTour();
           const geo = tour.geo;
           setRun(tour.color);
-          if (geo.fullPath.length > 1) {
-            svg.appendChild(el("polyline", { class: "path-rest", points: pts(geo.fullPath) }));
-          }
           const doneSeg = slicePath(geo, 0, toIdx);
           if (doneSeg.length > 1) {
             svg.appendChild(el("polyline", { class: "path-done", points: pts(doneSeg) }));
@@ -804,7 +801,7 @@
           });
           map.appendChild(svg);
           applyViewBox(svg, activeViewBox(), fly);
-          if (aheadNode) queueMarch(aheadNode, 0.62, 0.5);
+          if (aheadNode) queueMarch(aheadNode, 0.36, 0.3);
           startMarch();
           if (playNode && !reduce) {
             try {
