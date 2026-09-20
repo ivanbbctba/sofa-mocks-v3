@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f7f6f2" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>Mesa · Fábrica</title>
+  <style>
+    :root {
+      --accent: #635bff;
+      --accent-deep: #4f48d4;
+      --accent-soft: #eeedff;
+      --ink: #1a1b1a;
+      --ink-2: #3c3e3c;
+      --mute: #6d706c;
+      --line: #e3e1da;
+      --paper: #f7f6f2;
+      --paper-2: #efeee8;
+      --white: #fffcf8;
+      --ok: #3d6f60;
+      --ok-soft: #dce8e3;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    html {
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      font-size: 15px;
+      line-height: 1.4;
+      color: var(--ink);
+      background: var(--paper);
+    }
+
+    .shell {
+      width: min(100%, 420px);
+      margin: 0 auto;
+      min-height: 100dvh;
+      padding: calc(14px + var(--safe-top)) 20px calc(28px + var(--safe-bottom));
+      display: flex;
+      flex-direction: column;
+    }
+
+    .top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .brand {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .live {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+      color: var(--mute);
+    }
+
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 0 rgba(99, 91, 255, 0.55);
+      animation: live-ping 2.2s ease-out infinite;
+    }
+
+    body.is-paused .live-dot {
+      background: var(--mute);
+      box-shadow: none;
+      animation: none;
+    }
+
+    .factory {
+      flex: 0 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px 0 8px;
+    }
+
+    .orb-wrap {
+      position: relative;
+      width: 248px;
+      height: 248px;
+      display: grid;
+      place-items: center;
+    }
+
+    .orb-pulse,
+    .orb-pulse--late {
+      position: absolute;
+      inset: 10px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(99, 91, 255, 0.22);
+      pointer-events: none;
+    }
+
+    .orb-pulse {
+      animation: orb-expand 2.8s ease-out infinite;
+    }
+
+    .orb-pulse--late {
+      animation: orb-expand 2.8s ease-out 1.4s infinite;
+    }
+
+    .orb {
+      position: relative;
+      width: 216px;
+      height: 216px;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 50% 46%, var(--white) 0 58%, var(--accent-soft) 100%);
+      box-shadow:
+        0 0 0 1px rgba(99, 91, 255, 0.08),
+        0 18px 40px -22px rgba(99, 91, 255, 0.55),
+        0 0 48px rgba(99, 91, 255, 0.16);
+      display: grid;
+      place-items: center;
+    }
+
+    .orb svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+
+    .orb-track {
+      fill: none;
+      stroke: rgba(99, 91, 255, 0.12);
+      stroke-width: 7;
+    }
+
+    .orb-fill {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 7;
+      stroke-linecap: round;
+      stroke-dasharray: 628.3;
+      stroke-dashoffset: 188.5;
+      transition: stroke-dashoffset 0.6s ease;
+    }
+
+    .orb-core {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding-top: 4px;
+    }
+
+    .countdown {
+      margin: 0;
+      font-size: 52px;
+      font-weight: 620;
+      letter-spacing: -0.05em;
+      font-variant-numeric: tabular-nums;
+      line-height: 0.95;
+      color: var(--ink);
+    }
+
+    .countdown-label {
+      margin: 8px 0 0;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      color: var(--mute);
+    }
+
+    .factory-cta {
+      appearance: none;
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      max-width: 360px;
+      margin-top: 20px;
+      padding: 0;
+      border: none;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .factory-cta:active {
+      transform: scale(0.985);
+    }
+
+    .glance {
+      width: 76px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 4px 9px;
+      border-radius: 22px;
+      background: var(--white);
+      box-shadow: 0 0 0 1px rgba(99, 91, 255, 0.08);
+    }
+
+    .glance[hidden] {
+      display: none;
+    }
+
+    .glance-ring {
+      position: relative;
+      width: 48px;
+      height: 48px;
+    }
+
+    .glance-ring svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+
+    .glance-track {
+      fill: none;
+      stroke: rgba(99, 91, 255, 0.14);
+      stroke-width: 3.2;
+    }
+
+    .glance-fill {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 3.2;
+      stroke-linecap: round;
+    }
+
+    .glance-glyph {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: var(--accent-deep);
+    }
+
+    .glance-glyph svg {
+      position: static;
+      width: 20px;
+      height: 20px;
+      transform: none;
+    }
+
+    .glance-remain {
+      font-size: 12px;
+      font-weight: 620;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.03em;
+      color: var(--ink);
+      line-height: 1;
+    }
+
+    .glance-kind {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--mute);
+      letter-spacing: 0.01em;
+      line-height: 1;
+    }
+
+    .factory-actions {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    .btn {
+      appearance: none;
+      min-height: 40px;
+      border: none;
+      border-radius: 14px;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      cursor: pointer;
+      padding: 0 18px;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--ink-2);
+      box-shadow: inset 0 0 0 1px var(--line);
+    }
+
+    .waves {
+      margin-top: 28px;
+      flex: 1;
+    }
+
+    .waves h2 {
+      margin: 0 0 4px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--mute);
+      letter-spacing: 0.01em;
+    }
+
+    .wave-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .wave {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .wave-link {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      padding: 16px 0;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .wave-link strong {
+      font-size: 17px;
+      font-weight: 580;
+      letter-spacing: -0.02em;
+    }
+
+    .wave-link span {
+      font-size: 13px;
+      color: var(--mute);
+    }
+
+    .share {
+      appearance: none;
+      flex: 0 0 40px;
+      width: 40px;
+      height: 40px;
+      border: none;
+      border-radius: 50%;
+      background: var(--accent-soft);
+      color: var(--accent-deep);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .share:active {
+      transform: scale(0.96);
+    }
+
+    .share svg {
+      display: block;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(22px + var(--safe-bottom));
+      transform: translate(-50%, 12px);
+      background: var(--ink);
+      color: var(--white);
+      font-size: 13px;
+      font-weight: 500;
+      padding: 10px 16px;
+      border-radius: 999px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      z-index: 20;
+      white-space: nowrap;
+    }
+
+    .toast.is-on {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    body.is-paused .orb {
+      box-shadow:
+        0 0 0 1px var(--line),
+        0 10px 24px -18px rgba(26, 27, 26, 0.2);
+    }
+
+    body.is-paused .orb-pulse,
+    body.is-paused .orb-pulse--late {
+      animation: none;
+      opacity: 0;
+    }
+
+    body.is-paused .orb-fill,
+    body.is-paused .glance-fill {
+      stroke: #a8a3ff;
+    }
+
+    body.is-paused .glance-glyph {
+      color: #8b86d4;
+    }
+
+    body.is-paused .glance {
+      box-shadow: 0 0 0 1px var(--line);
+    }
+
+    @keyframes orb-expand {
+      0% {
+        transform: scale(0.92);
+        opacity: 0.55;
+      }
+      100% {
+        transform: scale(1.18);
+        opacity: 0;
+      }
+    }
+
+    @keyframes live-ping {
+      0% {
+        box-shadow: 0 0 0 0 rgba(99, 91, 255, 0.5);
+      }
+      70% {
+        box-shadow: 0 0 0 7px rgba(99, 91, 255, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(99, 91, 255, 0);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .orb-pulse,
+      .orb-pulse--late,
+      .live-dot {
+        animation: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="top">
+      <h1 class="brand">Mesa</h1>
+      <p class="live" id="liveStatus"><span class="live-dot" aria-hidden="true"></span><span id="liveLabel">Fábrica ligada</span></p>
+    </header>
+
+    <section class="factory" aria-label="Próxima onda automática">
+      <div class="orb-wrap">
+        <div class="orb-pulse" aria-hidden="true"></div>
+        <div class="orb-pulse orb-pulse--late" aria-hidden="true"></div>
+        <div class="orb">
+          <svg viewBox="0 0 216 216" aria-hidden="true">
+            <circle class="orb-track" cx="108" cy="108" r="100"></circle>
+            <circle class="orb-fill" id="orbFill" cx="108" cy="108" r="100"></circle>
+          </svg>
+          <div class="orb-core">
+            <p class="countdown" id="countdown" aria-live="polite">04:32</p>
+            <p class="countdown-label" id="countdownLabel">até a próxima onda</p>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="factory-cta" id="anticipate" aria-label="Antecipar onda">
+        <span class="glance" data-kind="orders">
+          <span class="glance-ring">
+            <svg viewBox="0 0 52 52" aria-hidden="true">
+              <circle class="glance-track" cx="26" cy="26" r="22"></circle>
+              <circle class="glance-fill" data-meter="orders" cx="26" cy="26" r="22"></circle>
+            </svg>
+            <span class="glance-glyph">
+              <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <rect x="3.4" y="3.6" width="13.2" height="3.4" rx="1.1" stroke="currentColor" stroke-width="1.6"/>
+                <rect x="3.4" y="8.3" width="13.2" height="3.4" rx="1.1" stroke="currentColor" stroke-width="1.6"/>
+                <rect x="3.4" y="13" width="13.2" height="3.4" rx="1.1" stroke="currentColor" stroke-width="1.6"/>
+              </svg>
+            </span>
+          </span>
+          <span class="glance-remain" data-remain="orders">3</span>
+          <span class="glance-kind">pedidos</span>
+        </span>
+        <span class="glance" data-kind="units">
+          <span class="glance-ring">
+            <svg viewBox="0 0 52 52" aria-hidden="true">
+              <circle class="glance-track" cx="26" cy="26" r="22"></circle>
+              <circle class="glance-fill" data-meter="units" cx="26" cy="26" r="22"></circle>
+            </svg>
+            <span class="glance-glyph">
+              <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <path d="M10 3.2 16.4 6.6v6.8L10 16.8 3.6 13.4V6.6L10 3.2Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                <path d="M3.6 6.6 10 10l6.4-3.4M10 10v6.8" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+              </svg>
+            </span>
+          </span>
+          <span class="glance-remain" data-remain="units">12</span>
+          <span class="glance-kind">unid.</span>
+        </span>
+        <span class="glance" data-kind="clock">
+          <span class="glance-ring">
+            <svg viewBox="0 0 52 52" aria-hidden="true">
+              <circle class="glance-track" cx="26" cy="26" r="22"></circle>
+              <circle class="glance-fill" data-meter="clock" cx="26" cy="26" r="22"></circle>
+            </svg>
+            <span class="glance-glyph">
+              <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <circle cx="10" cy="10.2" r="6.4" stroke="currentColor" stroke-width="1.6"/>
+                <path d="M10 7.2v3.2l2.3 1.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+          </span>
+          <span class="glance-remain" data-remain="clock">16:00</span>
+          <span class="glance-kind">hora</span>
+        </span>
+        <span class="glance" data-kind="elapsed">
+          <span class="glance-ring">
+            <svg viewBox="0 0 52 52" aria-hidden="true">
+              <circle class="glance-track" cx="26" cy="26" r="22"></circle>
+              <circle class="glance-fill" data-meter="elapsed" cx="26" cy="26" r="22"></circle>
+            </svg>
+            <span class="glance-glyph">
+              <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <path d="M7.2 3.4h5.6M10 3.4v1.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                <circle cx="10" cy="11.2" r="5.4" stroke="currentColor" stroke-width="1.6"/>
+                <path d="M10 11.2V8.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              </svg>
+            </span>
+          </span>
+          <span class="glance-remain" data-remain="elapsed">04:32</span>
+          <span class="glance-kind">tempo</span>
+        </span>
+      </button>
+
+      <div class="factory-actions">
+        <button type="button" class="btn btn-ghost" id="pause">Pausar</button>
+      </div>
+    </section>
+
+    <section class="waves" aria-label="Ondas prontas">
+      <h2>Prontas</h2>
+      <ul class="wave-list" id="waveList">
+        <li class="wave">
+          <a class="wave-link" href="../rich/01.html">
+            <strong>Onda #1042</strong>
+            <span>8 pedidos · 17 paradas</span>
+          </a>
+          <button type="button" class="share" data-wave="Onda #1042" aria-label="Compartilhar Onda #1042">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M8 10.2V2.6M8 2.6 5.2 5.3M8 2.6l2.8 2.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M3.2 8.4v4.2A1.2 1.2 0 0 0 4.4 13.8h7.2a1.2 1.2 0 0 0 1.2-1.2V8.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </li>
+        <li class="wave">
+          <a class="wave-link" href="../rich/01.html">
+            <strong>Onda #1043</strong>
+            <span>14 pedidos · 22 paradas</span>
+          </a>
+          <button type="button" class="share" data-wave="Onda #1043" aria-label="Compartilhar Onda #1043">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M8 10.2V2.6M8 2.6 5.2 5.3M8 2.6l2.8 2.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M3.2 8.4v4.2A1.2 1.2 0 0 0 4.4 13.8h7.2a1.2 1.2 0 0 0 1.2-1.2V8.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </li>
+        <li class="wave">
+          <a class="wave-link" href="../rich/01.html">
+            <strong>Onda #1044</strong>
+            <span>9 pedidos · 15 paradas</span>
+          </a>
+          <button type="button" class="share" data-wave="Onda #1044" aria-label="Compartilhar Onda #1044">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M8 10.2V2.6M8 2.6 5.2 5.3M8 2.6l2.8 2.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M3.2 8.4v4.2A1.2 1.2 0 0 0 4.4 13.8h7.2a1.2 1.2 0 0 0 1.2-1.2V8.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </li>
+      </ul>
+    </section>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (function () {
+      var ORB_CIRC = 2 * Math.PI * 100;
+      var GLANCE_CIRC = 2 * Math.PI * 22;
+      var WINDOW = 15 * 60;
+      var remaining = 4 * 60 + 32;
+      var nextWave = 1045;
+      var paused = false;
+      var toastTimer = 0;
+
+      var TRIGGERS = [
+        { id: "orders", enabled: true, fill: 0.75, remain: "3" },
+        { id: "units", enabled: true, fill: 0.76, remain: "12" },
+        { id: "clock", enabled: true, fill: 0.68, remain: "16:00" },
+        { id: "elapsed", enabled: true, fill: 0.7, remain: "04:32" }
+      ];
+
+      var countdownEl = document.getElementById("countdown");
+      var labelEl = document.getElementById("countdownLabel");
+      var liveLabel = document.getElementById("liveLabel");
+      var fillEl = document.getElementById("orbFill");
+      var pauseBtn = document.getElementById("pause");
+      var anticipateBtn = document.getElementById("anticipate");
+      var waveList = document.getElementById("waveList");
+      var toastEl = document.getElementById("toast");
+
+      function pad(n) {
+        return n < 10 ? "0" + n : String(n);
+      }
+
+      function formatTime(sec) {
+        var m = Math.floor(sec / 60);
+        var s = sec % 60;
+        return pad(m) + ":" + pad(s);
+      }
+
+      function setCircle(el, fill, circ) {
+        var spent = Math.max(0, Math.min(1, fill));
+        el.style.strokeDasharray = String(circ);
+        el.style.strokeDashoffset = String(circ * (1 - spent));
+      }
+
+      function triggerById(id) {
+        var i;
+        for (i = 0; i < TRIGGERS.length; i += 1) {
+          if (TRIGGERS[i].id === id) return TRIGGERS[i];
+        }
+        return null;
+      }
+
+      function syncElapsed() {
+        var elapsed = triggerById("elapsed");
+        if (!elapsed) return;
+        elapsed.remain = formatTime(remaining);
+        elapsed.fill = 1 - remaining / WINDOW;
+      }
+
+      function renderGlances() {
+        TRIGGERS.forEach(function (trigger) {
+          var node = document.querySelector('[data-kind="' + trigger.id + '"]');
+          if (!node) return;
+          node.hidden = !trigger.enabled;
+          if (!trigger.enabled) return;
+          var remainEl = node.querySelector('[data-remain="' + trigger.id + '"]');
+          var meterEl = node.querySelector('[data-meter="' + trigger.id + '"]');
+          if (remainEl) remainEl.textContent = trigger.remain;
+          if (meterEl) setCircle(meterEl, trigger.fill, GLANCE_CIRC);
+        });
+      }
+
+      function renderClock() {
+        syncElapsed();
+        countdownEl.textContent = formatTime(remaining);
+        setCircle(fillEl, 1 - remaining / WINDOW, ORB_CIRC);
+        renderGlances();
+      }
+
+      function toast(msg) {
+        toastEl.textContent = msg;
+        toastEl.classList.add("is-on");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () {
+          toastEl.classList.remove("is-on");
+        }, 2200);
+      }
+
+      function waveItem(name, meta) {
+        var li = document.createElement("li");
+        li.className = "wave";
+        li.innerHTML =
+          '<a class="wave-link" href="../rich/01.html">' +
+          "<strong>" + name + "</strong>" +
+          "<span>" + meta + "</span>" +
+          "</a>" +
+          '<button type="button" class="share" data-wave="' + name + '" aria-label="Compartilhar ' + name + '">' +
+          '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">' +
+          '<path d="M8 10.2V2.6M8 2.6 5.2 5.3M8 2.6l2.8 2.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>' +
+          '<path d="M3.2 8.4v4.2A1.2 1.2 0 0 0 4.4 13.8h7.2a1.2 1.2 0 0 0 1.2-1.2V8.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>' +
+          "</svg></button>";
+        return li;
+      }
+
+      function resetTriggers() {
+        var orders = triggerById("orders");
+        var units = triggerById("units");
+        var clock = triggerById("clock");
+        if (orders) {
+          orders.remain = "12";
+          orders.fill = 0;
+        }
+        if (units) {
+          units.remain = "50";
+          units.fill = 0;
+        }
+        if (clock) {
+          clock.remain = "18:00";
+          clock.fill = 0.05;
+        }
+      }
+
+      function setPaused(next) {
+        paused = next;
+        document.body.classList.toggle("is-paused", paused);
+        pauseBtn.textContent = paused ? "Retomar" : "Pausar";
+        liveLabel.textContent = paused ? "Fábrica pausada" : "Fábrica ligada";
+        labelEl.textContent = paused ? "automático pausado" : "até a próxima onda";
+      }
+
+      function tick() {
+        if (paused || remaining <= 0) return;
+        remaining -= 1;
+        if (remaining <= 0) {
+          remaining = 0;
+          toast("Onda automática pronta");
+        }
+        renderClock();
+      }
+
+      async function shareWave(name) {
+        var payload = {
+          title: "Pisoly · " + name,
+          text: "Separar " + name,
+          url: "https://pisoly.com/r/7f3a2c1b"
+        };
+        if (navigator.share) {
+          try {
+            await navigator.share(payload);
+            return;
+          } catch (err) {
+            if (err && err.name === "AbortError") return;
+          }
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(payload.url);
+          toast("Link copiado");
+          return;
+        }
+        toast("Compartilhe " + payload.url);
+      }
+
+      function anticipate() {
+        remaining = WINDOW;
+        resetTriggers();
+        renderClock();
+        var name = "Onda #" + nextWave;
+        nextWave += 1;
+        waveList.insertBefore(waveItem(name, "12 pedidos · 18 paradas"), waveList.firstChild);
+        toast(name + " antecipada");
+      }
+
+      anticipateBtn.addEventListener("click", anticipate);
+
+      pauseBtn.addEventListener("click", function () {
+        setPaused(!paused);
+        toast(paused ? "Fábrica pausada" : "Fábrica retomada");
+      });
+
+      waveList.addEventListener("click", function (event) {
+        var btn = event.target.closest(".share");
+        if (!btn) return;
+        event.preventDefault();
+        event.stopPropagation();
+        shareWave(btn.getAttribute("data-wave"));
+      });
+
+      renderClock();
+      setInterval(tick, 1000);
+    })();
+  </script>
+</body>
+</html>
