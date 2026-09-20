@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#e8edf5" />
+  <title>Pisoly — Onda · checklist</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --accent: #635bff;
+      --accent-deep: #4f48d4;
+      --accent-soft: #eeedff;
+      --ink: #111318;
+      --ink-2: #3a3d46;
+      --mute: #8b90a0;
+      --mute-2: #b4b9c6;
+      --ok: #3dcc70;
+      --ok-deep: #2f9a55;
+      --feito: #14151a;
+      --run-paper: #dce6f2;
+      --aisle: rgba(148, 160, 184, 0.55);
+      --glass: rgba(232, 237, 245, 0.38);
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    *,
+    *::before,
+    *::after { box-sizing: border-box; }
+
+    html { -webkit-text-size-adjust: 100%; }
+
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: #d8dee8;
+    }
+
+    .run {
+      width: 100%;
+      max-width: 390px;
+      height: 100dvh;
+      max-height: 844px;
+      margin: 0 auto;
+      position: relative;
+      overflow: hidden;
+      background: var(--run-paper);
+    }
+
+    @media (min-height: 900px) {
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .run {
+        height: 844px;
+        border-radius: 28px;
+        box-shadow: 0 18px 50px rgba(17, 19, 24, 0.16);
+      }
+    }
+
+    .map {
+      position: absolute;
+      inset: 0;
+    }
+
+    .aisles {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      justify-content: space-evenly;
+      padding: 0 22px;
+      pointer-events: none;
+    }
+
+    .aisles i {
+      display: block;
+      width: 22px;
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(
+        180deg,
+        transparent 0%,
+        var(--aisle) 10%,
+        rgba(176, 184, 200, 0.5) 46%,
+        var(--aisle) 82%,
+        transparent 100%
+      );
+    }
+
+    .route-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .path-rest {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 14;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: 0.34;
+    }
+
+    .path-dash {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 16;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 14 18;
+      opacity: 0.42;
+    }
+
+    .path-solid,
+    .path-play {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 18;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .path-play.is-play {
+      stroke-dasharray: var(--len);
+      stroke-dashoffset: var(--len);
+      animation: draw-leg 1.15s ease-out forwards;
+    }
+
+    .node { fill: #c5cad6; }
+    .node.done { fill: var(--accent); }
+    .node.upcoming {
+      fill: var(--run-paper);
+      stroke: #9aa3f5;
+      stroke-width: 4;
+    }
+    .node.current {
+      fill: url(#nodeGreen);
+      stroke: none;
+    }
+    .node-ring {
+      fill: none;
+      stroke: var(--ok);
+      stroke-width: 5;
+    }
+    .node.current.is-live {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: here-pulse 2.4s ease-in-out infinite;
+    }
+
+    .map-fade {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 26%;
+      background: linear-gradient(
+        180deg,
+        rgba(220, 230, 242, 0) 0%,
+        rgba(220, 230, 242, 0.28) 46%,
+        rgba(220, 230, 242, 0.78) 100%
+      );
+      pointer-events: none;
+    }
+
+    .btn-back {
+      position: absolute;
+      top: calc(8px + var(--safe-top));
+      left: 10px;
+      z-index: 6;
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border: none;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.55);
+      color: var(--ink-2);
+      text-decoration: none;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .progress {
+      position: absolute;
+      top: calc(14px + var(--safe-top));
+      right: 16px;
+      z-index: 6;
+      margin: 0;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--mute-2);
+      letter-spacing: 0.01em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .checklist {
+      position: absolute;
+      top: calc(52px + var(--safe-top));
+      right: 12px;
+      z-index: 5;
+      width: 136px;
+      max-height: calc(100% - 236px);
+      display: flex;
+      flex-direction: column;
+      padding: 10px 6px 8px;
+      border-radius: 16px;
+      background: var(--glass);
+      border: 1px solid rgba(255, 255, 255, 0.36);
+      box-shadow: 0 8px 22px rgba(17, 19, 24, 0.06);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    .checklist h2 {
+      margin: 0 4px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--mute);
+    }
+
+    .checklist h2 b {
+      font-weight: 600;
+      color: var(--ink-2);
+      letter-spacing: 0;
+      text-transform: none;
+    }
+
+    .checklist ol {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      overflow: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .checklist button {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 12px 1fr auto;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      padding: 7px 6px;
+      border: 0;
+      border-radius: 10px;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .checklist button:active { transform: scale(0.98); }
+
+    .checklist .mark {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(99, 91, 255, 0.28);
+      box-shadow: inset 0 0 0 1.5px #9aa3f5;
+    }
+
+    .checklist .loc {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .checklist .qty {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--mute);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .checklist li.is-current button {
+      background: rgba(99, 91, 255, 0.14);
+    }
+
+    .checklist li.is-current .mark {
+      background: var(--ok);
+      box-shadow: 0 0 0 3px rgba(61, 204, 112, 0.22);
+    }
+
+    .checklist li.is-current .loc { color: var(--ink); }
+    .checklist li.is-current .qty { color: var(--accent-deep); }
+
+    .hud {
+      position: absolute;
+      left: 20px;
+      bottom: calc(26px + var(--safe-bottom));
+      z-index: 6;
+      max-width: 54%;
+      pointer-events: none;
+    }
+
+    .hud-qty {
+      margin: 0;
+      font-size: 80px;
+      font-weight: 700;
+      letter-spacing: -0.05em;
+      line-height: 0.86;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .hud-loc {
+      margin: 8px 0 0;
+      font-size: 17px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+    }
+
+    .hud-depois {
+      margin: 3px 0 0;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--mute);
+    }
+
+    .btn-feito {
+      position: absolute;
+      right: 18px;
+      bottom: calc(28px + var(--safe-bottom));
+      z-index: 7;
+      width: 76px;
+      height: 76px;
+      border: none;
+      border-radius: 50%;
+      background: var(--feito);
+      color: #fff;
+      font: inherit;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      box-shadow: 0 10px 24px rgba(17, 19, 24, 0.22);
+    }
+
+    .btn-feito:active { transform: scale(0.96); }
+    .btn-feito[disabled] { opacity: 0.45; cursor: default; }
+
+    .toast {
+      position: absolute;
+      left: 50%;
+      top: 18%;
+      transform: translateX(-50%);
+      z-index: 8;
+      display: none;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(20, 21, 26, 0.86);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .toast.is-on { display: block; }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+    }
+
+    @keyframes draw-leg {
+      to { stroke-dashoffset: 0; }
+    }
+
+    @keyframes here-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.62; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .path-play.is-play,
+      .node.current.is-live {
+        animation: none !important;
+        stroke-dasharray: none !important;
+        stroke-dashoffset: 0 !important;
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="run" id="run">
+    <div class="map" aria-hidden="true">
+      <div class="aisles"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <svg id="route-svg" class="route-svg" viewBox="8 40 396 620" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <linearGradient id="nodeGreen" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#6ad88a" />
+            <stop offset="100%" stop-color="#2f9a55" />
+          </linearGradient>
+        </defs>
+        <path id="path-rest" class="path-rest" d="" />
+        <path id="path-dash" class="path-dash" d="" />
+        <path id="path-solid" class="path-solid" d="" />
+        <path id="path-play" class="path-play" d="" />
+        <g id="route-nodes"></g>
+      </svg>
+      <div class="map-fade"></div>
+    </div>
+
+    <a class="btn-back" href="../desk/05.html" aria-label="Voltar à mesa">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M15 5 L8 12 L15 19" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </a>
+    <p class="progress" id="run-progress">4 de 18</p>
+
+    <aside class="checklist" aria-label="Paradas restantes">
+      <h2>Restantes · <b id="remain-count">14</b></h2>
+      <ol id="check-list"></ol>
+    </aside>
+
+    <div class="hud">
+      <p class="hud-qty" id="hud-qty">42</p>
+      <p class="hud-loc" id="hud-loc">F-02</p>
+      <p class="hud-depois" id="hud-depois">depois H-09</p>
+    </div>
+
+    <button type="button" class="btn-feito" id="btn-feito">Feito</button>
+    <div class="toast" id="run-toast" role="status"></div>
+    <ol class="sr-only" id="a11y-stops"></ol>
+  </div>
+
+  <script>
+    (function () {
+      var TOTAL = 18;
+      var AISLE_X = { A: 40, B: 88, C: 136, D: 184, E: 232, F: 280, G: 328, H: 372 };
+      var BACK_Y = 78;
+      var FRONT_Y = 620;
+      var STOPS = [
+        { qty: 10, loc: "A-01", next: "C-02" },
+        { qty: 8, loc: "C-02", next: "E-01" },
+        { qty: 10, loc: "E-01", next: "E-10" },
+        { qty: 10, loc: "E-10", next: "F-02" },
+        { qty: 42, loc: "F-02", next: "H-09" },
+        { qty: 5, loc: "H-09", next: "B-03" },
+        { qty: 7, loc: "B-03", next: "B-09" },
+        { qty: 5, loc: "B-09", next: "G-01" },
+        { qty: 9, loc: "G-01", next: "G-09" },
+        { qty: 7, loc: "G-09", next: "C-08" },
+        { qty: 6, loc: "C-08", next: "F-10" },
+        { qty: 4, loc: "F-10", next: "D-04" },
+        { qty: 8, loc: "D-04", next: "D-10" },
+        { qty: 3, loc: "D-10", next: "A-06" },
+        { qty: 11, loc: "A-06", next: "H-02" },
+        { qty: 6, loc: "H-02", next: "A-10" },
+        { qty: 4, loc: "A-10", next: "H-10" },
+        { qty: 2, loc: "H-10", next: "Fim" }
+      ];
+
+      function binY(n) {
+        return BACK_Y + (n - 1) * ((FRONT_Y - BACK_Y) / 9);
+      }
+
+      function parseLoc(code) {
+        var parts = code.split("-");
+        return { aisle: parts[0], bin: parseInt(parts[1], 10) };
+      }
+
+      function xy(code) {
+        var loc = parseLoc(code);
+        return [AISLE_X[loc.aisle], binY(loc.bin)];
+      }
+
+      function corridorY(fromCode, toCode) {
+        var a = parseLoc(fromCode);
+        var b = parseLoc(toCode);
+        var y1 = binY(a.bin);
+        var y2 = binY(b.bin);
+        var viaBack = Math.abs(y1 - BACK_Y) + Math.abs(y2 - BACK_Y);
+        var viaFront = Math.abs(y1 - FRONT_Y) + Math.abs(y2 - FRONT_Y);
+        return viaBack <= viaFront ? BACK_Y : FRONT_Y;
+      }
+
+      function samePoint(a, b) {
+        return Math.abs(a[0] - b[0]) < 0.5 && Math.abs(a[1] - b[1]) < 0.5;
+      }
+
+      function segment(fromCode, toCode) {
+        var p1 = xy(fromCode);
+        var p2 = xy(toCode);
+        if (fromCode.charAt(0) === toCode.charAt(0)) return [p1, p2];
+        var via = corridorY(fromCode, toCode);
+        var pts = [p1];
+        if (Math.abs(p1[1] - via) > 1) pts.push([p1[0], via]);
+        pts.push([p2[0], via]);
+        if (Math.abs(p2[1] - via) > 1) pts.push(p2);
+        return pts;
+      }
+
+      function buildRoute() {
+        var pts = [];
+        var i;
+        for (i = 0; i < STOPS.length - 1; i += 1) {
+          var seg = segment(STOPS[i].loc, STOPS[i + 1].loc);
+          if (pts.length && samePoint(pts[pts.length - 1], seg[0])) {
+            pts = pts.concat(seg.slice(1));
+          } else {
+            pts = pts.concat(seg);
+          }
+        }
+        return pts;
+      }
+
+      function indexOnRoute(route, code) {
+        var target = xy(code);
+        var best = 0;
+        var bestD = Infinity;
+        var i;
+        for (i = 0; i < route.length; i += 1) {
+          var dx = route[i][0] - target[0];
+          var dy = route[i][1] - target[1];
+          var d = dx * dx + dy * dy;
+          if (d < bestD) {
+            bestD = d;
+            best = i;
+          }
+        }
+        return best;
+      }
+
+      function toPath(points) {
+        if (!points.length) return "";
+        var d = "M " + points[0][0].toFixed(1) + " " + points[0][1].toFixed(1);
+        var i;
+        for (i = 1; i < points.length; i += 1) {
+          d += " L " + points[i][0].toFixed(1) + " " + points[i][1].toFixed(1);
+        }
+        return d;
+      }
+
+      function fitBox(points, pad) {
+        var xs = points.map(function (p) { return p[0]; });
+        var ys = points.map(function (p) { return p[1]; });
+        var minX = Math.min.apply(null, xs) - pad;
+        var maxX = Math.max.apply(null, xs) + pad;
+        var minY = Math.min.apply(null, ys) - pad;
+        var maxY = Math.max.apply(null, ys) + pad;
+        var w = Math.max(maxX - minX, 120);
+        var h = Math.max(maxY - minY, 200);
+        maxX += 92;
+        w = maxX - minX;
+        var aspect = 390 / 844;
+        if (w / h > aspect) {
+          var extraH = w / aspect - h;
+          minY -= extraH / 2;
+          h += extraH;
+        } else {
+          var extraW = h * aspect - w;
+          minX -= extraW * 0.15;
+          w += extraW;
+        }
+        return [minX, minY, w, h].map(function (n) { return n.toFixed(1); }).join(" ");
+      }
+
+      function sliceBetween(route, fromCode, toCode) {
+        var a = indexOnRoute(route, fromCode);
+        var b = indexOnRoute(route, toCode);
+        if (a > b) {
+          var swap = a;
+          a = b;
+          b = swap;
+        }
+        if (b <= a) return route.slice(a, a + 2);
+        return route.slice(a, b + 1);
+      }
+
+      function reduceMotion() {
+        return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      }
+
+      var params = new URLSearchParams(window.location.search);
+      var index = parseInt(params.get("i") || "4", 10);
+      if (isNaN(index) || index < 0) index = 4;
+      if (index > STOPS.length - 1) index = STOPS.length - 1;
+
+      var route = buildRoute();
+      var svg = document.getElementById("route-svg");
+      var rest = document.getElementById("path-rest");
+      var dash = document.getElementById("path-dash");
+      var solid = document.getElementById("path-solid");
+      var play = document.getElementById("path-play");
+      var nodes = document.getElementById("route-nodes");
+      var qtyEl = document.getElementById("hud-qty");
+      var locEl = document.getElementById("hud-loc");
+      var nextEl = document.getElementById("hud-depois");
+      var progressEl = document.getElementById("run-progress");
+      var remainEl = document.getElementById("remain-count");
+      var listEl = document.getElementById("check-list");
+      var a11yEl = document.getElementById("a11y-stops");
+      var feito = document.getElementById("btn-feito");
+      var toastEl = document.getElementById("run-toast");
+
+      function toast(msg) {
+        toastEl.textContent = msg;
+        toastEl.classList.add("is-on");
+        window.clearTimeout(toast.tid);
+        toast.tid = window.setTimeout(function () {
+          toastEl.classList.remove("is-on");
+        }, 1400);
+      }
+
+      function playLeg(fromCode, toCode) {
+        var pts = sliceBetween(route, fromCode, toCode);
+        play.setAttribute("d", toPath(pts));
+        play.classList.remove("is-play");
+        if (reduceMotion() || pts.length < 2) return;
+        void play.getBoundingClientRect();
+        var len = play.getTotalLength();
+        play.style.setProperty("--len", String(len));
+        play.classList.add("is-play");
+      }
+
+      function renderList() {
+        var remain = STOPS.length - index;
+        remainEl.textContent = String(remain);
+        var html = "";
+        var i;
+        for (i = index; i < STOPS.length; i += 1) {
+          var stop = STOPS[i];
+          var current = i === index ? " is-current" : "";
+          html += '<li class="' + current.trim() + '">' +
+            '<button type="button" data-jump="' + i + '">' +
+            '<span class="mark" aria-hidden="true"></span>' +
+            '<span class="loc">' + stop.loc + "</span>" +
+            '<span class="qty">' + stop.qty + "</span>" +
+            "</button></li>";
+        }
+        listEl.innerHTML = html;
+
+        var a11y = "";
+        for (i = 0; i < STOPS.length; i += 1) {
+          var state = i < index ? "feita" : i === index ? "atual" : "restante";
+          a11y += "<li>" + STOPS[i].loc + " · " + STOPS[i].qty + " un. · " + state + "</li>";
+        }
+        a11yEl.innerHTML = a11y;
+      }
+
+      function render(playFrom) {
+        var stop = STOPS[index];
+        var here = indexOnRoute(route, stop.loc);
+        var nextCode = stop.next === "Fim" ? stop.loc : stop.next;
+        var nextPt = indexOnRoute(route, nextCode);
+        var solidEnd = Math.max(here, nextPt);
+        var solidPts = route.slice(0, solidEnd + 1);
+        var dashPts = route.slice(solidEnd);
+        if (solidPts.length === 1) solidPts = [solidPts[0], solidPts[0]];
+        svg.setAttribute("viewBox", fitBox(route, 48));
+        rest.setAttribute("d", toPath(route));
+        solid.setAttribute("d", toPath(solidPts));
+        dash.setAttribute("d", toPath(dashPts.length ? dashPts : solidPts));
+
+        var current = xy(stop.loc);
+        var nextXY = xy(nextCode);
+        var html = "";
+        var i;
+        for (i = 0; i < STOPS.length; i += 1) {
+          if (i === index) continue;
+          var p = xy(STOPS[i].loc);
+          var cls = i < index ? "node done" : "node upcoming";
+          html += '<circle class="' + cls + '" cx="' + p[0] + '" cy="' + p[1] + '" r="' + (i < index ? 7 : 8) + '" />';
+        }
+        if (stop.next !== "Fim") {
+          html += '<circle class="node-ring" cx="' + nextXY[0] + '" cy="' + nextXY[1] + '" r="18" />';
+        }
+        html += '<circle class="node-ring" cx="' + current[0] + '" cy="' + current[1] + '" r="18" />';
+        html += '<circle class="node current is-live" cx="' + current[0] + '" cy="' + current[1] + '" r="12" />';
+        nodes.innerHTML = html;
+
+        qtyEl.textContent = String(stop.qty);
+        locEl.textContent = stop.loc;
+        nextEl.textContent = stop.next === "Fim" ? "última parada" : "depois " + stop.next;
+        progressEl.textContent = index + " de " + TOTAL;
+        feito.disabled = false;
+        renderList();
+        var currentRow = listEl.querySelector(".is-current");
+        if (currentRow && currentRow.scrollIntoView) {
+          currentRow.scrollIntoView({ block: "nearest" });
+        }
+
+        var fromCode = playFrom || STOPS[0].loc;
+        playLeg(fromCode, stop.loc);
+      }
+
+      function go(nextIndex, fromCode) {
+        if (nextIndex < 0 || nextIndex >= STOPS.length) return;
+        var prevLoc = STOPS[index].loc;
+        index = nextIndex;
+        var url = new URL(window.location.href);
+        url.searchParams.set("i", String(index));
+        window.history.replaceState({}, "", url);
+        render(fromCode || prevLoc);
+      }
+
+      feito.addEventListener("click", function () {
+        if (index >= STOPS.length - 1) {
+          toast("Onda concluída");
+          window.setTimeout(function () {
+            window.location.href = "../desk/05.html";
+          }, 700);
+          return;
+        }
+        go(index + 1);
+      });
+
+      listEl.addEventListener("click", function (ev) {
+        var btn = ev.target.closest("[data-jump]");
+        if (!btn) return;
+        var next = parseInt(btn.getAttribute("data-jump"), 10);
+        if (next === index) return;
+        go(next);
+      });
+
+      render(STOPS[0].loc);
+    })();
+  </script>
+</body>
+</html>
