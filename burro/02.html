@@ -787,7 +787,7 @@
 
       function finish() {
         here = STOPS.length;
-        finishedAt = Date.now();
+        if (!finishedAt) finishedAt = Date.now();
         show("done");
         paintZen();
         paintMap();
