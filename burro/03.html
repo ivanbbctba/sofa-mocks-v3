@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Onda 14 · Speek</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,640;9..144,720&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --run: #635bff;
+      --ink: #1c1916;
+      --ink-2: #3f3a34;
+      --mute: #7a746b;
+      --line: #e4ddd2;
+      --paper: #f3efe6;
+      --card: #fffaf2;
+      --map: #e7ebf2;
+      --feito: #14151a;
+      --ok: #1f9d58;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    *,
+    *::before,
+    *::after { box-sizing: border-box; }
+
+    html { -webkit-text-size-adjust: 100%; }
+
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      font-family: Manrope, system-ui, -apple-system, sans-serif;
+      color: var(--ink);
+      background: #cfd4dc;
+    }
+
+    .phone {
+      width: 100%;
+      max-width: 390px;
+      height: 100dvh;
+      max-height: 844px;
+      margin: 0 auto;
+      position: relative;
+      overflow: hidden;
+      background: var(--paper);
+      display: flex;
+      flex-direction: column;
+    }
+
+    @media (min-height: 900px) {
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .phone {
+        height: 844px;
+        border-radius: 28px;
+        box-shadow: 0 22px 56px rgba(20, 21, 26, 0.16);
+      }
+    }
+
+    .map {
+      position: relative;
+      flex: 0 0 54%;
+      background:
+        radial-gradient(120% 80% at 50% 0%, rgba(255, 255, 255, 0.55), transparent 62%),
+        var(--map);
+      transition: flex-basis 0.7s cubic-bezier(0.22, 1, 0.36, 1), filter 0.5s ease, opacity 0.5s ease;
+    }
+
+    .phone[data-fase="run"] .map {
+      flex-basis: 27%;
+      filter: saturate(0.72) contrast(0.92);
+    }
+
+    .phone[data-fase="zen"] .map {
+      flex-basis: 22%;
+      filter: saturate(0.35) contrast(0.86);
+      opacity: 0.72;
+    }
+
+    .route-svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .aisle { fill: #c5ccd8; opacity: 0.38; }
+    .phone[data-fase="run"] .aisle,
+    .phone[data-fase="zen"] .aisle { opacity: 0.22; }
+
+    .path-rest {
+      fill: none;
+      stroke: var(--run);
+      stroke-width: 7;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: 0.1;
+    }
+
+    .path-done {
+      fill: none;
+      stroke: var(--run);
+      stroke-width: 8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: 0.34;
+    }
+
+    .path-dash {
+      fill: none;
+      stroke: var(--run);
+      stroke-width: 8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 7 11;
+      opacity: 0.86;
+      animation: dash-walk 1.05s linear infinite;
+    }
+
+    .node { fill: #b7becb; }
+    .node.done { fill: #9aa2b0; }
+    .node.skip { fill: none; stroke: var(--run); stroke-width: 2; opacity: 0.55; }
+    .node.next {
+      fill: var(--map);
+      stroke: var(--run);
+      stroke-width: 2.4;
+    }
+    .node.here { fill: var(--ok); }
+    .node-halo {
+      fill: none;
+      stroke: var(--ok);
+      stroke-width: 3;
+      opacity: 0.38;
+    }
+
+    .map-veil {
+      position: absolute;
+      inset: auto 0 0;
+      height: 42%;
+      background: linear-gradient(180deg, transparent, var(--paper) 92%);
+      pointer-events: none;
+    }
+
+    .phone[data-fase="run"] .map-veil,
+    .phone[data-fase="zen"] .map-veil { height: 58%; }
+
+    .share-chip {
+      position: absolute;
+      top: calc(14px + var(--safe-top));
+      left: 16px;
+      z-index: 3;
+      margin: 0;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255, 250, 242, 0.86);
+      color: var(--mute);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      backdrop-filter: blur(8px);
+    }
+
+    .btn-share {
+      position: absolute;
+      top: calc(10px + var(--safe-top));
+      right: 12px;
+      z-index: 4;
+      border: 0;
+      height: 40px;
+      padding: 0 12px;
+      border-radius: 999px;
+      background: rgba(255, 250, 242, 0.9);
+      color: var(--ink-2);
+      font: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+    }
+
+    .speek {
+      position: relative;
+      z-index: 5;
+      flex: 1;
+      margin: -28px 14px 0;
+      padding: 22px 22px calc(18px + var(--safe-bottom));
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      border-radius: 28px 28px 22px 22px;
+      background: var(--card);
+      box-shadow:
+        0 -10px 40px rgba(28, 25, 22, 0.06),
+        0 18px 40px rgba(28, 25, 22, 0.08);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .speek-kicker {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .speek-mark {
+      margin: 0;
+      color: var(--run);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .speek-count {
+      margin: 0;
+      color: var(--mute);
+      font-size: 13px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .speek-qty {
+      margin: 10px 0 0;
+      font-family: Fraunces, Georgia, serif;
+      font-size: clamp(84px, 24vw, 118px);
+      font-weight: 720;
+      letter-spacing: -0.07em;
+      line-height: 0.82;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .speek-loc {
+      margin: 10px 0 0;
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+    }
+
+    .speek-sku {
+      margin: 6px 0 0;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--ink-2);
+      overflow-wrap: anywhere;
+    }
+
+    .speek-name,
+    .speek-next,
+    .speek-lead {
+      margin: 4px 0 0;
+      color: var(--mute);
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    .speek-next { margin-top: 10px; }
+
+    .speek-lead {
+      margin-top: 8px;
+      max-width: 18rem;
+    }
+
+    .wave-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 16px 0 0;
+    }
+
+    .wave-meta span {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #f0eadf;
+      color: var(--ink-2);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .wave-meta .swatch {
+      width: 10px;
+      height: 10px;
+      padding: 0;
+      border-radius: 50%;
+      background: var(--run);
+    }
+
+    .actions {
+      margin-top: auto;
+      padding-top: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .btn-iniciar,
+    .btn-again {
+      width: 100%;
+      height: 58px;
+      border: 0;
+      border-radius: 999px;
+      background: var(--feito);
+      color: #fff;
+      font: inherit;
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      cursor: pointer;
+    }
+
+    .btn-miss {
+      border: 0;
+      background: transparent;
+      color: var(--mute);
+      font: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      padding: 12px 4px;
+      cursor: pointer;
+    }
+
+    .btn-feito {
+      width: 84px;
+      height: 84px;
+      border: 0;
+      border-radius: 50%;
+      background: var(--feito);
+      color: #fff;
+      font: inherit;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 12px 24px rgba(20, 21, 26, 0.2);
+    }
+
+    .btn-iniciar:active,
+    .btn-again:active,
+    .btn-feito:active { transform: scale(0.97); }
+
+    .zen-title {
+      margin: 18px 0 0;
+      font-family: Fraunces, Georgia, serif;
+      font-size: 48px;
+      font-weight: 640;
+      letter-spacing: -0.05em;
+      line-height: 0.95;
+    }
+
+    .toast {
+      position: absolute;
+      left: 50%;
+      top: 18%;
+      transform: translateX(-50%);
+      z-index: 8;
+      display: none;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(20, 21, 26, 0.86);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .toast.is-on { display: block; }
+
+    .phone[data-fase="share"] .is-run,
+    .phone[data-fase="share"] .is-zen,
+    .phone[data-fase="run"] .is-share,
+    .phone[data-fase="run"] .is-zen,
+    .phone[data-fase="zen"] .is-share,
+    .phone[data-fase="zen"] .is-run { display: none; }
+
+    @keyframes dash-walk {
+      to { stroke-dashoffset: -18; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .path-dash,
+      .map,
+      .btn-iniciar,
+      .btn-again,
+      .btn-feito {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="phone" id="app" data-fase="share">
+    <div class="map" aria-hidden="true">
+      <p class="share-chip" id="map-chip">Onda compartilhada</p>
+      <button type="button" class="btn-share" id="btn-share">Compartilhar</button>
+      <svg id="route-svg" class="route-svg" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice">
+        <g id="aisle-pills"></g>
+        <path id="path-rest" class="path-rest" d=""></path>
+        <path id="path-done" class="path-done" d=""></path>
+        <path id="path-dash" class="path-dash" d=""></path>
+        <g id="route-nodes"></g>
+      </svg>
+      <div class="map-veil"></div>
+    </div>
+
+    <section class="speek" aria-live="polite">
+      <div class="speek-kicker">
+        <p class="speek-mark">Speek</p>
+        <p class="speek-count" id="speek-count">18 paradas</p>
+      </div>
+
+      <p class="speek-qty is-run" id="speek-qty">10</p>
+      <p class="speek-loc is-run" id="speek-loc">A-01</p>
+      <p class="speek-sku is-run" id="speek-sku">ML-CINZA-M</p>
+      <p class="speek-name is-run" id="speek-name">Moletom cinza M</p>
+      <p class="speek-next is-run" id="speek-next">depois C-02</p>
+
+      <p class="speek-qty is-share" id="share-title">14</p>
+      <p class="speek-loc is-share">Onda da mesa</p>
+      <p class="speek-lead is-share">A mesa compartilhou esta onda. Toque em Iniciar para assumir e ir à primeira parada.</p>
+      <div class="wave-meta is-share">
+        <span>18 paradas</span>
+        <span>8 pedidos</span>
+        <span class="swatch" aria-hidden="true"></span>
+        <span>cor desta corrida</span>
+      </div>
+
+      <p class="zen-title is-zen">Todos pegos</p>
+      <p class="speek-lead is-zen" id="zen-lead">18 de 18. A onda 14 fechou sem voltar atrás.</p>
+
+      <div class="actions is-share">
+        <button type="button" class="btn-iniciar" id="btn-iniciar">Iniciar</button>
+      </div>
+      <div class="actions is-run">
+        <button type="button" class="btn-miss" id="btn-miss">Não achei</button>
+        <button type="button" class="btn-feito" id="btn-feito">Feito</button>
+      </div>
+      <div class="actions is-zen">
+        <button type="button" class="btn-again" id="btn-again">Começar de novo</button>
+      </div>
+    </section>
+
+    <div class="toast" id="toast" role="status"></div>
+  </div>
+
+  <script>
+    (function () {
+      var COLORS = ["#635bff", "#059669", "#ea580c", "#9333ea", "#e11d48", "#0284c8"];
+      var TOTAL = 18;
+      var AISLE_X = { A: 40, B: 88, C: 136, D: 184, E: 232, F: 280, G: 328, H: 372 };
+      var BACK_Y = 78;
+      var FRONT_Y = 620;
+      var STOPS = [
+        { qty: 10, loc: "A-01", sku: "ML-CINZA-M", name: "Moletom cinza M" },
+        { qty: 8, loc: "C-02", sku: "CJ-JEANS-42", name: "Calça jeans 42" },
+        { qty: 10, loc: "E-01", sku: "CT-BRANCA-P", name: "Camiseta branca P" },
+        { qty: 10, loc: "E-10", sku: "VN-PRETA-38", name: "Vestido preto 38" },
+        { qty: 42, loc: "F-02", sku: "MK-MEIA-3", name: "Meia kit 3 pares" },
+        { qty: 5, loc: "H-09", sku: "BL-LINHO-M", name: "Blusa linho M" },
+        { qty: 7, loc: "B-03", sku: "CL-CHINO-40", name: "Calça chino 40" },
+        { qty: 5, loc: "B-09", sku: "JA-NYLON-G", name: "Jaqueta nylon G" },
+        { qty: 9, loc: "G-01", sku: "TN-BASIC-M", name: "Tênis básico 40" },
+        { qty: 7, loc: "G-09", sku: "SH-SLIM-P", name: "Shorts slim P" },
+        { qty: 6, loc: "C-08", sku: "RG-ALGOD-M", name: "Regata algodão M" },
+        { qty: 4, loc: "F-10", sku: "CS-LISA-G", name: "Camisa lisa G" },
+        { qty: 8, loc: "D-04", sku: "SA-MIDI-36", name: "Saia midi 36" },
+        { qty: 3, loc: "D-10", sku: "CR-TRICOT-P", name: "Cardigã tricot P" },
+        { qty: 11, loc: "A-06", sku: "CL-MOLE-M", name: "Calça moletom M" },
+        { qty: 6, loc: "H-02", sku: "BT-COURO-37", name: "Bota couro 37" },
+        { qty: 4, loc: "A-10", sku: "BL-POLO-G", name: "Polo piqué G" },
+        { qty: 2, loc: "H-10", sku: "CN-LA-U", name: "Cinto lã único" }
+      ];
+
+      function binY(n) {
+        return BACK_Y + (n - 1) * ((FRONT_Y - BACK_Y) / 9);
+      }
+
+      function parseLoc(code) {
+        var parts = code.split("-");
+        return { aisle: parts[0], bin: parseInt(parts[1], 10) };
+      }
+
+      function xy(code) {
+        var loc = parseLoc(code);
+        return [AISLE_X[loc.aisle], binY(loc.bin)];
+      }
+
+      function corridorY(fromCode, toCode) {
+        var a = parseLoc(fromCode);
+        var b = parseLoc(toCode);
+        var y1 = binY(a.bin);
+        var y2 = binY(b.bin);
+        var viaBack = Math.abs(y1 - BACK_Y) + Math.abs(y2 - BACK_Y);
+        var viaFront = Math.abs(y1 - FRONT_Y) + Math.abs(y2 - FRONT_Y);
+        return viaBack <= viaFront ? BACK_Y : FRONT_Y;
+      }
+
+      function segment(fromCode, toCode) {
+        var p1 = xy(fromCode);
+        var p2 = xy(toCode);
+        if (fromCode.charAt(0) === toCode.charAt(0)) return [p1, p2];
+        var via = corridorY(fromCode, toCode);
+        var pts = [p1];
+        if (Math.abs(p1[1] - via) > 1) pts.push([p1[0], via]);
+        pts.push([p2[0], via]);
+        if (Math.abs(p2[1] - via) > 1) pts.push(p2);
+        return pts;
+      }
+
+      function samePoint(a, b) {
+        return Math.abs(a[0] - b[0]) < 0.5 && Math.abs(a[1] - b[1]) < 0.5;
+      }
+
+      function buildRoute() {
+        var pts = [];
+        var i;
+        for (i = 0; i < STOPS.length - 1; i += 1) {
+          var seg = segment(STOPS[i].loc, STOPS[i + 1].loc);
+          if (pts.length && samePoint(pts[pts.length - 1], seg[0])) {
+            pts = pts.concat(seg.slice(1));
+          } else {
+            pts = pts.concat(seg);
+          }
+        }
+        return pts;
+      }
+
+      function indexOnRoute(route, code) {
+        var target = xy(code);
+        var best = 0;
+        var bestD = Infinity;
+        var i;
+        for (i = 0; i < route.length; i += 1) {
+          var dx = route[i][0] - target[0];
+          var dy = route[i][1] - target[1];
+          var d = dx * dx + dy * dy;
+          if (d < bestD) {
+            bestD = d;
+            best = i;
+          }
+        }
+        return best;
+      }
+
+      function toPath(points) {
+        if (!points.length) return "";
+        var d = "M " + points[0][0].toFixed(1) + " " + points[0][1].toFixed(1);
+        var i;
+        for (i = 1; i < points.length; i += 1) {
+          d += " L " + points[i][0].toFixed(1) + " " + points[i][1].toFixed(1);
+        }
+        return d;
+      }
+
+      function frameBox(points, extra) {
+        var xs = points.map(function (p) { return p[0]; });
+        var ys = points.map(function (p) { return p[1]; });
+        var minX = Math.min.apply(null, xs) - extra;
+        var maxX = Math.max.apply(null, xs) + extra;
+        var minY = Math.min.apply(null, ys) - extra;
+        var maxY = Math.max.apply(null, ys) + extra;
+        var aspect = 390 / 844;
+        var w = Math.max(210, maxX - minX);
+        var h = Math.max(360, maxY - minY);
+        if (w / h > aspect) h = w / aspect;
+        else w = h * aspect;
+        var cx = (minX + maxX) / 2;
+        var cy = (minY + maxY) / 2 - 18;
+        return [cx - w / 2, cy - h / 2, w, h];
+      }
+
+      function parseBox(value) {
+        return value.split(/[ ,]+/).map(Number);
+      }
+
+      function boxString(box) {
+        return box.map(function (n) { return n.toFixed(1); }).join(" ");
+      }
+
+      var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      var params = new URLSearchParams(window.location.search);
+      var fase = params.get("fase") || "share";
+      if (fase !== "share" && fase !== "run" && fase !== "zen") fase = "share";
+      var index = parseInt(params.get("i") || "0", 10);
+      if (isNaN(index) || index < 0) index = 0;
+      if (index > STOPS.length) index = STOPS.length;
+      var colorIdx = parseInt(params.get("c") || "0", 10);
+      if (isNaN(colorIdx) || colorIdx < 0) colorIdx = 0;
+      colorIdx = colorIdx % COLORS.length;
+      var skipped = {};
+      var route = buildRoute();
+      var zoomTid = 0;
+
+      var app = document.getElementById("app");
+      var svg = document.getElementById("route-svg");
+      var rest = document.getElementById("path-rest");
+      var done = document.getElementById("path-done");
+      var dash = document.getElementById("path-dash");
+      var nodes = document.getElementById("route-nodes");
+      var aislePills = document.getElementById("aisle-pills");
+      var qtyEl = document.getElementById("speek-qty");
+      var locEl = document.getElementById("speek-loc");
+      var skuEl = document.getElementById("speek-sku");
+      var nameEl = document.getElementById("speek-name");
+      var nextEl = document.getElementById("speek-next");
+      var countEl = document.getElementById("speek-count");
+      var chipEl = document.getElementById("map-chip");
+      var zenLead = document.getElementById("zen-lead");
+      var toastEl = document.getElementById("toast");
+
+      aislePills.innerHTML = Object.keys(AISLE_X).map(function (key) {
+        var x = AISLE_X[key];
+        return '<rect class="aisle" x="' + (x - 11).toFixed(1) + '" y="0" width="22" height="844" rx="11"></rect>';
+      }).join("");
+      rest.setAttribute("d", toPath(route));
+
+      function toast(msg) {
+        toastEl.textContent = msg;
+        toastEl.classList.add("is-on");
+        window.clearTimeout(toast.tid);
+        toast.tid = window.setTimeout(function () {
+          toastEl.classList.remove("is-on");
+        }, 1300);
+      }
+
+      function shareUrl() {
+        var url = new URL(window.location.href);
+        url.search = "";
+        url.searchParams.set("c", String(colorIdx));
+        return url.toString();
+      }
+
+      function persist() {
+        var url = new URL(window.location.href);
+        url.searchParams.set("fase", fase);
+        url.searchParams.set("i", String(index));
+        url.searchParams.set("c", String(colorIdx));
+        window.history.replaceState({}, "", url);
+      }
+
+      function applyColor() {
+        document.documentElement.style.setProperty("--run", COLORS[colorIdx]);
+      }
+
+      function targetBox() {
+        if (fase === "share") return [0, 0, 390, 844];
+        var at = Math.min(index, STOPS.length - 1);
+        var here = indexOnRoute(route, STOPS[at].loc);
+        var nextStop = STOPS[at + 1];
+        var nextPt = nextStop ? indexOnRoute(route, nextStop.loc) : here;
+        var focusStart = Math.max(0, here - (fase === "zen" ? 18 : 4));
+        var focusEnd = Math.min(route.length, nextPt + (fase === "zen" ? 18 : 6));
+        var framePts = route.slice(focusStart, focusEnd);
+        if (!framePts.length) framePts = [xy(STOPS[at].loc)];
+        return frameBox(framePts, fase === "zen" ? 110 : 72);
+      }
+
+      function zoomTo(box) {
+        var next = boxString(box);
+        if (reduce) {
+          svg.setAttribute("viewBox", next);
+          return;
+        }
+        var from = parseBox(svg.getAttribute("viewBox") || "0 0 390 844");
+        var start = performance.now();
+        window.cancelAnimationFrame(zoomTid);
+        function tick(now) {
+          var t = Math.min(1, (now - start) / 720);
+          var e = 1 - Math.pow(1 - t, 3);
+          var cur = from.map(function (n, i) { return n + (box[i] - n) * e; });
+          svg.setAttribute("viewBox", boxString(cur));
+          if (t < 1) zoomTid = window.requestAnimationFrame(tick);
+        }
+        zoomTid = window.requestAnimationFrame(tick);
+      }
+
+      function paintMap() {
+        var at = Math.min(index, STOPS.length - 1);
+        var here = indexOnRoute(route, STOPS[at].loc);
+        var nextStop = STOPS[at + 1];
+        var nextPt = nextStop ? indexOnRoute(route, nextStop.loc) : here;
+        var solidEnd = fase === "share" ? 0 : Math.max(here, nextPt);
+        if (fase === "zen") solidEnd = route.length - 1;
+        var donePts = route.slice(0, solidEnd + 1);
+        var dashPts = fase === "zen" ? [] : route.slice(fase === "share" ? 0 : solidEnd);
+        done.setAttribute("d", toPath(donePts.length > 1 ? donePts : [route[0], route[0]]));
+        dash.setAttribute("d", toPath(dashPts.length ? dashPts : donePts));
+
+        var html = "";
+        var i;
+        for (i = 0; i < STOPS.length; i += 1) {
+          var p = xy(STOPS[i].loc);
+          if (fase === "run" && i === index) {
+            html += '<circle class="node-halo" cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="13"></circle>';
+            html += '<circle class="node here" cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="7.5"></circle>';
+            continue;
+          }
+          if (fase === "run" && i === index + 1) {
+            html += '<circle class="node next" cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="6"></circle>';
+            continue;
+          }
+          var cls = "node";
+          if (skipped[i]) cls += " skip";
+          else if (i < index || fase === "zen") cls += " done";
+          html += '<circle class="' + cls + '" cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="4.5"></circle>';
+        }
+        nodes.innerHTML = html;
+        zoomTo(targetBox());
+      }
+
+      function setFase(next) {
+        switch (next) {
+          case "share":
+          case "run":
+          case "zen":
+            fase = next;
+            break;
+          default:
+            fase = "share";
+        }
+        app.setAttribute("data-fase", fase);
+      }
+
+      function paintCopy() {
+        if (fase === "share") {
+          chipEl.textContent = "Onda compartilhada";
+          countEl.textContent = "18 paradas";
+          return;
+        }
+        if (fase === "zen") {
+          var skippedN = Object.keys(skipped).length;
+          chipEl.textContent = "Onda 14";
+          countEl.textContent = TOTAL + " de " + TOTAL;
+          zenLead.textContent = skippedN
+            ? TOTAL + " de " + TOTAL + ". " + skippedN + (skippedN === 1 ? " pulada." : " puladas.")
+            : TOTAL + " de " + TOTAL + ". A onda 14 fechou sem voltar atrás.";
+          return;
+        }
+        var stop = STOPS[index];
+        var next = STOPS[index + 1];
+        qtyEl.textContent = String(stop.qty);
+        locEl.textContent = stop.loc;
+        skuEl.textContent = stop.sku;
+        nameEl.textContent = stop.name;
+        nextEl.textContent = next ? "depois " + next.loc : "última parada";
+        countEl.textContent = index + " de " + TOTAL;
+        chipEl.textContent = "Onda 14";
+      }
+
+      function render() {
+        applyColor();
+        setFase(fase);
+        paintCopy();
+        paintMap();
+        persist();
+      }
+
+      function finish() {
+        index = STOPS.length;
+        setFase("zen");
+        render();
+      }
+
+      function advance() {
+        if (index >= STOPS.length - 1) {
+          finish();
+          return;
+        }
+        index += 1;
+        render();
+      }
+
+      document.getElementById("btn-iniciar").addEventListener("click", function () {
+        index = 0;
+        skipped = {};
+        setFase("run");
+        toast("Onda sua");
+        render();
+      });
+
+      document.getElementById("btn-feito").addEventListener("click", function () {
+        advance();
+      });
+
+      document.getElementById("btn-miss").addEventListener("click", function () {
+        skipped[index] = true;
+        toast("Seguindo");
+        advance();
+      });
+
+      document.getElementById("btn-again").addEventListener("click", function () {
+        colorIdx = (colorIdx + 1) % COLORS.length;
+        index = 0;
+        skipped = {};
+        setFase("share");
+        render();
+      });
+
+      document.getElementById("btn-share").addEventListener("click", function () {
+        var payload = {
+          title: "Onda 14",
+          text: "18 paradas · 8 pedidos",
+          url: shareUrl()
+        };
+        if (navigator.share) {
+          navigator.share(payload).catch(function () {});
+          return;
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(payload.url).then(function () {
+            toast("Link copiado");
+          });
+          return;
+        }
+        toast(payload.url);
+      });
+
+      if (fase === "run" && index >= STOPS.length) setFase("zen");
+      render();
+    })();
+  </script>
+</body>
+</html>
