@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <meta name="theme-color" content="#f7f6f2"/>
+  <title>Onda 14 · Pisoly</title>
+  <style>
+    :root {
+      --paper: #f7f6f2;
+      --surface: #fffcf8;
+      --ink: #1a1b1a;
+      --ink-2: #3c3e3c;
+      --muted: #6d706c;
+      --mute: #6d706c;
+      --faint: #9a9c98;
+      --line: #e3e1da;
+      --accent: #4f8a78;
+      --accent-soft: #dce8e3;
+      --go: #0f766e;
+      --warn: #b45309;
+      --floor: #efe8dc;
+      --aisle: #e3e1da;
+      --ok: #0f766e;
+      --feito: #1a1b1a;
+      --white: #fffcf8;
+      --run: #4f8a78;
+      --run1: #4f8a78;
+      --run2: #0f766e;
+      --run3: #0284c7;
+      --run4: #c2410c;
+      --run5: #be123c;
+      --run6: #4d7c0f;
+      --shadow: 0 12px 28px rgba(26, 27, 26, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: #e3e1da;
+      color: var(--ink);
+      font: 17px/1.25 "SF Pro Text", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      min-height: 100dvh;
+      display: grid;
+      place-items: center;
+    }
+
+    .phone {
+      position: relative;
+      width: min(390px, 100vw);
+      height: min(844px, 100dvh);
+      overflow: hidden;
+      background: var(--floor);
+    }
+
+    .map {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+    }
+
+    .map svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .floor { fill: #efe8dc; }
+
+    .aisle {
+      fill: #e3e1da;
+    }
+
+    .path-rest {
+      fill: none;
+      stroke: var(--run);
+      stroke-width: 0.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: 0.16;
+    }
+
+    .path-done {
+      fill: none;
+      stroke: var(--run);
+      stroke-width: 0.4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: 0.72;
+    }
+
+    .path-play {
+      fill: none;
+      stroke: var(--run);
+      stroke-width: 0.52;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .path-play.is-draw {
+      stroke-dasharray: var(--len);
+      stroke-dashoffset: var(--len);
+      animation: draw-leg 0.9s cubic-bezier(0.22, 0.7, 0.2, 1) forwards;
+    }
+
+    .path-ahead,
+    .path-wave {
+      fill: none;
+      stroke-linecap: butt;
+      stroke-linejoin: round;
+      opacity: 0.9;
+    }
+
+    .path-ahead {
+      stroke: var(--run);
+      stroke-width: 0.34;
+    }
+
+    .path-wave {
+      stroke-width: 0.28;
+    }
+
+    .node-done { fill: #9a9c98; }
+    .node-future { fill: #e3e1da; opacity: 0.55; }
+    .node-next {
+      fill: #fff;
+      stroke: var(--run);
+      stroke-width: 0.1;
+    }
+    .node-here { fill: var(--ok); }
+    .node-halo {
+      fill: none;
+      stroke: var(--ok);
+      stroke-width: 0.08;
+      opacity: 0.42;
+    }
+    .node-here.is-live {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: here-pulse 2.3s ease-in-out infinite;
+    }
+
+    .chrome {
+      position: absolute;
+      inset: 0;
+      z-index: 4;
+      pointer-events: none;
+    }
+
+    .chrome button { pointer-events: auto; }
+
+    .count {
+      position: absolute;
+      top: calc(12px + env(safe-area-inset-top));
+      right: 16px;
+      margin: 0;
+      color: var(--mute);
+      font-size: 13px;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .hud {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 5;
+      padding: 0 20px calc(18px + env(safe-area-inset-bottom));
+      background: linear-gradient(
+        180deg,
+        rgba(247, 246, 242, 0) 0%,
+        rgba(247, 246, 242, 0.72) 28%,
+        rgba(247, 246, 242, 0.96) 62%,
+        #f7f6f2 100%
+      );
+      pointer-events: none;
+    }
+
+    .hud-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      gap: 14px;
+      width: min(28rem, 100%);
+      margin: 0 auto;
+      pointer-events: auto;
+    }
+
+    .hud.is-start .hud-row {
+      display: flex;
+      justify-content: center;
+    }
+
+    .qty {
+      margin: 0;
+      font-size: 76px;
+      font-weight: 650;
+      letter-spacing: -0.07em;
+      line-height: 0.84;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .slot {
+      margin: 8px 0 0;
+      font-size: 20px;
+      font-weight: 620;
+      letter-spacing: -0.03em;
+    }
+
+    .depois {
+      margin: 3px 0 0;
+      color: var(--mute);
+      font-size: 14px;
+    }
+
+    .actions {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding-bottom: 4px;
+    }
+
+    .feito,
+    .go {
+      width: 80px;
+      height: 80px;
+      border: 0;
+      border-radius: 50%;
+      background: var(--feito);
+      color: #fff;
+      font: 650 15px/1 "SF Pro Text", system-ui, sans-serif;
+      letter-spacing: -0.03em;
+      cursor: pointer;
+    }
+
+    .go {
+      width: 96px;
+      height: 96px;
+      background: var(--run);
+      font-size: 16px;
+    }
+
+    .feito:active,
+    .go:active { transform: scale(0.96); }
+
+    .skip {
+      border: 0;
+      background: transparent;
+      color: var(--mute);
+      font: 560 13px/1 "SF Pro Text", system-ui, sans-serif;
+      cursor: pointer;
+      padding: 6px 4px;
+    }
+
+    .speak {
+      display: block;
+      width: min(28rem, 100%);
+      margin: 0 auto 12px;
+      border: 0;
+      border-radius: 16px;
+      background: var(--white);
+      box-shadow: var(--shadow);
+      color: inherit;
+      font: inherit;
+      text-align: left;
+      padding: 12px 14px;
+      cursor: pointer;
+      pointer-events: auto;
+    }
+
+    .speak-kicker {
+      margin: 0;
+      color: var(--mute);
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .speak-line {
+      margin: 4px 0 0;
+      font-size: 15px;
+      font-weight: 620;
+      letter-spacing: -0.02em;
+    }
+
+    .speak-more {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #e3e1da;
+    }
+
+    .speak-more p {
+      margin: 0 0 4px;
+      color: var(--ink-2);
+      font-size: 14px;
+    }
+
+    .empty {
+      margin: 0 auto 16px;
+      color: var(--ink);
+      font-size: 22px;
+      font-weight: 650;
+      letter-spacing: -0.03em;
+      text-align: center;
+    }
+
+    .zen {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      top: 16%;
+      z-index: 6;
+      border-radius: 22px;
+      background: var(--white);
+      box-shadow: var(--shadow);
+      padding: 22px 18px 18px;
+      text-align: center;
+    }
+
+    .zen h1 {
+      margin: 0;
+      font-size: 26px;
+      letter-spacing: -0.04em;
+    }
+
+    .zen-kicker {
+      margin: 0 0 6px;
+      color: var(--mute);
+      font-size: 12px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 16px 0 8px;
+      text-align: left;
+    }
+
+    .stat {
+      background: #efe8dc;
+      border-radius: 14px;
+      padding: 10px 12px;
+    }
+
+    .stat b {
+      display: block;
+      font-size: 20px;
+      letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .stat span {
+      color: var(--mute);
+      font-size: 12px;
+    }
+
+    .again {
+      width: 100%;
+      margin-top: 10px;
+      border: 0;
+      border-radius: 999px;
+      background: var(--feito);
+      color: #fff;
+      font: 650 16px/1 "SF Pro Text", system-ui, sans-serif;
+      padding: 15px;
+      cursor: pointer;
+    }
+
+    .hidden { display: none !important; }
+
+    @keyframes draw-leg {
+      to { stroke-dashoffset: 0; }
+    }
+
+    @keyframes here-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.55; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .path-play.is-draw { animation: none; stroke-dashoffset: 0; }
+      .node-here.is-live { animation: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="phone" id="app">
+    <div class="map" id="map" role="img" aria-label="Mapa do galpão"></div>
+    <div class="chrome">
+      <p class="count" id="count"></p>
+      <section class="zen hidden" id="zen">
+        <p class="zen-kicker">Corrida</p>
+        <h1>Feita</h1>
+        <div class="stats">
+          <p class="stat"><b id="zen-time">0:00</b><span>tempo</span></p>
+          <p class="stat"><b id="zen-qty">0 un.</b><span>quantidade</span></p>
+          <p class="stat"><b id="zen-kg">0 kg</b><span>peso</span></p>
+          <p class="stat"><b id="zen-m3">0 m³</b><span>volume</span></p>
+        </div>
+        <p class="depois" id="zen-latency">aceite 0,0 s</p>
+        <button type="button" class="again hidden" id="again">Começar de novo</button>
+      </section>
+    </div>
+    <div class="hud" id="hud">
+      <button type="button" class="speak hidden" id="speak" aria-expanded="false">
+        <p class="speak-kicker">Falar</p>
+        <p class="speak-line" id="speak-line"></p>
+        <div class="speak-more hidden" id="speak-more"></div>
+      </button>
+      <p class="empty hidden" id="empty">Todos pegos</p>
+      <div class="hud-row">
+        <div class="hud-copy hidden" id="hud-copy">
+          <p class="qty" id="qty">10</p>
+          <p class="slot" id="slot">A-01</p>
+          <p class="depois" id="depois">depois C-02</p>
+        </div>
+        <div class="actions">
+          <button type="button" class="go" id="go">Iniciar</button>
+          <button type="button" class="feito hidden" id="feito">Feito</button>
+          <button type="button" class="skip hidden" id="skip">Não achei</button>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script>
+    (function () {
+      const COLORS = ["#4f8a78", "#0f766e", "#0284c7", "#c2410c", "#be123c", "#4d7c0f"];
+      const AISLE_X = { A: 0.78, B: 1.92, C: 3.06, D: 4.2, E: 5.34, F: 6.48, G: 7.62, H: 8.76 };
+      const Y0 = 1.55;
+      const Y1 = 15.85;
+      const TOP = 0.85;
+      const BOT = 16.65;
+      const NS = "http://www.w3.org/2000/svg";
+      const STORE = "pisoly-onda14-claimed";
+      const FULL_VB = [-0.15, -0.2, 9.85, 17.9];
+
+      const RUNS = [
+        {
+          stops: [
+            { code: "A-01", qty: 10, sku: "TOALHA-220", kg: 4.8, m3: 0.09, speak: "Dez toalhas 220 no A-01." },
+            { code: "C-02", qty: 8, sku: "JOGO-LENCOL", kg: 6.1, m3: 0.12, speak: "Oito jogos de lençol no C-02." },
+            { code: "E-01", qty: 10, sku: "FRONHA-PAR", kg: 2.4, m3: 0.05, speak: "Dez pares de fronha no E-01." },
+            { code: "E-10", qty: 6, sku: "COBERTOR-CAS", kg: 7.2, m3: 0.16, speak: "Seis cobertores casal no E-10." }
+          ]
+        },
+        {
+          stops: [
+            { code: "F-02", qty: 42, sku: "KIT-HIGIENE", kg: 9.4, m3: 0.11, speak: "Quarenta e dois kits higiene no F-02." },
+            { code: "H-09", qty: 3, sku: "SABONETE", kg: 0.9, m3: 0.02, speak: "Três sabonetes no H-09." },
+            { code: "H-03", qty: 12, sku: "SHAMPOO-400", kg: 5.1, m3: 0.07, speak: "Doze shampoos 400 no H-03." },
+            { code: "G-01", qty: 7, sku: "CREME-HID", kg: 3.3, m3: 0.04, speak: "Sete cremes hidratantes no G-01." }
+          ]
+        },
+        {
+          stops: [
+            { code: "B-09", qty: 5, sku: "ESC-DENTES", kg: 0.6, m3: 0.01, speak: "Cinco escovas de dente no B-09." },
+            { code: "C-08", qty: 6, sku: "PILLOW-TOP", kg: 8.8, m3: 0.22, speak: "Seis pillow tops no C-08." },
+            { code: "F-10", qty: 9, sku: "TAPETE-BAN", kg: 6.4, m3: 0.14, speak: "Nove tapetes de banho no F-10." },
+            { code: "D-04", qty: 2, sku: "CORTINA-180", kg: 3.9, m3: 0.1, speak: "Duas cortinas 180 no D-04." }
+          ]
+        },
+        {
+          stops: [
+            { code: "D-09", qty: 15, sku: "TOALHA-MAO", kg: 3.1, m3: 0.06, speak: "Quinze toalhas de mão no D-09." },
+            { code: "A-08", qty: 1, sku: "ROUPAO-M", kg: 0.8, m3: 0.03, speak: "Um roupão M no A-08." },
+            { code: "B-02", qty: 11, sku: "SACO-LIXO", kg: 2.2, m3: 0.05, speak: "Onze sacos de lixo no B-02." },
+            { code: "H-01", qty: 8, sku: "PAPEL-HIG", kg: 4.0, m3: 0.08, speak: "Oito papéis higiênicos no H-01." }
+          ]
+        },
+        {
+          stops: [
+            { code: "G-05", qty: 3, sku: "AMACIANTE", kg: 3.6, m3: 0.04, speak: "Três amaciantes no G-05." },
+            { code: "G-08", qty: 4, sku: "ALGODAO", kg: 0.5, m3: 0.02, speak: "Quatro pacotes de algodão no G-08." },
+            { code: "E-05", qty: 14, sku: "LENCOL-SOLT", kg: 5.7, m3: 0.13, speak: "Quatorze lençóis solteiro no E-05." },
+            { code: "C-04", qty: 9, sku: "CAPA-TRV", kg: 2.8, m3: 0.07, speak: "Nove capas de travesseiro no C-04." }
+          ]
+        },
+        {
+          stops: [
+            { code: "A-05", qty: 16, sku: "TOALHA-PISO", kg: 6.8, m3: 0.15, speak: "Dezesseis toalhas de piso no A-05." },
+            { code: "B-06", qty: 4, sku: "KIT-BANHO", kg: 4.5, m3: 0.09, speak: "Quatro kits banho no B-06." },
+            { code: "D-02", qty: 7, sku: "EDREDOM", kg: 8.1, m3: 0.19, speak: "Sete edredons no D-02." },
+            { code: "F-06", qty: 5, sku: "PORTA-TRV", kg: 1.7, m3: 0.04, speak: "Cinco porta-travesseiros no F-06." }
+          ]
+        }
+      ];
+
+      function slotY(n) {
+        return Y0 + ((n - 1) * (Y1 - Y0)) / 9;
+      }
+
+      function parseCode(code) {
+        return { aisle: code[0], n: Number(code.slice(2)) };
+      }
+
+      function cleanLoc(code) {
+        return String(code || "").replace(/\$\{|\}\$/g, "").trim();
+      }
+
+      function xy(code) {
+        const parsed = parseCode(cleanLoc(code));
+        return { x: AISLE_X[parsed.aisle], y: slotY(parsed.n), aisle: parsed.aisle, n: parsed.n };
+      }
+
+      function hop(a, b) {
+        if (a.aisle === b.aisle) return [a, { x: a.x, y: b.y }];
+        const mid = (Y0 + Y1) / 2;
+        const sameTop = a.y <= mid && b.y <= mid;
+        const sameBot = a.y >= mid && b.y >= mid;
+        let end;
+        if (sameTop) end = Math.min(a.y, b.y) - 0.7;
+        else if (sameBot) end = Math.max(a.y, b.y) + 0.7;
+        else {
+          const viaTop = Math.abs(a.y - TOP) + Math.abs(b.y - TOP);
+          const viaBot = Math.abs(a.y - BOT) + Math.abs(b.y - BOT);
+          end = viaTop <= viaBot ? TOP : BOT;
+        }
+        return [a, { x: a.x, y: end }, { x: b.x, y: end }, { x: b.x, y: b.y }];
+      }
+
+      function samePoint(p, q) {
+        return Math.abs(p.x - q.x) < 0.001 && Math.abs(p.y - q.y) < 0.001;
+      }
+
+      function joinHops(hops) {
+        const out = [];
+        hops.forEach(function (seg) {
+          seg.forEach(function (p, i) {
+            if (i === 0 && out.length && samePoint(out[out.length - 1], p)) return;
+            out.push(p);
+          });
+        });
+        return out;
+      }
+
+      function geometryFor(stops) {
+        const points = stops.map(function (stop) { return xy(stop.code); });
+        const hops = points.slice(1).map(function (pt, i) { return hop(points[i], pt); });
+        const fullPath = hops.length ? joinHops(hops) : points.slice();
+        const hopSpans = [];
+        let cursor = 0;
+        hops.forEach(function (seg) {
+          const extra = cursor === 0 ? seg.length : seg.length - 1;
+          const start = cursor;
+          cursor += extra;
+          hopSpans.push({ from: start, to: cursor });
+        });
+        return { points: points, hops: hops, fullPath: fullPath, hopSpans: hopSpans };
+      }
+
+      const tours = RUNS.map(function (run, i) {
+        return { color: COLORS[i], stops: run.stops, geo: geometryFor(run.stops) };
+      });
+
+      function slicePath(geo, fromIdx, toIdx) {
+        if (!geo.hopSpans.length || toIdx <= fromIdx) return [];
+        const last = geo.hopSpans.length - 1;
+        if (fromIdx > last) return [];
+        const startHop = Math.max(0, Math.min(fromIdx, last));
+        const endHop = Math.max(0, Math.min(toIdx - 1, last));
+        if (endHop < startHop) return [];
+        return geo.fullPath.slice(geo.hopSpans[startHop].from, geo.hopSpans[endHop].to + 1);
+      }
+
+      function pts(list) {
+        return list.map(function (p) { return p.x + " " + p.y; }).join(" ");
+      }
+
+      function el(name, attrs) {
+        const node = document.createElementNS(NS, name);
+        Object.keys(attrs || {}).forEach(function (key) {
+          node.setAttribute(key, String(attrs[key]));
+        });
+        return node;
+      }
+
+      function loadClaimed() {
+        try {
+          const raw = sessionStorage.getItem(STORE);
+          const parsed = raw ? JSON.parse(raw) : [];
+          if (!Array.isArray(parsed)) return [];
+          return parsed.filter(function (n) {
+            return Number.isInteger(n) && n >= 0 && n < tours.length;
+          });
+        } catch (err) {
+          return [];
+        }
+      }
+
+      function saveClaimed() {
+        sessionStorage.setItem(STORE, JSON.stringify(claimed));
+      }
+
+      const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const map = document.getElementById("map");
+      const countEl = document.getElementById("count");
+      const hudCopy = document.getElementById("hud-copy");
+      const qtyEl = document.getElementById("qty");
+      const slotEl = document.getElementById("slot");
+      const depoisEl = document.getElementById("depois");
+      const speakEl = document.getElementById("speak");
+      const speakLine = document.getElementById("speak-line");
+      const speakMore = document.getElementById("speak-more");
+      const emptyEl = document.getElementById("empty");
+      const goEl = document.getElementById("go");
+      const feitoEl = document.getElementById("feito");
+      const skipEl = document.getElementById("skip");
+      const zenEl = document.getElementById("zen");
+      const againEl = document.getElementById("again");
+
+      let mode = "overview";
+      let claimed = loadClaimed();
+      let runIndex = -1;
+      let here = 0;
+      let missed = {};
+      let openedAt = Date.now();
+      let acceptMs = 0;
+      let pickStartedAt = 0;
+      let speakOpen = false;
+      let viewBox = FULL_VB.slice();
+      let vbTimer = 0;
+
+      function freeIndexes() {
+        return tours.map(function (_, i) { return i; }).filter(function (i) {
+          return claimed.indexOf(i) === -1;
+        });
+      }
+
+      function currentTour() {
+        return runIndex >= 0 ? tours[runIndex] : null;
+      }
+
+      function setRun(color) {
+        document.documentElement.style.setProperty("--run", color);
+      }
+
+      function hide(node, on) {
+        node.classList.toggle("hidden", on);
+      }
+
+      function fmtTime(ms) {
+        const total = Math.max(0, Math.round(ms / 1000));
+        return Math.floor(total / 60) + ":" + String(total % 60).padStart(2, "0");
+      }
+
+      function fmtLat(ms) {
+        return (Math.max(0, ms) / 1000).toFixed(1).replace(".", ",") + " s";
+      }
+
+      function fmtNum(n, digits) {
+        return n.toFixed(digits).replace(".", ",");
+      }
+
+      const marching = [];
+      let marchNodes = [];
+
+      function queueMarch(node, dash, gap) {
+        if (node) marching.push({ node: node, dash: dash, gap: gap });
+      }
+
+      function startMarch() {
+        marchNodes.forEach(function (node) {
+          if (node._march) cancelAnimationFrame(node._march);
+        });
+        marchNodes = [];
+        marching.splice(0).forEach(function (item) {
+          const node = item.node;
+          const period = item.dash + item.gap;
+          node.setAttribute("stroke-dasharray", item.dash + " " + item.gap);
+          node.setAttribute("stroke-dashoffset", "0");
+          node.style.strokeLinecap = "butt";
+          if (node._march) cancelAnimationFrame(node._march);
+          let offset = 0;
+          function tick() {
+            offset -= period / 7;
+            if (offset <= -period) offset += period;
+            node.setAttribute("stroke-dashoffset", String(offset));
+            node._march = requestAnimationFrame(tick);
+          }
+          node._march = requestAnimationFrame(tick);
+          marchNodes.push(node);
+        });
+      }
+
+      function activeViewBox() {
+        const tour = currentTour();
+        const geo = tour.geo;
+        const a = geo.points[here];
+        const b = geo.points[Math.min(here + 1, geo.points.length - 1)];
+        const xs = [a.x, b.x];
+        const ys = [a.y, b.y];
+        const minX = Math.min.apply(null, xs) - 1.15;
+        const maxX = Math.max.apply(null, xs) + 1.15;
+        const minY = Math.min.apply(null, ys) - 1.35;
+        const maxY = Math.max.apply(null, ys) + 1.55;
+        return [minX, minY, Math.max(3.35, maxX - minX), Math.max(4.2, maxY - minY)];
+      }
+
+      function applyViewBox(svg, dest, animate) {
+        if (!animate || reduce) {
+          viewBox = dest.slice();
+          svg.setAttribute("viewBox", viewBox.join(" "));
+          return;
+        }
+        const from = viewBox.slice();
+        const t0 = performance.now();
+        if (vbTimer) cancelAnimationFrame(vbTimer);
+        function frame(now) {
+          const u = Math.min(1, (now - t0) / 680);
+          const e = 1 - Math.pow(1 - u, 3);
+          viewBox = from.map(function (v, i) { return v + (dest[i] - v) * e; });
+          svg.setAttribute("viewBox", viewBox.join(" "));
+          if (u < 1) vbTimer = requestAnimationFrame(frame);
+        }
+        vbTimer = requestAnimationFrame(frame);
+      }
+
+      function paintMap(fromIdx, toIdx, fly) {
+        marching.length = 0;
+        map.replaceChildren();
+        const svg = el("svg", {
+          viewBox: viewBox.join(" "),
+          preserveAspectRatio: "xMidYMid slice",
+          "aria-hidden": "true"
+        });
+        svg.appendChild(el("rect", { class: "floor", x: -4, y: -4, width: 18, height: 26 }));
+        Object.keys(AISLE_X).forEach(function (letter) {
+          const x = AISLE_X[letter];
+          svg.appendChild(el("rect", {
+            class: "aisle",
+            x: x - 0.24,
+            y: 0.45,
+            width: 0.48,
+            height: 16.5,
+            rx: 0.24
+          }));
+        });
+
+        if (mode === "overview" || mode === "empty") {
+          const nextFree = freeIndexes()[0];
+          setRun(COLORS[nextFree] || COLORS[0]);
+          tours.forEach(function (tour, i) {
+            if (tour.geo.fullPath.length < 2) return;
+            const taken = claimed.indexOf(i) !== -1;
+            const line = el("polyline", {
+              class: taken ? "path-rest" : "path-wave",
+              points: pts(tour.geo.fullPath),
+              stroke: tour.color,
+              opacity: taken ? "0.28" : "0.9"
+            });
+            svg.appendChild(line);
+            if (!taken) queueMarch(line, 0.72, 0.58);
+            tour.geo.points.forEach(function (p) {
+              svg.appendChild(el("circle", {
+                cx: p.x,
+                cy: p.y,
+                r: 0.13,
+                fill: tour.color,
+                opacity: taken ? "0.35" : "1"
+              }));
+            });
+          });
+        }
+
+        if (mode === "pick") {
+          const tour = currentTour();
+          const geo = tour.geo;
+          setRun(tour.color);
+          const doneSeg = slicePath(geo, 0, toIdx);
+          if (doneSeg.length > 1) {
+            svg.appendChild(el("polyline", { class: "path-done", points: pts(doneSeg) }));
+          }
+          const aheadSeg = slicePath(geo, toIdx, geo.points.length);
+          let aheadNode = null;
+          if (aheadSeg.length > 1) {
+            aheadNode = el("polyline", { class: "path-ahead", points: pts(aheadSeg) });
+            svg.appendChild(aheadNode);
+          }
+          let playNode = null;
+          if (toIdx > 0) {
+            const playSeg = slicePath(geo, fromIdx, toIdx);
+            if (playSeg.length > 1) {
+              playNode = el("polyline", { class: "path-play", points: pts(playSeg) });
+              svg.appendChild(playNode);
+            }
+          }
+          geo.points.forEach(function (p, i) {
+            if (i === toIdx) {
+              svg.appendChild(el("circle", { class: "node-halo", cx: p.x, cy: p.y, r: 0.4 }));
+              const hereNode = el("circle", { class: "node-here", cx: p.x, cy: p.y, r: 0.21 });
+              svg.appendChild(hereNode);
+              if (!reduce) hereNode.classList.add("is-live");
+              return;
+            }
+            if (i === toIdx + 1) {
+              svg.appendChild(el("circle", { class: "node-next", cx: p.x, cy: p.y, r: 0.17 }));
+              return;
+            }
+            svg.appendChild(el("circle", {
+              class: i < toIdx ? "node-done" : "node-future",
+              cx: p.x,
+              cy: p.y,
+              r: i < toIdx ? 0.1 : 0.08
+            }));
+          });
+          map.appendChild(svg);
+          applyViewBox(svg, activeViewBox(), fly);
+          if (aheadNode) queueMarch(aheadNode, 0.36, 0.3);
+          startMarch();
+          if (playNode && !reduce) {
+            try {
+              const len = playNode.getTotalLength();
+              playNode.style.setProperty("--len", String(len));
+              playNode.classList.add("is-draw");
+            } catch (err) {
+              playNode.classList.remove("is-draw");
+            }
+          }
+          return;
+        }
+
+        map.appendChild(svg);
+        applyViewBox(svg, FULL_VB, fly);
+        startMarch();
+      }
+
+      function paintSpeak() {
+        const tour = currentTour();
+        if (!tour) return;
+        const stop = tour.stops[here];
+        const loc = cleanLoc(stop.code);
+        speakLine.textContent = stop.qty + " · " + stop.sku + " · " + loc;
+        speakMore.innerHTML =
+          "<p><strong>" + stop.sku + "</strong></p>" +
+          "<p>" + stop.qty + " un. · " + loc + "</p>" +
+          "<p>" + stop.speak + "</p>";
+        hide(speakMore, !speakOpen);
+        speakEl.setAttribute("aria-expanded", speakOpen ? "true" : "false");
+      }
+
+      function paintChrome() {
+        const free = freeIndexes();
+        hide(zenEl, mode !== "zen");
+        hide(hudCopy, mode !== "pick");
+        hide(speakEl, mode !== "pick");
+        hide(emptyEl, mode !== "empty");
+        hide(goEl, mode !== "overview");
+        hide(feitoEl, mode !== "pick");
+        hide(skipEl, mode !== "pick");
+        hide(againEl, !(mode === "zen" && free.length > 0));
+        document.getElementById("hud").classList.toggle("is-start", mode === "overview" || mode === "empty");
+
+        if (mode === "overview") {
+          setRun(COLORS[free[0]] || COLORS[0]);
+          countEl.textContent = "";
+        }
+
+        if (mode === "empty") {
+          countEl.textContent = "";
+        }
+
+        if (mode === "pick") {
+          const tour = currentTour();
+          const stop = tour.stops[here];
+          const next = tour.stops[here + 1];
+          const loc = cleanLoc(stop.code);
+          qtyEl.textContent = String(stop.qty);
+          slotEl.textContent = loc;
+          depoisEl.textContent = next ? "depois " + cleanLoc(next.code) : "última parada";
+          countEl.textContent = here + " de " + tour.stops.length;
+          paintSpeak();
+        }
+
+        if (mode === "zen") {
+          const tour = currentTour();
+          countEl.textContent = tour.stops.length + " de " + tour.stops.length;
+        }
+      }
+
+      function enterPick(index, fly) {
+        runIndex = index;
+        here = 0;
+        missed = {};
+        speakOpen = false;
+        mode = "pick";
+        pickStartedAt = Date.now();
+        paintChrome();
+        paintMap(0, 0, fly);
+      }
+
+      function claimFree() {
+        const free = freeIndexes();
+        if (!free.length) {
+          mode = "empty";
+          paintChrome();
+          paintMap(0, 0, false);
+          return false;
+        }
+        acceptMs = Date.now() - openedAt;
+        claimed.push(free[0]);
+        saveClaimed();
+        enterPick(free[0], true);
+        return true;
+      }
+
+      function finishRun() {
+        const tour = currentTour();
+        let qty = 0;
+        let kg = 0;
+        let m3 = 0;
+        tour.stops.forEach(function (stop, i) {
+          if (missed[i]) return;
+          qty += stop.qty;
+          kg += stop.kg;
+          m3 += stop.m3;
+        });
+        document.getElementById("zen-time").textContent = fmtTime(Date.now() - pickStartedAt);
+        document.getElementById("zen-qty").textContent = qty + " un.";
+        document.getElementById("zen-kg").textContent = fmtNum(kg, 1) + " kg";
+        document.getElementById("zen-m3").textContent = fmtNum(m3, 2) + " m³";
+        document.getElementById("zen-latency").textContent = "aceite " + fmtLat(acceptMs);
+        mode = "zen";
+        paintChrome();
+        paintMap(0, 0, true);
+      }
+
+      function advance() {
+        const tour = currentTour();
+        if (here + 1 >= tour.stops.length) {
+          finishRun();
+          return;
+        }
+        const from = here;
+        here += 1;
+        speakOpen = false;
+        paintChrome();
+        paintMap(from, here, true);
+      }
+
+      goEl.addEventListener("click", function () {
+        claimFree();
+      });
+
+      feitoEl.addEventListener("click", function () {
+        if (mode === "pick") advance();
+      });
+
+      skipEl.addEventListener("click", function () {
+        if (mode !== "pick") return;
+        missed[here] = true;
+        advance();
+      });
+
+      speakEl.addEventListener("click", function () {
+        speakOpen = !speakOpen;
+        paintSpeak();
+      });
+
+      againEl.addEventListener("click", function () {
+        claimFree();
+      });
+
+      paintChrome();
+      paintMap(0, 0, false);
+    })();
+  </script>
+</body>
+</html>
