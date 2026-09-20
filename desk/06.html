@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Pisoly · Mesa</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #121214;
+      --mute: #8e8e96;
+      --line: #ececf1;
+      --paper: #f6f6f9;
+      --accent: #635bff;
+      --accent-deep: #4f48d4;
+      --white: #ffffff;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    html {
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 16px;
+      line-height: 1.35;
+      color: var(--ink);
+      background: var(--paper);
+    }
+
+    .feed {
+      list-style: none;
+      margin: 0;
+      padding: calc(28px + var(--safe-top)) 22px 168px;
+      max-width: 420px;
+      margin-inline: auto;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .row:last-child {
+      border-bottom: none;
+    }
+
+    .event {
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      align-items: baseline;
+      gap: 10px;
+      padding: 15px 0;
+      color: inherit;
+      text-decoration: none;
+      min-width: 0;
+    }
+
+    .event:active {
+      opacity: 0.55;
+    }
+
+    .when {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--mute);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .row.is-live .when {
+      color: var(--accent);
+    }
+
+    .text {
+      font-size: 16px;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+    }
+
+    .share {
+      appearance: none;
+      border: 0;
+      background: transparent;
+      color: var(--mute);
+      padding: 8px 2px 8px 10px;
+      margin: -8px -2px -8px 0;
+      cursor: pointer;
+      line-height: 0;
+    }
+
+    .share:active {
+      color: var(--accent);
+    }
+
+    .share svg {
+      display: block;
+    }
+
+    .dock {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 14px 22px calc(16px + var(--safe-bottom));
+      background: linear-gradient(180deg, rgba(246, 246, 249, 0) 0%, var(--paper) 26%);
+    }
+
+    .cta {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      max-width: 376px;
+      margin: 0 auto;
+      padding: 12px 18px 13px;
+      border: 0;
+      border-radius: 22px;
+      background: var(--accent);
+      color: var(--white);
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .cta:active {
+      transform: scale(0.985);
+      background: var(--accent-deep);
+    }
+
+    .cta.is-pulse {
+      animation: whisper 2.8s ease-in-out infinite;
+    }
+
+    .cta.is-paused {
+      background: var(--ink);
+      animation: none;
+    }
+
+    .glances {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .glance {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      min-width: 0;
+    }
+
+    .glance svg {
+      display: block;
+      flex: 0 0 16px;
+    }
+
+    .glance .meter {
+      display: flex;
+      align-items: baseline;
+      gap: 3px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .glance .value {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+    }
+
+    .glance .unit {
+      font-size: 11px;
+      font-weight: 500;
+      opacity: 0.72;
+    }
+
+    .verb {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(128px + var(--safe-bottom));
+      transform: translateX(-50%) translateY(8px);
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: var(--ink);
+      color: var(--white);
+      font-size: 13px;
+      font-weight: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .toast.is-on {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @keyframes whisper {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(99, 91, 255, 0); }
+      50% { box-shadow: 0 0 0 6px rgba(99, 91, 255, 0.16); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .cta.is-pulse { animation: none; }
+    }
+  </style>
+</head>
+<body>
+  <ul class="feed" id="feed" aria-label="Atividade da fábrica"></ul>
+
+  <div class="dock">
+    <button type="button" class="cta" id="cta" aria-label="Antecipar. Faltam 8 pedidos e 18 minutos.">
+      <span class="glances" id="glances" aria-hidden="true"></span>
+      <span class="verb" id="verb">Antecipar</span>
+    </button>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const RICH = new URL("../rich/06.html", location.href).href;
+
+    const factory = [
+      { id: "ready", label: "Antecipar", spoken: "Antecipar. Faltam 8 pedidos e 18 minutos.", cls: "", event: "Fábrica retomada", wave: "#1042" },
+      { id: "live", label: "Pausar automático", spoken: "Pausar automático. Faltam 8 pedidos e 18 minutos.", cls: "is-pulse", event: "Onda #1045 · antecipada", wave: "#1045" },
+      { id: "paused", label: "Retomar", spoken: "Retomar. Faltam 8 pedidos e 18 minutos.", cls: "is-paused", event: "Fábrica em pausa", wave: "#1042" },
+    ];
+
+    const ON_TRIGGERS = ["order_count", "elapsed"];
+
+    const feed = document.getElementById("feed");
+    const cta = document.getElementById("cta");
+    const glances = document.getElementById("glances");
+    const verb = document.getElementById("verb");
+    const toast = document.getElementById("toast");
+
+    const events = [
+      { when: "agora", text: "Ana · 10 · A-01", live: true, wave: "#1042" },
+      { when: "2 min", text: "4 de 18 · depois C-02", wave: "#1042" },
+      { when: "6 min", text: "Feito · F-02 · 42", wave: "#1042" },
+      { when: "11 min", text: "6 · C-08 · depois F-10", wave: "#1042" },
+      { when: "18 min", text: "Onda #1042 · setup", wave: "#1042" },
+      { when: "22 min", text: "#1043 · 14 ped.", wave: "#1043" },
+      { when: "40 min", text: "#1044 · 9 ped.", wave: "#1044" },
+    ];
+
+    let factoryIndex = 0;
+    let toastTimer = 0;
+
+    function triggerIcon(kind) {
+      switch (kind) {
+        case "order_count":
+          return '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M1.35 2.15h1.55l.3 1.25h10.95a.7.7 0 0 1 .68.88l-1.15 4.15A1.45 1.45 0 0 1 12.3 9.7H6.15l.22 1.15h6.35a.7.7 0 1 1 0 1.4H5.55a.7.7 0 0 1-.69-.54L3.38 3.55H1.35a.7.7 0 0 1 0-1.4Zm4.3 11.15a1.15 1.15 0 1 0 .02 2.3 1.15 1.15 0 0 0-.02-2.3Zm5.55 0a1.15 1.15 0 1 0 .02 2.3 1.15 1.15 0 0 0-.02-2.3Z"/></svg>';
+        case "quantity":
+          return '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 1.2 14.2 4.4v7.2L8 14.8 1.8 11.6V4.4L8 1.2Zm0 1.55L3.2 5.05 8 7.5l4.8-2.45L8 2.75ZM3.2 6.35v4.55L7.3 13.1V8.5L3.2 6.35Zm9.6 0L8.7 8.5v4.6l4.1-2.2V6.35Z"/></svg>';
+        case "schedule":
+          return '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 1.2a6.8 6.8 0 1 1 0 13.6A6.8 6.8 0 0 1 8 1.2Zm.7 3.1a.7.7 0 0 0-1.4 0v4.05c0 .2.1.4.25.54l2.3 2.15a.7.7 0 0 0 .94-1.04L8.7 8.1V4.3Z"/></svg>';
+        case "elapsed":
+          return '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M6.1 1.25h3.8a.7.7 0 1 1 0 1.4h-.55v.55a6.55 6.55 0 1 1-2.7 0V2.65H6.1a.7.7 0 1 1 0-1.4ZM8 4.55a.7.7 0 0 0-.7.7v3.05c0 .2.08.39.23.52l1.95 1.7a.7.7 0 0 0 .92-1.06L8.7 8.1V5.25a.7.7 0 0 0-.7-.7Z"/></svg>';
+        default: {
+          const _never = kind;
+          throw new Error("gatilho desconhecido: " + _never);
+        }
+      }
+    }
+
+    function triggerMeter(kind) {
+      switch (kind) {
+        case "order_count":
+          return { value: "8", unit: "ped.", name: "pedidos" };
+        case "quantity":
+          return { value: "42", unit: "un.", name: "unidades" };
+        case "schedule":
+          return { value: "14:30", unit: "", name: "horário" };
+        case "elapsed":
+          return { value: "18", unit: "min", name: "tempo" };
+        default: {
+          const _never = kind;
+          throw new Error("gatilho desconhecido: " + _never);
+        }
+      }
+    }
+
+    function shareIcon() {
+      return '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 2.2 11.3 5.4a.7.7 0 0 1-1 1L8.7 4.8V10a.7.7 0 0 1-1.4 0V4.8L5.7 6.4a.7.7 0 1 1-1-1L8 2.2ZM3.2 8.2c.4 0 .7.3.7.7v3.2c0 .2.2.4.4.4h7.4c.2 0 .4-.2.4-.4V8.9a.7.7 0 1 1 1.4 0v3.2A1.8 1.8 0 0 1 11.7 14H4.3A1.8 1.8 0 0 1 2.5 12.1V8.9c0-.4.3-.7.7-.7Z"/></svg>';
+    }
+
+    function rowEl(item) {
+      const li = document.createElement("li");
+      li.className = "row" + (item.live ? " is-live" : "");
+
+      const link = document.createElement("a");
+      link.className = "event";
+      link.href = RICH;
+
+      const when = document.createElement("span");
+      when.className = "when";
+      when.textContent = item.when;
+
+      const text = document.createElement("span");
+      text.className = "text";
+      text.textContent = item.text;
+      link.append(when, text);
+
+      const share = document.createElement("button");
+      share.type = "button";
+      share.className = "share";
+      share.setAttribute("aria-label", "Compartilhar " + item.wave);
+      share.innerHTML = shareIcon();
+      share.addEventListener("click", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        shareWave(item);
+      });
+
+      li.append(link, share);
+      return li;
+    }
+
+    function render() {
+      feed.replaceChildren();
+      events.forEach(function (item) {
+        feed.appendChild(rowEl(item));
+      });
+    }
+
+    function say(message) {
+      toast.textContent = message;
+      toast.classList.add("is-on");
+      window.clearTimeout(toastTimer);
+      toastTimer = window.setTimeout(function () {
+        toast.classList.remove("is-on");
+      }, 1600);
+    }
+
+    function shareWave(item) {
+      const payload = {
+        title: "Pisoly",
+        text: "Onda " + item.wave,
+        url: RICH,
+      };
+
+      if (navigator.share) {
+        navigator.share(payload).catch(function () {});
+        return;
+      }
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(RICH).then(function () {
+          say("Link copiado");
+        }).catch(function () {
+          say(RICH);
+        });
+        return;
+      }
+
+      say(RICH);
+    }
+
+    function glanceEl(kind) {
+      const meter = triggerMeter(kind);
+      const item = document.createElement("span");
+      item.className = "glance";
+      item.dataset.kind = kind;
+      item.innerHTML = triggerIcon(kind);
+      const meterEl = document.createElement("span");
+      meterEl.className = "meter";
+      const value = document.createElement("span");
+      value.className = "value";
+      value.textContent = meter.value;
+      meterEl.appendChild(value);
+      if (meter.unit) {
+        const unit = document.createElement("span");
+        unit.className = "unit";
+        unit.textContent = meter.unit;
+        meterEl.appendChild(unit);
+      }
+      item.appendChild(meterEl);
+      return item;
+    }
+
+    function paintGlances() {
+      glances.replaceChildren();
+      ON_TRIGGERS.forEach(function (kind) {
+        glances.appendChild(glanceEl(kind));
+      });
+    }
+
+    function paintCta() {
+      const state = factory[factoryIndex];
+      verb.textContent = state.label;
+      cta.className = "cta" + (state.cls ? " " + state.cls : "");
+      cta.setAttribute("aria-label", state.spoken);
+    }
+
+    cta.addEventListener("click", function () {
+      const next = (factoryIndex + 1) % factory.length;
+      const incoming = factory[next];
+      events.forEach(function (item) {
+        item.live = false;
+        if (item.when === "agora") item.when = "1 min";
+      });
+      events.unshift({
+        when: "agora",
+        text: incoming.event,
+        live: true,
+        wave: incoming.wave,
+      });
+      factoryIndex = next;
+      render();
+      paintCta();
+    });
+
+    paintGlances();
+    render();
+    paintCta();
+  </script>
+</body>
+</html>
