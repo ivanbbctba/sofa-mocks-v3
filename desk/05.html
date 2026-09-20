@@ -18,9 +18,9 @@
       --accent: #635bff;
       --accent-deep: #4f48d4;
       --accent-soft: #eeedff;
-      --ok: #2f8a5a;
       --ok-dot: #3cb371;
       --radius: 18px;
+      --ring: 138.23;
       --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
 
@@ -114,8 +114,8 @@
     .panel {
       display: flex;
       flex-direction: column;
-      min-height: 196px;
-      padding: 16px 14px 14px;
+      min-height: 248px;
+      padding: 14px 12px 12px;
       background: var(--white);
       border: 1px solid var(--line);
       border-radius: var(--radius);
@@ -154,6 +154,11 @@
       border-radius: 50%;
       background: var(--accent);
       animation: pulse 2.4s ease-in-out infinite;
+    }
+
+    body.is-paused .pulse-dot {
+      animation: none;
+      opacity: 0.35;
     }
 
     @keyframes pulse {
@@ -202,12 +207,10 @@
     .bar > i {
       display: block;
       height: 100%;
+      width: 55.6%;
       border-radius: inherit;
       background: var(--accent);
     }
-
-    .agora .bar > i { width: 55.6%; }
-    .proxima .bar > i { width: 61.9%; }
 
     .meta {
       margin: 0;
@@ -218,6 +221,96 @@
 
     .meta strong {
       font-weight: 600;
+    }
+
+    .glances {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px 6px;
+      margin-top: auto;
+    }
+
+    .glance {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      min-width: 0;
+    }
+
+    .glance-dial {
+      position: relative;
+      width: 64px;
+      height: 64px;
+    }
+
+    .glance-dial svg.ring {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+
+    .glance-dial .track {
+      fill: none;
+      stroke: #ececf3;
+      stroke-width: 4.5;
+    }
+
+    .glance-dial .fill {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 4.5;
+      stroke-linecap: round;
+      stroke-dasharray: var(--ring);
+      stroke-dashoffset: calc(var(--ring) * (1 - var(--p, 0)));
+      transition: stroke-dashoffset 0.35s ease;
+    }
+
+    .glyph {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: var(--accent-deep);
+    }
+
+    .glyph svg {
+      display: block;
+    }
+
+    .glance-val {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, Inter, sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums;
+      text-align: center;
+      line-height: 1.15;
+    }
+
+    .glance-val span {
+      display: block;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+      color: var(--mute);
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    body.is-paused .glance-dial .fill {
+      stroke: #a8a3ff;
     }
 
     .actions {
@@ -237,7 +330,7 @@
       border: none;
       font: inherit;
       font-size: 14px;
-        font-weight: 500;
+      font-weight: 500;
       cursor: pointer;
     }
 
@@ -254,12 +347,6 @@
       background: transparent;
       color: var(--ink-2);
       border: 1px solid var(--line);
-    }
-
-    .btn[disabled] {
-      opacity: 0.45;
-      cursor: default;
-      transform: none;
     }
 
     .list-head {
@@ -293,7 +380,7 @@
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      padding: 16px 16px;
+      padding: 16px;
       border-bottom: 1px solid var(--line);
       text-decoration: none;
       color: inherit;
@@ -306,7 +393,7 @@
     .wave-link .title {
       display: block;
       font-size: 16px;
-        font-weight: 500;
+      font-weight: 500;
     }
 
     .wave-link .sub {
@@ -427,6 +514,15 @@
       .panel {
         min-height: 0;
       }
+
+      .glances {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .glance-dial {
+        width: 56px;
+        height: 56px;
+      }
     }
   </style>
 </head>
@@ -459,12 +555,10 @@
       </a>
 
       <div class="panel proxima" id="proxima-panel">
-        <p class="panel-kicker"><span class="pulse-dot" id="pulse-dot" aria-hidden="true"></span> Próxima</p>
+        <p class="panel-kicker"><span class="pulse-dot" aria-hidden="true"></span> Próxima</p>
         <h2 id="proxima-title">Auto-onda</h2>
-        <p class="hint" id="proxima-hint">fábrica até disparar</p>
-        <p class="big" id="proxima-big">8 <span>ped.</span></p>
-        <div class="bar" aria-hidden="true"><i id="proxima-fill"></i></div>
-        <p class="meta" id="proxima-meta">faltam para a automática<br />~18 min</p>
+        <p class="hint" id="proxima-hint">gatilhos ligados</p>
+        <div class="glances" id="glances" aria-label="Medidores da fábrica"></div>
       </div>
     </section>
 
@@ -530,6 +624,36 @@
         url: richHref
       };
 
+      var ICONS = {
+        pedidos:
+          '<svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">' +
+          '<path d="M7.2 7.1V5.6a3.8 3.8 0 0 1 7.6 0v1.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>' +
+          '<path d="M5.4 7.1h11.2l-.85 11.1a1.4 1.4 0 0 1-1.4 1.3H7.65a1.4 1.4 0 0 1-1.4-1.3L5.4 7.1Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>' +
+          "</svg>",
+        qty:
+          '<svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">' +
+          '<rect x="4.2" y="9.4" width="9.4" height="8.4" rx="1.6" stroke="currentColor" stroke-width="1.6"/>' +
+          '<rect x="8.4" y="5.2" width="9.4" height="8.4" rx="1.6" stroke="currentColor" stroke-width="1.6"/>' +
+          "</svg>",
+        schedule:
+          '<svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">' +
+          '<rect x="3.6" y="5.4" width="14.8" height="13.2" rx="2.2" stroke="currentColor" stroke-width="1.6"/>' +
+          '<path d="M3.6 9.2h14.8M7.2 3.8v3.2M14.8 3.8v3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>' +
+          "</svg>",
+        elapsed:
+          '<svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">' +
+          '<circle cx="11" cy="12.2" r="6.4" stroke="currentColor" stroke-width="1.6"/>' +
+          '<path d="M9.1 3.6h3.8M11 3.6v1.6M11 12.2l3.1-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>' +
+          "</svg>"
+      };
+
+      var TRIGGERS = [
+        { id: "pedidos", enabled: true, name: "Pedidos", remain: 8, unit: "ped.", p: 0.619 },
+        { id: "qty", enabled: true, name: "Quantidade", remain: 24, unit: "un.", p: 0.48 },
+        { id: "schedule", enabled: true, name: "Horário", remain: 18, unit: "min", p: 0.4 },
+        { id: "elapsed", enabled: true, name: "Decorrido", remain: 12, unit: "min", p: 0.6 }
+      ];
+
       var toastEl = document.getElementById("toast");
       var toastTimer;
 
@@ -543,8 +667,7 @@
       }
 
       var sheet = document.getElementById("share-sheet");
-      var shareUrl = document.getElementById("share-url");
-      shareUrl.textContent = richHref;
+      document.getElementById("share-url").textContent = richHref;
 
       function openSheet() {
         sheet.hidden = false;
@@ -586,48 +709,52 @@
       var pauseBtn = document.getElementById("pause-btn");
       var title = document.getElementById("proxima-title");
       var hint = document.getElementById("proxima-hint");
-      var big = document.getElementById("proxima-big");
-      var meta = document.getElementById("proxima-meta");
-      var fill = document.getElementById("proxima-fill");
-      var pulse = document.getElementById("pulse-dot");
+      var glances = document.getElementById("glances");
+
+      function glanceHtml(trigger, remain, p) {
+        return (
+          '<div class="glance" data-kind="' + trigger.id + '">' +
+            '<span class="visually-hidden">' + trigger.name + "</span>" +
+            '<div class="glance-dial" style="--p:' + p + '">' +
+              '<svg class="ring" viewBox="0 0 56 56" aria-hidden="true">' +
+                '<circle class="track" cx="28" cy="28" r="22"></circle>' +
+                '<circle class="fill" cx="28" cy="28" r="22"></circle>' +
+              "</svg>" +
+              '<span class="glyph">' + ICONS[trigger.id] + "</span>" +
+            "</div>" +
+            '<p class="glance-val">' + remain + "<span>" + trigger.unit + "</span></p>" +
+          "</div>"
+        );
+      }
 
       function renderProxima() {
+        document.body.classList.toggle("is-paused", paused);
+        pauseBtn.textContent = paused ? "Retomar" : "Pausar";
+
         if (paused) {
           title.textContent = "Pausada";
-          hint.textContent = "automático em espera";
-          big.innerHTML = "—";
-          meta.innerHTML = "fábrica parada<br />retome quando quiser";
-          fill.style.width = "0%";
-          pulse.style.animation = "none";
-          pulse.style.opacity = "0.35";
-          anticipateBtn.disabled = true;
-          pauseBtn.textContent = "Retomar";
-          return;
-        }
-
-        anticipateBtn.disabled = false;
-        pauseBtn.textContent = "Pausar";
-        pulse.style.animation = "";
-        pulse.style.opacity = "";
-
-        if (anticipated) {
+          hint.textContent = "medidores no lugar";
+        } else if (anticipated) {
           title.textContent = "Na fila";
           hint.textContent = "antecipada agora";
-          big.innerHTML = "0 <span>ped.</span>";
-          meta.innerHTML = "Pedidos do dia<br />dispara em seguida";
-          fill.style.width = "100%";
-          return;
+        } else {
+          title.textContent = "Auto-onda";
+          hint.textContent = "gatilhos ligados";
         }
 
-        title.textContent = "Auto-onda";
-        hint.textContent = "fábrica até disparar";
-        big.innerHTML = "8 <span>ped.</span>";
-        meta.innerHTML = "faltam para a automática<br />~18 min";
-        fill.style.width = "61.9%";
+        var html = "";
+        for (var i = 0; i < TRIGGERS.length; i += 1) {
+          var trigger = TRIGGERS[i];
+          if (!trigger.enabled) continue;
+          var remain = anticipated ? 0 : trigger.remain;
+          var p = anticipated ? 1 : trigger.p;
+          html += glanceHtml(trigger, remain, p);
+        }
+        glances.innerHTML = html || "";
       }
 
       anticipateBtn.addEventListener("click", function () {
-        if (paused || anticipated) return;
+        if (anticipated) return;
         anticipated = true;
         renderProxima();
         toast("Onda antecipada");
@@ -636,8 +763,10 @@
       pauseBtn.addEventListener("click", function () {
         paused = !paused;
         renderProxima();
-        toast(paused ? "Automático pausado" : "Automático retomado");
+        toast(paused ? "Fábrica pausada" : "Fábrica retomada");
       });
+
+      renderProxima();
     })();
   </script>
 </body>
