@@ -3,32 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Onda #1042 — trilha zen</title>
+  <title>Onda 14</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@96,500;96,680&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;800&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --paper: #e7dece;
-      --paper-deep: #d8ccb8;
-      --card: #fff8ee;
-      --ink: #1c1914;
-      --ink-2: #3d3932;
-      --mute: #6f6a61;
-      --mute-2: #a39c91;
-      --line: #d8ccb8;
-      --feito: #171614;
-      --ok: #2f9a55;
-      --ok-soft: #d7efe0;
-      --miss: #b45309;
-      --c1: #635bff;
-      --c2: #059669;
-      --c3: #ea580c;
-      --c4: #9333ea;
-      --c5: #e11d48;
-      --c6: #0284c8;
-      --safe-top: env(safe-area-inset-top, 0px);
-      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --paper: #e8edf5;
+      --ink: #14171c;
+      --ink-2: #334155;
+      --mute: #64748b;
+      --card: #fffdf8;
+      --feito: #14171c;
+      --ok: #1f9d5c;
+      --run: #635bff;
+      --safe-t: env(safe-area-inset-top, 0px);
+      --safe-b: env(safe-area-inset-bottom, 0px);
     }
 
     *,
@@ -40,18 +30,18 @@
     body {
       margin: 0;
       min-height: 100dvh;
-      font-family: Outfit, system-ui, -apple-system, sans-serif;
+      font-family: Inter, "Segoe UI", system-ui, sans-serif;
       color: var(--ink);
-      background: #d8d0c4;
+      background: #c5cedb;
     }
 
     .app {
+      position: relative;
       width: 100%;
       max-width: 390px;
       height: 100dvh;
       max-height: 844px;
       margin: 0 auto;
-      position: relative;
       overflow: hidden;
       background: var(--paper);
     }
@@ -65,7 +55,7 @@
       .app {
         height: 844px;
         border-radius: 28px;
-        box-shadow: 0 22px 56px rgba(28, 25, 20, 0.18);
+        box-shadow: 0 22px 56px rgba(20, 23, 28, 0.2);
       }
     }
 
@@ -75,99 +65,101 @@
     }
 
     .route-svg {
-      position: absolute;
-      inset: 0;
+      display: block;
       width: 100%;
       height: 100%;
-      display: block;
     }
 
     .aisle-pill { fill: url(#aisleFade); }
 
-    .aisle-mark {
-      fill: #9a8f7e;
-      font-family: Outfit, system-ui, sans-serif;
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-    }
-
-    .path-seg {
+    .path-run {
       fill: none;
       stroke-linecap: round;
       stroke-linejoin: round;
-      stroke-width: 10;
-      stroke-dasharray: 16 13;
-      opacity: 0.62;
-      animation: dash-walk 2.1s linear infinite;
+      stroke-width: 9;
+      stroke-dasharray: 11 13;
+      opacity: 0.9;
+      animation: dash-walk 1.15s linear infinite;
     }
 
-    .path-seg.is-soon {
-      opacity: 0.78;
-      stroke-width: 11;
+    .path-run.is-taken {
+      opacity: 0.22;
+      stroke-width: 7;
+      animation-duration: 2.8s;
     }
 
-    .path-seg.is-now {
+    .path-run.is-now {
+      stroke-width: 15;
       opacity: 1;
-      stroke-width: 16;
-      animation-duration: 1.05s;
+      animation-duration: 0.85s;
     }
 
-    .path-seg.is-done {
-      opacity: 0.7;
-      stroke-width: 11;
-      animation-duration: 3.2s;
+    .path-run.is-done {
+      stroke-dasharray: none;
+      stroke-width: 12;
+      opacity: 0.78;
+      animation: none;
+    }
+
+    .path-run.is-ahead {
+      stroke-width: 10;
+      opacity: 0.42;
     }
 
     @keyframes dash-walk {
-      to { stroke-dashoffset: -58; }
+      to { stroke-dashoffset: -48; }
     }
 
-    .node { fill: #c9c0b3; }
-    .node.soon {
+    .node-future {
       fill: var(--paper);
-      stroke: #b7ae9f;
+      stroke: #94a3b8;
       stroke-width: 2;
     }
-    .node.done { fill: var(--ink-2); }
-    .node.missed {
+
+    .node-done { fill: #94a3b8; }
+    .node-miss {
       fill: var(--paper);
-      stroke: var(--miss);
+      stroke: #ea580c;
       stroke-width: 2.4;
     }
-    .node.here { fill: url(#nodeGreen); }
+
+    .node-next {
+      fill: var(--card);
+      stroke: var(--run);
+      stroke-width: 3;
+    }
+
+    .node-here { fill: url(#nodeGreen); }
 
     .here-ring {
       fill: none;
       stroke: #3dcc70;
-      stroke-width: 3;
-      transform-origin: center;
-      animation: breathe 2.8s ease-in-out infinite;
+      stroke-width: 3.2;
+      animation: breathe 2.4s ease-in-out infinite;
     }
 
     @keyframes breathe {
-      0%, 100% { opacity: 0.85; }
-      50% { opacity: 0.35; }
+      0%, 100% { opacity: 0.9; }
+      50% { opacity: 0.28; }
     }
 
-    .map-fade {
+    .fade {
       position: absolute;
       inset: auto 0 0;
-      height: 46%;
-      background: linear-gradient(
-        180deg,
-        rgba(231, 222, 206, 0) 0%,
-        rgba(231, 222, 206, 0.28) 38%,
-        rgba(231, 222, 206, 0.82) 74%,
-        var(--paper) 100%
-      );
+      height: 38%;
       pointer-events: none;
       opacity: 0;
-      transition: opacity 0.45s ease;
+      background: linear-gradient(
+        180deg,
+        rgba(232, 237, 245, 0) 0%,
+        rgba(232, 237, 245, 0.35) 40%,
+        var(--paper) 100%
+      );
+      transition: opacity 0.35s ease;
     }
 
-    .app.is-run .map-fade,
-    .app.is-done .map-fade { opacity: 1; }
+    .app.is-pick .fade,
+    .app.is-zen .fade { opacity: 1; }
 
     .hud {
       position: absolute;
@@ -178,315 +170,216 @@
 
     .hud > * { pointer-events: auto; }
 
-    .topbar {
+    .count {
       position: absolute;
-      top: calc(12px + var(--safe-top));
-      left: 16px;
+      top: calc(14px + var(--safe-t));
       right: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      opacity: 0;
-      transform: translateY(-8px);
-      transition: opacity 0.4s ease, transform 0.4s ease;
-    }
-
-    .app.is-run .topbar,
-    .app.is-done .topbar {
-      opacity: 1;
-      transform: none;
-    }
-
-    .pebbles {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      width: 132px;
-    }
-
-    .pebble {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #c9bba6;
-    }
-
-    .pebble.is-ok { background: var(--ok); }
-    .pebble.is-miss { background: var(--miss); }
-    .pebble.is-here {
-      background: var(--c1);
-      box-shadow: 0 0 0 3px rgba(99, 91, 255, 0.18);
-    }
-
-    .top-meta {
-      text-align: right;
-    }
-
-    .progress {
       margin: 0;
       font-size: 13px;
-      font-weight: 500;
+      font-weight: 600;
       color: var(--mute);
       font-variant-numeric: tabular-nums;
+      opacity: 0;
     }
 
-    .streak {
-      margin: 3px 0 0;
-      font-size: 11px;
-      font-weight: 500;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      color: var(--mute-2);
-      min-height: 14px;
-    }
+    .app.is-pick .count { opacity: 1; }
 
-    .streak.is-on { color: #047857; }
-
-    .speak {
+    .speek {
       position: absolute;
       left: 16px;
-      bottom: calc(28px + var(--safe-bottom));
-      width: min(236px, calc(100% - 118px));
+      bottom: calc(28px + var(--safe-b));
+      width: min(228px, calc(100% - 118px));
       margin: 0;
-      padding: 16px 18px 15px;
-      border: 1px solid var(--line);
+      padding: 14px 16px 16px;
       border-radius: 22px;
       background: var(--card);
-      box-shadow: 0 12px 30px rgba(28, 25, 20, 0.08);
+      box-shadow: 0 12px 28px rgba(20, 23, 28, 0.12);
       opacity: 0;
-      transform: translateY(14px);
-      transition: opacity 0.4s ease, transform 0.4s ease;
+      transform: translateY(12px);
+      pointer-events: none;
     }
 
-    .app.is-run .speak {
+    .app.is-pick .speek {
       opacity: 1;
       transform: none;
     }
 
-    .speak-qty {
+    .speek-qty {
       margin: 0;
-      font-family: Fraunces, Georgia, serif;
-      font-size: 58px;
-      font-weight: 680;
-      letter-spacing: -0.05em;
-      line-height: 0.86;
+      font-size: 64px;
+      font-weight: 800;
+      letter-spacing: -0.07em;
+      line-height: 0.84;
       font-variant-numeric: tabular-nums;
     }
 
-    .speak-loc {
+    .speek-loc {
       margin: 10px 0 0;
-      font-size: 20px;
-      font-weight: 600;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
     }
 
-    .speak-sku {
-      margin: 4px 0 0;
-      font-size: 13px;
+    .speek-depois {
+      margin: 6px 0 0;
+      font-size: 14px;
       font-weight: 500;
-      color: var(--ink-2);
-      letter-spacing: 0.02em;
-      overflow-wrap: anywhere;
-    }
-
-    .speak-next {
-      margin: 10px 0 0;
-      padding-top: 9px;
-      border-top: 1px dashed var(--line);
-      font-size: 13px;
       color: var(--mute);
     }
 
+    .btn-go,
     .btn-feito {
       position: absolute;
       right: 18px;
-      bottom: calc(86px + var(--safe-bottom));
-      width: 78px;
-      height: 78px;
+      bottom: calc(28px + var(--safe-b));
+      width: 84px;
+      height: 84px;
       border: 0;
       border-radius: 50%;
       background: var(--feito);
       color: #fff;
       font: inherit;
-      font-size: 16px;
-      font-weight: 500;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
       cursor: pointer;
-      box-shadow: 0 12px 26px rgba(23, 22, 20, 0.24);
-      opacity: 0;
-      transform: scale(0.92);
-      transition: opacity 0.35s ease, transform 0.35s ease;
+      box-shadow: 0 12px 26px rgba(20, 23, 28, 0.24);
     }
 
-    .app.is-run .btn-feito {
-      opacity: 1;
-      transform: none;
+    .btn-go {
+      left: 50%;
+      right: auto;
+      bottom: calc(36px + var(--safe-b));
+      width: 104px;
+      height: 104px;
+      transform: translateX(-50%);
+      background: var(--run);
+      font-size: 16px;
     }
 
-    .btn-feito:active { transform: scale(0.96); }
+    .app.is-pick .btn-go,
+    .app.is-zen .btn-go,
+    .app.is-empty .btn-go { display: none; }
+
+    .btn-feito {
+      display: none;
+      bottom: calc(86px + var(--safe-b));
+    }
+
+    .app.is-pick .btn-feito { display: block; }
+
+    .btn-go:active,
+    .btn-feito:active { transform: translateX(-50%) scale(0.96); }
+    .app.is-pick .btn-feito:active { transform: scale(0.96); }
 
     .btn-miss {
+      display: none;
       position: absolute;
       right: 16px;
-      bottom: calc(28px + var(--safe-bottom));
-      width: 82px;
+      bottom: calc(28px + var(--safe-b));
+      width: 84px;
       border: 0;
       background: transparent;
       color: var(--mute);
       font: inherit;
       font-size: 13px;
-      font-weight: 500;
+      font-weight: 600;
       cursor: pointer;
       text-decoration: underline;
       text-underline-offset: 3px;
-      opacity: 0;
-      transition: opacity 0.35s ease, color 0.2s ease;
     }
 
-    .app.is-run .btn-miss { opacity: 1; }
-    .btn-miss:hover { color: var(--ink); }
+    .app.is-pick .btn-miss { display: block; }
 
-    .claim,
-    .done {
+    .zen {
+      display: none;
       position: absolute;
       left: 18px;
       right: 18px;
-      bottom: calc(22px + var(--safe-bottom));
-      z-index: 5;
-      padding: 16px 18px 16px;
-      border: 1px solid var(--line);
+      bottom: calc(24px + var(--safe-b));
+      padding: 18px 18px 16px;
       border-radius: 24px;
       background: var(--card);
-      background: color-mix(in srgb, var(--card) 92%, transparent);
-      backdrop-filter: blur(14px);
-      box-shadow: 0 16px 40px rgba(28, 25, 20, 0.1);
+      box-shadow: 0 16px 36px rgba(20, 23, 28, 0.12);
     }
 
-    .claim {
-      opacity: 0;
-      pointer-events: none;
-      transform: translateY(16px);
-      transition: opacity 0.4s ease, transform 0.4s ease;
-    }
+    .app.is-zen .zen { display: block; }
 
-    .app.is-claim .claim {
-      opacity: 1;
-      pointer-events: auto;
-      transform: none;
-    }
-
-    .done {
-      display: none;
-      text-align: left;
-    }
-
-    .app.is-done .done { display: block; }
-    .app.is-done .speak,
-    .app.is-done .btn-feito,
-    .app.is-done .btn-miss { display: none; }
-
-    .kicker {
+    .zen-kicker {
       margin: 0;
       font-size: 11px;
-      font-weight: 600;
+      font-weight: 700;
       letter-spacing: 0.08em;
       text-transform: uppercase;
       color: var(--mute);
     }
 
-    .link-chip {
-      display: inline-block;
-      margin: 8px 0 0;
-      padding: 4px 9px;
-      border-radius: 999px;
-      background: #efe7d8;
-      color: var(--ink-2);
-      font-size: 12px;
-      font-weight: 500;
-    }
-
-    .claim h1,
-    .done h1 {
-      margin: 8px 0 0;
-      font-family: Fraunces, Georgia, serif;
-      font-size: 34px;
-      font-weight: 680;
+    .zen-title {
+      margin: 6px 0 0;
+      font-size: 28px;
+      font-weight: 800;
       letter-spacing: -0.04em;
-      line-height: 0.95;
     }
 
-    .lede {
-      margin: 8px 0 0;
-      font-size: 14px;
-      line-height: 1.35;
-      color: var(--ink-2);
+    .metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 14px;
     }
 
-    .stats {
-      display: flex;
-      gap: 16px;
-      margin: 12px 0 0;
+    .metric {
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: #f1f4f8;
     }
 
-    .stat strong {
+    .metric b {
       display: block;
-      font-size: 18px;
-      font-weight: 600;
+      font-size: 20px;
+      letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums;
     }
 
-    .stat span {
+    .metric span {
       display: block;
       margin-top: 2px;
       font-size: 12px;
       color: var(--mute);
     }
 
-    .btn-go,
     .btn-again {
+      display: none;
       width: 100%;
-      margin-top: 18px;
-      height: 52px;
+      margin-top: 14px;
+      height: 48px;
       border: 0;
       border-radius: 999px;
       background: var(--feito);
       color: #fff;
       font: inherit;
-      font-size: 16px;
-      font-weight: 500;
+      font-size: 15px;
+      font-weight: 700;
       cursor: pointer;
     }
 
-    .btn-go:active,
-    .btn-again:active { transform: scale(0.985); }
+    .app.is-zen.has-free .btn-again { display: block; }
 
-    .claim-note {
-      margin: 10px 0 0;
+    .empty {
+      display: none;
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 42%;
+      margin: 0;
       text-align: center;
-      font-size: 12px;
-      color: var(--mute);
-    }
-
-    .done-split {
-      margin: 8px 0 0;
-      font-size: 14px;
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -0.04em;
       color: var(--ink-2);
     }
 
-    .whisper {
-      position: absolute;
-      left: 50%;
-      top: 18%;
-      transform: translateX(-50%);
-      z-index: 8;
-      display: none;
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: rgba(23, 22, 20, 0.86);
-      color: #fff;
-      font-size: 12px;
-      white-space: nowrap;
-    }
-
-    .whisper.is-on { display: block; }
+    .app.is-empty .empty { display: block; }
 
     .sr-only {
       position: absolute;
@@ -495,106 +388,105 @@
       overflow: hidden;
       clip: rect(0, 0, 0, 0);
     }
+
+    @media (prefers-reduced-motion: reduce) {
+      .path-run,
+      .here-ring { animation: none !important; }
+    }
   </style>
 </head>
 <body>
-  <div class="app is-claim" id="app">
+  <div class="app is-open" id="app">
     <div class="map" aria-hidden="true">
       <svg id="route-svg" class="route-svg" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice">
         <defs>
           <linearGradient id="nodeGreen" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stop-color="#6ad88a" />
-            <stop offset="100%" stop-color="#2f9a55" />
+            <stop offset="100%" stop-color="#1f9d5c" />
           </linearGradient>
           <linearGradient id="aisleFade" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#c4b49a" stop-opacity="0" />
-            <stop offset="10%" stop-color="#c4b49a" stop-opacity="0.55" />
-            <stop offset="50%" stop-color="#c4b49a" stop-opacity="0.82" />
-            <stop offset="88%" stop-color="#c4b49a" stop-opacity="0.5" />
-            <stop offset="100%" stop-color="#c4b49a" stop-opacity="0" />
+            <stop offset="0%" stop-color="#b0b8c8" stop-opacity="0" />
+            <stop offset="12%" stop-color="#b0b8c8" stop-opacity="0.55" />
+            <stop offset="50%" stop-color="#b0b8c8" stop-opacity="0.72" />
+            <stop offset="88%" stop-color="#b0b8c8" stop-opacity="0.5" />
+            <stop offset="100%" stop-color="#b0b8c8" stop-opacity="0" />
           </linearGradient>
         </defs>
         <g id="aisle-pills"></g>
         <g id="route-segs"></g>
         <g id="route-nodes"></g>
       </svg>
-      <div class="map-fade"></div>
+      <div class="fade"></div>
     </div>
 
     <div class="hud">
-      <div class="topbar">
-        <div class="pebbles" id="pebbles" aria-hidden="true"></div>
-        <div class="top-meta">
-          <p class="progress" id="progress">0 de 18</p>
-          <p class="streak" id="streak"></p>
-        </div>
-      </div>
-
-      <article class="speak" id="speak">
-        <p class="speak-qty" id="speak-qty">10</p>
-        <p class="speak-loc" id="speak-loc">A-01</p>
-        <p class="speak-sku" id="speak-sku">ML-CINZA-M</p>
-        <p class="speak-next" id="speak-next">depois C-02</p>
+      <p class="count" id="count">0 de 3</p>
+      <article class="speek" id="speek">
+        <p class="speek-qty" id="qty">10</p>
+        <p class="speek-loc" id="loc">A-01</p>
+        <p class="speek-depois" id="depois">depois C-02</p>
       </article>
-
+      <button type="button" class="btn-go" id="btn-iniciar">Iniciar</button>
       <button type="button" class="btn-feito" id="btn-feito">Feito</button>
       <button type="button" class="btn-miss" id="btn-miss">Não achei</button>
     </div>
 
-    <section class="claim" id="claim">
-      <p class="kicker">Link da onda</p>
-      <span class="link-chip">pisoly.link/r/1042</span>
-      <h1>Onda #1042</h1>
-      <p class="lede">Caminho pronto. Toque em Iniciar para assumir e ir até a primeira posição.</p>
-      <div class="stats">
-        <div class="stat"><strong>18</strong><span>paradas</span></div>
-        <div class="stat"><strong>8</strong><span>pedidos</span></div>
-        <div class="stat"><strong>157</strong><span>unidades</span></div>
+    <section class="zen" id="zen">
+      <p class="zen-kicker" id="zen-kicker">Corrida 1</p>
+      <h2 class="zen-title">Corrida feita</h2>
+      <div class="metrics">
+        <p class="metric"><b id="m-time">0:00</b><span>tempo</span></p>
+        <p class="metric"><b id="m-qty">0 un.</b><span>pegas</span></p>
+        <p class="metric"><b id="m-miss">0</b><span>não achei</span></p>
+        <p class="metric"><b id="m-stops">0</b><span>paradas</span></p>
       </div>
-      <button type="button" class="btn-go" id="btn-iniciar">Iniciar</button>
-      <p class="claim-note">Só para frente. Sem voltar.</p>
-    </section>
-
-    <section class="done" id="done" aria-live="polite">
-      <p class="kicker">Onda quieta</p>
-      <h1>Todos pegos</h1>
-      <p class="done-split" id="done-split">18 pegos · 0 não achei</p>
-      <p class="lede" id="done-streak">Série melhor: 0</p>
       <button type="button" class="btn-again" id="btn-again">Começar de novo</button>
     </section>
 
-    <div class="whisper" id="whisper" role="status"></div>
-    <p class="sr-only">Corrida do burro. Link da onda, Iniciar assume e aproxima o mapa. Só avança. Cartão de texto Speak, Feito ou Não achei.</p>
+    <p class="empty" id="empty">Todos pegos</p>
+    <p class="sr-only">Uma onda compartilhada. Iniciar assume a próxima corrida livre. Cartão de texto. Sem voz.</p>
   </div>
 
   <script>
     (function () {
-      var TOTAL = 18;
       var COLORS = ["#635bff", "#059669", "#ea580c", "#9333ea", "#e11d48", "#0284c8"];
       var AISLE_X = { A: 40, B: 88, C: 136, D: 184, E: 232, F: 280, G: 328, H: 372 };
       var BACK_Y = 78;
       var FRONT_Y = 620;
-      var PHASES = { claim: "claim", zoom: "zoom", run: "run", done: "done" };
+      var WIDE = [0, 8, 390, 736];
+      var PHASES = { open: "open", pick: "pick", zen: "zen", empty: "empty" };
 
-      var STOPS = [
-        { qty: 10, loc: "A-01", sku: "ML-CINZA-M", name: "Moletom cinza M" },
-        { qty: 8, loc: "C-02", sku: "CJ-JEANS-42", name: "Calça jeans 42" },
-        { qty: 10, loc: "E-01", sku: "CT-BRANCA-P", name: "Camiseta branca P" },
-        { qty: 10, loc: "E-10", sku: "VN-PRETA-38", name: "Vestido preto 38" },
-        { qty: 42, loc: "F-02", sku: "MK-MEIA-3", name: "Meia kit 3 pares" },
-        { qty: 5, loc: "H-09", sku: "BL-LINHO-M", name: "Blusa linho M" },
-        { qty: 7, loc: "B-03", sku: "CL-CHINO-40", name: "Calça chino 40" },
-        { qty: 5, loc: "B-09", sku: "JA-NYLON-G", name: "Jaqueta nylon G" },
-        { qty: 9, loc: "G-01", sku: "TN-BASIC-M", name: "Tênis básico 40" },
-        { qty: 7, loc: "G-09", sku: "SH-SLIM-P", name: "Shorts slim P" },
-        { qty: 6, loc: "C-08", sku: "RG-ALGOD-M", name: "Regata algodão M" },
-        { qty: 4, loc: "F-10", sku: "CS-LISA-G", name: "Camisa lisa G" },
-        { qty: 8, loc: "D-04", sku: "SA-MIDI-36", name: "Saia midi 36" },
-        { qty: 3, loc: "D-10", sku: "CR-TRICOT-P", name: "Cardigã tricot P" },
-        { qty: 11, loc: "A-06", sku: "CL-MOLE-M", name: "Calça moletom M" },
-        { qty: 6, loc: "H-02", sku: "BT-COURO-37", name: "Bota couro 37" },
-        { qty: 4, loc: "A-10", sku: "BL-POLO-G", name: "Polo piqué G" },
-        { qty: 2, loc: "H-10", sku: "CN-LA-U", name: "Cinto lã único" }
+      var RUNS = [
+        [
+          { qty: 10, loc: "A-01" },
+          { qty: 8, loc: "C-02" },
+          { qty: 10, loc: "E-01" }
+        ],
+        [
+          { qty: 10, loc: "E-10" },
+          { qty: 42, loc: "F-02" },
+          { qty: 5, loc: "H-09" }
+        ],
+        [
+          { qty: 7, loc: "B-03" },
+          { qty: 5, loc: "B-09" },
+          { qty: 9, loc: "G-01" }
+        ],
+        [
+          { qty: 7, loc: "G-09" },
+          { qty: 6, loc: "C-08" },
+          { qty: 4, loc: "F-10" }
+        ],
+        [
+          { qty: 8, loc: "D-04" },
+          { qty: 3, loc: "D-10" },
+          { qty: 11, loc: "A-06" }
+        ],
+        [
+          { qty: 6, loc: "H-02" },
+          { qty: 4, loc: "A-10" },
+          { qty: 2, loc: "H-10" }
+        ]
       ];
 
       function binY(n) {
@@ -643,20 +535,36 @@
         return d;
       }
 
-      function frameBox(points, extra) {
-        var xs = points.map(function (p) { return p[0]; });
-        var ys = points.map(function (p) { return p[1]; });
-        var minX = Math.min.apply(null, xs) - extra;
-        var maxX = Math.max.apply(null, xs) + extra;
-        var minY = Math.min.apply(null, ys) - extra;
-        var maxY = Math.max.apply(null, ys) + extra;
+      function runPath(stops) {
+        var pts = [];
+        var i;
+        for (i = 0; i < stops.length - 1; i += 1) {
+          var seg = segment(stops[i].loc, stops[i + 1].loc);
+          if (!pts.length) pts = seg.slice();
+          else pts = pts.concat(seg.slice(1));
+        }
+        return pts;
+      }
+
+      function frameLeg(stops, index) {
+        var here = stops[index];
+        var next = stops[index + 1] || here;
+        var pts = index + 1 < stops.length
+          ? segment(here.loc, next.loc)
+          : [xy(here.loc), [xy(here.loc)[0] + 18, xy(here.loc)[1] + 28]];
+        var xs = pts.map(function (p) { return p[0]; });
+        var ys = pts.map(function (p) { return p[1]; });
+        var minX = Math.min.apply(null, xs) - 64;
+        var maxX = Math.max.apply(null, xs) + 64;
+        var minY = Math.min.apply(null, ys) - 70;
+        var maxY = Math.max.apply(null, ys) + 90;
         var aspect = 390 / 844;
-        var w = Math.max(210, maxX - minX);
-        var h = Math.max(360, maxY - minY);
+        var w = Math.max(168, maxX - minX);
+        var h = Math.max(280, maxY - minY);
         if (w / h > aspect) h = w / aspect;
         else w = h * aspect;
         var cx = (minX + maxX) / 2;
-        var cy = (minY + maxY) / 2 - 18;
+        var cy = (minY + maxY) / 2 + 10;
         return [cx - w / 2, cy - h / 2, w, h];
       }
 
@@ -672,238 +580,247 @@
         return a.map(function (v, i) { return v + (b[i] - v) * t; });
       }
 
-      function focusBox(index) {
-        var stop = STOPS[Math.min(index, STOPS.length - 1)];
-        var next = STOPS[index + 1];
-        var pts = [xy(stop.loc)];
-        if (next) pts = pts.concat(segment(stop.loc, next.loc));
-        else pts.push([xy(stop.loc)[0] + 24, xy(stop.loc)[1] + 40]);
-        return frameBox(pts, 72);
+      function fmtTime(ms) {
+        var total = Math.max(0, Math.round(ms / 1000));
+        var m = Math.floor(total / 60);
+        var s = total % 60;
+        return m + ":" + (s < 10 ? "0" : "") + s;
       }
 
-      var WIDE = [8, 20, 374, 720];
       var app = document.getElementById("app");
       var svg = document.getElementById("route-svg");
+      var aisleEl = document.getElementById("aisle-pills");
       var segsEl = document.getElementById("route-segs");
       var nodesEl = document.getElementById("route-nodes");
-      var aisleEl = document.getElementById("aisle-pills");
-      var pebblesEl = document.getElementById("pebbles");
-      var progressEl = document.getElementById("progress");
-      var streakEl = document.getElementById("streak");
-      var qtyEl = document.getElementById("speak-qty");
-      var locEl = document.getElementById("speak-loc");
-      var skuEl = document.getElementById("speak-sku");
-      var nextEl = document.getElementById("speak-next");
-      var doneSplit = document.getElementById("done-split");
-      var doneStreak = document.getElementById("done-streak");
-      var whisperEl = document.getElementById("whisper");
-
-      var phase = PHASES.claim;
-      var index = 0;
-      var outcomes = [];
-      var streak = 0;
-      var bestStreak = 0;
-      var animating = false;
+      var countEl = document.getElementById("count");
+      var qtyEl = document.getElementById("qty");
+      var locEl = document.getElementById("loc");
+      var depoisEl = document.getElementById("depois");
 
       aisleEl.innerHTML = Object.keys(AISLE_X).map(function (key) {
         var x = AISLE_X[key];
-        return (
-          '<rect class="aisle-pill" x="' + (x - 13).toFixed(1) + '" y="0" width="26" height="844" rx="13"></rect>' +
-          '<text class="aisle-mark" x="' + x.toFixed(1) + '" y="36" text-anchor="middle">' + key + "</text>"
-        );
+        return '<rect class="aisle-pill" x="' + (x - 13).toFixed(1) + '" y="0" width="26" height="844" rx="13"></rect>';
       }).join("");
+
+      var phase = PHASES.open;
+      var claimed = [];
+      var runIndex = -1;
+      var here = 0;
+      var misses = {};
+      var startedAt = 0;
+      var viewBox = WIDE.slice();
+
+      function freeIndexes() {
+        return RUNS.map(function (_, i) { return i; }).filter(function (i) {
+          return claimed.indexOf(i) === -1;
+        });
+      }
 
       function setPhase(next) {
         phase = next;
-        app.classList.remove("is-claim", "is-zoom", "is-run", "is-done");
-        app.classList.add("is-" + next);
+        app.className = "app is-" + next;
+        if (next === PHASES.zen && freeIndexes().length) app.classList.add("has-free");
+        var color = runIndex >= 0 ? COLORS[runIndex] : COLORS[freeIndexes()[0] || 0];
+        document.documentElement.style.setProperty("--run", color);
       }
 
-      function whisper(msg) {
-        whisperEl.textContent = msg;
-        whisperEl.classList.add("is-on");
-        window.clearTimeout(whisper.tid);
-        whisper.tid = window.setTimeout(function () {
-          whisperEl.classList.remove("is-on");
-        }, 1200);
-      }
-
-      function animateView(toBox, ms, done) {
-        var from = svg.getAttribute("viewBox").split(/[\s,]+/).map(Number);
-        var t0 = performance.now();
-        animating = true;
-        function tick(now) {
-          var t = Math.min(1, (now - t0) / ms);
-          svg.setAttribute("viewBox", boxString(mixBox(from, toBox, easeOut(t))));
-          if (t < 1) {
-            window.requestAnimationFrame(tick);
+      function assertPhase(value) {
+        switch (value) {
+          case PHASES.open:
+          case PHASES.pick:
+          case PHASES.zen:
+          case PHASES.empty:
             return;
-          }
-          animating = false;
-          if (done) done();
+          default:
+            throw new Error("fase desconhecida");
+        }
+      }
+
+      function animateView(toBox) {
+        var from = viewBox.slice();
+        var t0 = performance.now();
+        function tick(now) {
+          var t = Math.min(1, (now - t0) / 720);
+          viewBox = mixBox(from, toBox, easeOut(t));
+          svg.setAttribute("viewBox", boxString(viewBox));
+          if (t < 1) window.requestAnimationFrame(tick);
         }
         window.requestAnimationFrame(tick);
       }
 
-      function paintPaths() {
+      function paintOpenPaths() {
         var html = "";
         var i;
-        for (i = 0; i < STOPS.length - 1; i += 1) {
-          var cls = "path-seg";
-          if (phase === PHASES.claim || phase === PHASES.zoom) {
-            cls += " is-soon";
-          } else if (i < index) {
-            cls += " is-done";
-          } else if (i === index && phase === PHASES.run) {
-            cls += " is-now";
-          } else if (phase === PHASES.done) {
-            cls += " is-done";
-          } else {
-            cls += " is-soon";
-          }
+        for (i = 0; i < RUNS.length; i += 1) {
+          var taken = claimed.indexOf(i) !== -1;
           html +=
-            '<path class="' + cls + '" stroke="' + COLORS[i % COLORS.length] + '" d="' +
-            toPath(segment(STOPS[i].loc, STOPS[i + 1].loc)) + '"></path>';
+            '<path class="path-run' + (taken ? " is-taken" : "") + '" stroke="' +
+            COLORS[i] + '" d="' + toPath(runPath(RUNS[i])) + '"></path>';
         }
         segsEl.innerHTML = html;
+        var nodes = "";
+        for (i = 0; i < RUNS.length; i += 1) {
+          RUNS[i].forEach(function (stop) {
+            var p = xy(stop.loc);
+            nodes +=
+              '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) +
+              '" r="5.5" fill="' + COLORS[i] + '" opacity="' +
+              (claimed.indexOf(i) !== -1 ? "0.28" : "0.95") + '"></circle>';
+          });
+        }
+        nodesEl.innerHTML = nodes;
       }
 
-      function paintNodes() {
+      function paintPickPaths() {
+        var stops = RUNS[runIndex];
+        var color = COLORS[runIndex];
         var html = "";
         var i;
-        for (i = 0; i < STOPS.length; i += 1) {
-          var p = xy(STOPS[i].loc);
+        for (i = 0; i < stops.length - 1; i += 1) {
+          var cls = "path-run";
+          if (i < here) cls += " is-done";
+          else if (i === here) cls += " is-now";
+          else cls += " is-ahead";
+          html +=
+            '<path class="' + cls + '" stroke="' + color + '" d="' +
+            toPath(segment(stops[i].loc, stops[i + 1].loc)) + '"></path>';
+        }
+        segsEl.innerHTML = html;
+
+        var nodes = "";
+        for (i = 0; i < stops.length; i += 1) {
+          var p = xy(stops[i].loc);
           var x = p[0].toFixed(1);
           var y = p[1].toFixed(1);
-          if (phase === PHASES.claim || phase === PHASES.zoom) {
-            html += '<circle class="node soon" cx="' + x + '" cy="' + y + '" r="5"></circle>';
-            continue;
+          if (i === here) {
+            nodes += '<circle class="here-ring" cx="' + x + '" cy="' + y + '" r="14"></circle>';
+            nodes += '<circle class="node-here" cx="' + x + '" cy="' + y + '" r="8"></circle>';
+          } else if (i === here + 1) {
+            nodes += '<circle class="node-next" cx="' + x + '" cy="' + y + '" r="6.5"></circle>';
+          } else if (i < here) {
+            nodes += '<circle class="' + (misses[i] ? "node-miss" : "node-done") + '" cx="' + x + '" cy="' + y + '" r="5.5"></circle>';
+          } else {
+            nodes += '<circle class="node-future" cx="' + x + '" cy="' + y + '" r="5"></circle>';
           }
-          if (i < index || phase === PHASES.done) {
-            var missed = outcomes[i] === "miss";
-            html += '<circle class="node ' + (missed ? "missed" : "done") + '" cx="' + x + '" cy="' + y + '" r="5.5"></circle>';
-            continue;
-          }
-          if (i === index && phase === PHASES.run) {
-            html += '<circle class="here-ring" cx="' + x + '" cy="' + y + '" r="14"></circle>';
-            html += '<circle class="node here" cx="' + x + '" cy="' + y + '" r="8"></circle>';
-            continue;
-          }
-          html += '<circle class="node soon" cx="' + x + '" cy="' + y + '" r="5"></circle>';
         }
-        nodesEl.innerHTML = html;
+        nodesEl.innerHTML = nodes;
       }
 
-      function paintPebbles() {
-        var html = "";
-        var i;
-        for (i = 0; i < TOTAL; i += 1) {
-          var cls = "pebble";
-          if (i < outcomes.length) cls += outcomes[i] === "ok" ? " is-ok" : " is-miss";
-          else if (i === index && phase === PHASES.run) cls += " is-here";
-          html += '<i class="' + cls + '"></i>';
-        }
-        pebblesEl.innerHTML = html;
-      }
-
-      function paintSpeak() {
-        var stop = STOPS[Math.min(index, STOPS.length - 1)];
-        var next = STOPS[index + 1];
+      function paintHud() {
+        if (phase !== PHASES.pick) return;
+        var stops = RUNS[runIndex];
+        var stop = stops[here];
+        var next = stops[here + 1];
         qtyEl.textContent = String(stop.qty);
         locEl.textContent = stop.loc;
-        skuEl.textContent = stop.sku;
-        nextEl.textContent = next ? "depois " + next.loc : "última parada";
-        progressEl.textContent = index + " de " + TOTAL;
-        if (streak >= 3) {
-          streakEl.textContent = "série " + streak;
-          streakEl.classList.add("is-on");
-        } else {
-          streakEl.textContent = "";
-          streakEl.classList.remove("is-on");
-        }
+        depoisEl.textContent = next ? "depois " + next.loc : "última parada";
+        countEl.textContent = here + " de " + stops.length;
       }
 
-      function paintDone() {
-        var ok = 0;
+      function paintZen() {
+        var stops = RUNS[runIndex];
+        var qty = 0;
         var miss = 0;
         var i;
-        for (i = 0; i < outcomes.length; i += 1) {
-          if (outcomes[i] === "ok") ok += 1;
-          else miss += 1;
+        for (i = 0; i < stops.length; i += 1) {
+          if (misses[i]) miss += 1;
+          else qty += stops[i].qty;
         }
-        doneSplit.textContent = ok + " pegos · " + miss + " não achei";
-        doneStreak.textContent = bestStreak > 1 ? "Série melhor: " + bestStreak : "Caminho inteiro, sem pressa.";
-        progressEl.textContent = TOTAL + " de " + TOTAL;
-        streakEl.textContent = "";
+        document.getElementById("zen-kicker").textContent = "Corrida " + (runIndex + 1);
+        document.getElementById("m-time").textContent = fmtTime(Date.now() - startedAt);
+        document.getElementById("m-qty").textContent = qty + " un.";
+        document.getElementById("m-miss").textContent = String(miss);
+        document.getElementById("m-stops").textContent = String(stops.length);
       }
 
-      function render() {
-        paintPaths();
-        paintNodes();
-        paintPebbles();
-        if (phase === PHASES.run) paintSpeak();
-        if (phase === PHASES.done) paintDone();
+      function render(fly) {
+        assertPhase(phase);
+        if (phase === PHASES.open || phase === PHASES.empty || phase === PHASES.zen) {
+          paintOpenPaths();
+          svg.setAttribute("viewBox", boxString(WIDE));
+          viewBox = WIDE.slice();
+          return;
+        }
+        paintPickPaths();
+        paintHud();
+        var dest = frameLeg(RUNS[runIndex], here);
+        if (fly) animateView(dest);
+        else {
+          viewBox = dest.slice();
+          svg.setAttribute("viewBox", boxString(viewBox));
+        }
       }
 
-      function finishWave() {
-        setPhase(PHASES.done);
-        svg.setAttribute("viewBox", boxString(WIDE));
-        render();
+      function enterPick(index, fly) {
+        runIndex = index;
+        here = 0;
+        misses = {};
+        startedAt = Date.now();
+        setPhase(PHASES.pick);
+        render(fly);
+      }
+
+      function finishRun() {
+        if (!freeIndexes().length) {
+          setPhase(PHASES.empty);
+          render(false);
+          return;
+        }
+        setPhase(PHASES.zen);
+        paintZen();
+        render(false);
       }
 
       function advance(kind) {
-        if (phase !== PHASES.run || animating) return;
-        outcomes.push(kind);
-        if (kind === "ok") {
-          streak += 1;
-          if (streak > bestStreak) bestStreak = streak;
-        } else {
-          streak = 0;
-        }
-        if (index >= STOPS.length - 1) {
-          finishWave();
+        if (phase !== PHASES.pick) return;
+        if (kind === "miss") misses[here] = true;
+        var stops = RUNS[runIndex];
+        if (here >= stops.length - 1) {
+          finishRun();
           return;
         }
-        index += 1;
-        paintSpeak();
-        paintPebbles();
-        paintPaths();
-        paintNodes();
-        animateView(focusBox(index), 640);
+        here += 1;
+        paintPickPaths();
+        paintHud();
+        animateView(frameLeg(stops, here));
       }
 
-      function claimAndZoom() {
-        if (phase !== PHASES.claim || animating) return;
-        setPhase(PHASES.zoom);
-        whisper("Sua");
-        animateView(focusBox(0), 880, function () {
-          setPhase(PHASES.run);
-          render();
-        });
+      function claim() {
+        if (phase !== PHASES.open) return;
+        var free = freeIndexes();
+        if (!free.length) {
+          setPhase(PHASES.empty);
+          render(false);
+          return;
+        }
+        claimed.push(free[0]);
+        enterPick(free[0], true);
       }
 
-      function restart() {
-        phase = PHASES.claim;
-        index = 0;
-        outcomes = [];
-        streak = 0;
-        bestStreak = 0;
-        setPhase(PHASES.claim);
-        svg.setAttribute("viewBox", boxString(WIDE));
-        render();
+      function again() {
+        if (!freeIndexes().length) {
+          setPhase(PHASES.empty);
+          render(false);
+          return;
+        }
+        runIndex = -1;
+        here = 0;
+        setPhase(PHASES.open);
+        render(false);
       }
 
-      document.getElementById("btn-iniciar").addEventListener("click", claimAndZoom);
+      document.getElementById("btn-iniciar").addEventListener("click", claim);
       document.getElementById("btn-feito").addEventListener("click", function () {
         advance("ok");
       });
       document.getElementById("btn-miss").addEventListener("click", function () {
         advance("miss");
       });
-      document.getElementById("btn-again").addEventListener("click", restart);
+      document.getElementById("btn-again").addEventListener("click", again);
 
       svg.setAttribute("viewBox", boxString(WIDE));
-      render();
+      setPhase(PHASES.open);
+      render(false);
     })();
   </script>
 </body>
