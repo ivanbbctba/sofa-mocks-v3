@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>Corrida · Onda 14</title>
+  <style>
+    :root {
+      --accent: #635bff;
+      --accent-deep: #4f48d4;
+      --accent-soft: #eeedff;
+      --ink: #1a1b1a;
+      --ink-2: #3c3e3c;
+      --mute: #6d706c;
+      --paper: #eef2f7;
+      --white: #fffcf8;
+      --ok: #22a06b;
+      --ok-deep: #0f8a5f;
+      --feito: #16181d;
+      --path: #635bff;
+      --path-done: #a8a3ff;
+      --aisle: #d7dde8;
+      --aisle-ink: rgba(22, 32, 52, 0.14);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: var(--paper);
+      color: var(--ink);
+      font: 17px/1.3 "SF Pro Text", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      min-height: 100dvh;
+      overflow: hidden;
+    }
+
+    .floor {
+      position: relative;
+      height: 100dvh;
+      width: 100%;
+      overflow: hidden;
+      background:
+        radial-gradient(120% 70% at 50% 0%, rgba(255, 255, 255, 0.72), transparent 58%),
+        #eef2f7;
+    }
+
+    .map {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .map svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .aisle {
+      fill: #cfd6e3;
+    }
+
+    .path-rest {
+      fill: none;
+      stroke: var(--path);
+      stroke-width: 0.22;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: 0.14;
+    }
+
+    .path-done {
+      fill: none;
+      stroke: var(--path);
+      stroke-width: 0.34;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: 0.62;
+    }
+
+    .path-play {
+      fill: none;
+      stroke: var(--path);
+      stroke-width: 0.48;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: 1;
+    }
+
+    .path-play.is-draw {
+      stroke-dasharray: var(--len);
+      stroke-dashoffset: var(--len);
+      animation: draw-leg 1.15s ease-out forwards;
+    }
+
+    .path-ahead {
+      fill: none;
+      stroke: var(--path);
+      stroke-width: 0.3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: 0.4;
+      stroke-dasharray: 0.42 0.32;
+    }
+
+    .node-done {
+      fill: #b8bcc8;
+    }
+
+    .node-next {
+      fill: #fff;
+      stroke: var(--path);
+      stroke-width: 0.1;
+    }
+
+    .node-future {
+      fill: #c5cad6;
+      opacity: 0.5;
+    }
+
+    .node-here {
+      fill: var(--ok);
+    }
+
+    .node-here.is-live {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: here-pulse 2.4s ease-in-out infinite;
+    }
+
+    .node-halo {
+      fill: none;
+      stroke: var(--ok);
+      stroke-width: 0.08;
+      opacity: 0.4;
+    }
+
+    .chrome {
+      position: absolute;
+      inset: 0;
+      z-index: 4;
+      pointer-events: none;
+    }
+
+    .chrome a,
+    .chrome button {
+      pointer-events: auto;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: calc(10px + env(safe-area-inset-top)) 16px 0;
+    }
+
+    .back-desk {
+      color: var(--mute);
+      text-decoration: none;
+      font-size: 14px;
+      letter-spacing: -0.02em;
+      padding: 6px 2px;
+    }
+
+    .count {
+      border: 0;
+      background: transparent;
+      color: var(--mute);
+      font: inherit;
+      font-size: 13px;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+      padding: 6px 2px;
+      cursor: pointer;
+    }
+
+    .hud-wrap {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 6;
+      padding: 0 20px calc(18px + env(safe-area-inset-bottom));
+      background: linear-gradient(
+        180deg,
+        rgba(238, 242, 247, 0) 0%,
+        rgba(238, 242, 247, 0.78) 28%,
+        rgba(238, 242, 247, 0.96) 58%,
+        #eef2f7 100%
+      );
+      pointer-events: none;
+    }
+
+    .hud {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      gap: 12px;
+      width: min(28rem, 100%);
+      margin: 0 auto;
+      pointer-events: auto;
+    }
+
+    .hud-copy { min-width: 0; }
+
+    .qty {
+      margin: 0;
+      font-size: 72px;
+      font-weight: 650;
+      letter-spacing: -0.07em;
+      line-height: 0.86;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .slot {
+      margin: 8px 0 0;
+      font-size: 18px;
+      font-weight: 560;
+      letter-spacing: -0.02em;
+    }
+
+    .depois {
+      margin: 3px 0 0;
+      font-size: 14px;
+      color: var(--mute);
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding-bottom: 6px;
+    }
+
+    .voltar,
+    .feito {
+      border: 0;
+      border-radius: 50%;
+      cursor: pointer;
+      letter-spacing: -0.03em;
+    }
+
+    .voltar {
+      width: 56px;
+      height: 56px;
+      background: transparent;
+      color: var(--ink);
+      box-shadow: inset 0 0 0 1.5px rgba(22, 24, 29, 0.22);
+      font: 560 12px/1 "SF Pro Text", system-ui, sans-serif;
+    }
+
+    .voltar:disabled {
+      opacity: 0.28;
+      cursor: default;
+    }
+
+    .feito {
+      width: 76px;
+      height: 76px;
+      background: var(--feito);
+      color: #fff;
+      font: 650 15px/1 "SF Pro Text", system-ui, sans-serif;
+    }
+
+    .feito:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+
+    .voltar:active:not(:disabled),
+    .feito:active:not(:disabled) {
+      transform: scale(0.96);
+    }
+
+    .drawer-hit {
+      display: block;
+      width: 44px;
+      height: 5px;
+      margin: 0 auto 14px;
+      border: 0;
+      border-radius: 99px;
+      background: rgba(22, 24, 29, 0.16);
+      cursor: pointer;
+      pointer-events: auto;
+    }
+
+    .scrim {
+      position: absolute;
+      inset: 0;
+      z-index: 8;
+      background: rgba(16, 18, 24, 0.28);
+      border: 0;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.22s ease;
+    }
+
+    .scrim.is-on {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .drawer {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 9;
+      max-height: min(78dvh, 680px);
+      border-radius: 22px 22px 0 0;
+      background: var(--white);
+      box-shadow: 0 -16px 40px rgba(16, 18, 24, 0.12);
+      transform: translateY(110%);
+      transition: transform 0.28s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .drawer.is-on { transform: translateY(0); }
+
+    .drawer-head {
+      padding: 14px 18px 10px;
+      border-bottom: 1px solid #eceae4;
+    }
+
+    .drawer-kicker {
+      margin: 0;
+      color: var(--mute);
+      font-size: 12px;
+    }
+
+    .drawer-title {
+      margin: 4px 0 0;
+      font-size: 20px;
+      font-weight: 650;
+      letter-spacing: -0.03em;
+    }
+
+    .meter {
+      margin-top: 10px;
+      height: 4px;
+      border-radius: 99px;
+      background: #eceae4;
+      overflow: hidden;
+    }
+
+    .meter > i {
+      display: block;
+      height: 100%;
+      width: 0;
+      background: var(--accent);
+    }
+
+    .stops {
+      margin: 0;
+      padding: 8px 10px calc(18px + env(safe-area-inset-bottom));
+      list-style: none;
+      overflow: auto;
+    }
+
+    .stop {
+      display: grid;
+      grid-template-columns: 28px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      width: 100%;
+      padding: 11px 8px;
+      border: 0;
+      border-radius: 12px;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .stop.is-here {
+      background: var(--accent-soft);
+    }
+
+    .stop.is-done .stop-slot { color: var(--mute); }
+
+    .stop-n {
+      color: var(--mute);
+      font-variant-numeric: tabular-nums;
+      font-size: 13px;
+    }
+
+    .stop-slot {
+      font-weight: 650;
+      letter-spacing: -0.02em;
+    }
+
+    .stop-meta {
+      margin: 2px 0 0;
+      color: var(--mute);
+      font-size: 13px;
+    }
+
+    .stop-qty {
+      font-variant-numeric: tabular-nums;
+      color: var(--ink-2);
+      font-weight: 560;
+    }
+
+    @keyframes draw-leg {
+      to { stroke-dashoffset: 0; }
+    }
+
+    @keyframes here-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.55; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .path-play.is-draw,
+      .node-here.is-live,
+      .drawer,
+      .scrim {
+        animation: none !important;
+        transition: none !important;
+      }
+      .path-play.is-draw {
+        stroke-dasharray: none !important;
+        stroke-dashoffset: 0 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="floor" id="floor">
+    <div class="map" id="map" role="img" aria-label="Caminho desta corrida"></div>
+    <div class="chrome">
+      <div class="top-bar">
+        <a class="back-desk" href="../desk/01.html">← Sofá</a>
+        <button type="button" class="count" id="count" aria-controls="drawer">4 de 18</button>
+      </div>
+    </div>
+    <div class="hud-wrap">
+      <button type="button" class="drawer-hit" id="drawer-hit" aria-label="Abrir paradas"></button>
+      <div class="hud">
+        <div class="hud-copy">
+          <p class="qty" id="qty">42</p>
+          <p class="slot" id="slot">F-02</p>
+          <p class="depois" id="depois">depois H-09</p>
+        </div>
+        <div class="actions">
+          <button type="button" class="voltar" id="voltar">Voltar</button>
+          <button type="button" class="feito" id="feito">Feito</button>
+        </div>
+      </div>
+    </div>
+    <button type="button" class="scrim" id="scrim" hidden aria-label="Fechar lista"></button>
+    <aside class="drawer" id="drawer" aria-hidden="true">
+      <div class="drawer-head">
+        <p class="drawer-kicker" id="drawer-kicker">Onda 14 · 8 pedidos</p>
+        <h2 class="drawer-title" id="drawer-title">4 de 18 paradas</h2>
+        <div class="meter" aria-hidden="true"><i id="meter"></i></div>
+      </div>
+      <ol class="stops" id="stops"></ol>
+    </aside>
+  </main>
+  <script>
+    (function () {
+      const AISLE_X = { A: 0.78, B: 1.92, C: 3.06, D: 4.2, E: 5.34, F: 6.48, G: 7.62, H: 8.76 };
+      const Y0 = 1.55;
+      const Y1 = 15.85;
+      const TOP = 0.85;
+      const BOT = 16.65;
+      const NS = "http://www.w3.org/2000/svg";
+
+      const STOPS = [
+        { code: "A-01", qty: 10, sku: "TOALHA-220", pedido: "1042" },
+        { code: "C-02", qty: 8, sku: "JOGO-LENCOL", pedido: "1042" },
+        { code: "E-01", qty: 10, sku: "FRONHA-PAR", pedido: "1043" },
+        { code: "E-10", qty: 10, sku: "COBERTOR-CAS", pedido: "1043" },
+        { code: "F-02", qty: 42, sku: "KIT-HIGIENE", pedido: "1044" },
+        { code: "H-09", qty: 3, sku: "SABONETE", pedido: "1044" },
+        { code: "H-03", qty: 12, sku: "SHAMPOO-400", pedido: "1045" },
+        { code: "B-09", qty: 5, sku: "ESC-DENTES", pedido: "1045" },
+        { code: "G-01", qty: 7, sku: "CREME-HID", pedido: "1046" },
+        { code: "G-08", qty: 4, sku: "ALGODAO", pedido: "1046" },
+        { code: "C-08", qty: 6, sku: "PILLOW-TOP", pedido: "1047" },
+        { code: "F-10", qty: 9, sku: "TAPETE-BAN", pedido: "1047" },
+        { code: "D-04", qty: 2, sku: "CORTINA-180", pedido: "1048" },
+        { code: "D-09", qty: 15, sku: "TOALHA-MAO", pedido: "1048" },
+        { code: "A-08", qty: 1, sku: "ROUPAO-M", pedido: "1048" },
+        { code: "B-02", qty: 11, sku: "SACO-LIXO", pedido: "1049" },
+        { code: "H-01", qty: 8, sku: "PAPEL-HIG", pedido: "1049" },
+        { code: "G-05", qty: 3, sku: "AMACIANTE", pedido: "1049" }
+      ];
+
+      function slotY(n) {
+        return Y0 + ((n - 1) * (Y1 - Y0)) / 9;
+      }
+
+      function parseCode(code) {
+        return { aisle: code[0], n: Number(code.slice(2)) };
+      }
+
+      function xy(code) {
+        const parsed = parseCode(code);
+        return { x: AISLE_X[parsed.aisle], y: slotY(parsed.n), aisle: parsed.aisle, n: parsed.n };
+      }
+
+      function hop(a, b) {
+        if (a.aisle === b.aisle) return [a, { x: a.x, y: b.y }];
+        const mid = (Y0 + Y1) / 2;
+        const sameTop = a.y <= mid && b.y <= mid;
+        const sameBot = a.y >= mid && b.y >= mid;
+        let end;
+        if (sameTop) {
+          end = Math.min(a.y, b.y) - 0.7;
+        } else if (sameBot) {
+          end = Math.max(a.y, b.y) + 0.7;
+        } else {
+          const viaTop = Math.abs(a.y - TOP) + Math.abs(b.y - TOP);
+          const viaBot = Math.abs(a.y - BOT) + Math.abs(b.y - BOT);
+          end = viaTop <= viaBot ? TOP : BOT;
+        }
+        end = Math.max(TOP, Math.min(BOT, end));
+        return [a, { x: a.x, y: end }, { x: b.x, y: end }, { x: b.x, y: b.y }];
+      }
+
+      function samePoint(p, q) {
+        return Math.abs(p.x - q.x) < 0.001 && Math.abs(p.y - q.y) < 0.001;
+      }
+
+      function joinHops(hops) {
+        const out = [];
+        hops.forEach((seg) => {
+          seg.forEach((p, i) => {
+            if (i === 0 && out.length && samePoint(out[out.length - 1], p)) return;
+            out.push(p);
+          });
+        });
+        return out;
+      }
+
+      const points = STOPS.map((stop) => xy(stop.code));
+      const hops = points.slice(1).map((pt, i) => hop(points[i], pt));
+      const fullPath = joinHops(hops);
+      const hopSpans = [];
+      let cursor = 0;
+      hops.forEach((seg) => {
+        const start = cursor;
+        const extra = cursor === 0 ? seg.length : seg.length - 1;
+        cursor += extra;
+        hopSpans.push({ from: start, to: cursor });
+      });
+
+      function slicePath(fromIdx, toIdx) {
+        if (!hopSpans.length || toIdx <= 0) return fullPath.slice(0, 1);
+        const last = hopSpans.length - 1;
+        const startHop = Math.max(0, Math.min(fromIdx, last));
+        const endHop = Math.max(0, Math.min(toIdx - 1, last));
+        return fullPath.slice(hopSpans[startHop].from, hopSpans[endHop].to + 1);
+      }
+
+      function pts(list) {
+        return list.map((p) => p.x + " " + p.y).join(" ");
+      }
+
+      function el(name, attrs) {
+        const node = document.createElementNS(NS, name);
+        Object.keys(attrs).forEach((key) => node.setAttribute(key, String(attrs[key])));
+        return node;
+      }
+
+      const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const map = document.getElementById("map");
+      const qtyEl = document.getElementById("qty");
+      const slotEl = document.getElementById("slot");
+      const depoisEl = document.getElementById("depois");
+      const countEl = document.getElementById("count");
+      const feitoEl = document.getElementById("feito");
+      const voltarEl = document.getElementById("voltar");
+      const drawer = document.getElementById("drawer");
+      const scrim = document.getElementById("scrim");
+      const stopsEl = document.getElementById("stops");
+      const drawerTitle = document.getElementById("drawer-title");
+      const meter = document.getElementById("meter");
+
+      let here = 4;
+
+      function paintMap(fromIdx, toIdx) {
+        map.replaceChildren();
+        const svg = el("svg", {
+          viewBox: "0 0 9.55 21.6",
+          preserveAspectRatio: "xMidYMid meet",
+          "aria-hidden": "true"
+        });
+
+        Object.keys(AISLE_X).forEach((letter) => {
+          const x = AISLE_X[letter];
+          svg.appendChild(el("rect", {
+            class: "aisle",
+            x: x - 0.24,
+            y: 0.45,
+            width: 0.48,
+            height: 16.5,
+            rx: 0.24
+          }));
+        });
+
+        if (fullPath.length > 1) {
+          svg.appendChild(el("polyline", { class: "path-rest", points: pts(fullPath) }));
+        }
+
+        const doneSeg = slicePath(0, toIdx);
+        if (doneSeg.length > 1) {
+          svg.appendChild(el("polyline", { class: "path-done", points: pts(doneSeg) }));
+        }
+
+        const aheadSeg = slicePath(toIdx, STOPS.length);
+        if (aheadSeg.length > 1) {
+          svg.appendChild(el("polyline", { class: "path-ahead", points: pts(aheadSeg) }));
+        }
+
+        let playNode = null;
+        if (toIdx > 0) {
+          const playSeg = slicePath(fromIdx, toIdx);
+          if (playSeg.length > 1) {
+            playNode = el("polyline", { class: "path-play", points: pts(playSeg) });
+            svg.appendChild(playNode);
+          }
+        }
+
+        points.forEach((p, i) => {
+          if (i === toIdx) {
+            svg.appendChild(el("circle", { class: "node-halo", cx: p.x, cy: p.y, r: 0.38 }));
+            const hereNode = el("circle", { class: "node-here", cx: p.x, cy: p.y, r: 0.2 });
+            svg.appendChild(hereNode);
+            if (!reduce) hereNode.classList.add("is-live");
+            return;
+          }
+          if (i === toIdx + 1) {
+            svg.appendChild(el("circle", { class: "node-next", cx: p.x, cy: p.y, r: 0.17 }));
+            return;
+          }
+          svg.appendChild(el("circle", {
+            class: i < toIdx ? "node-done" : "node-future",
+            cx: p.x,
+            cy: p.y,
+            r: i < toIdx ? 0.1 : 0.08
+          }));
+        });
+
+        map.appendChild(svg);
+
+        if (playNode && !reduce) {
+          const len = playNode.getTotalLength();
+          playNode.style.setProperty("--len", String(len));
+          playNode.classList.add("is-draw");
+        }
+      }
+
+      function paintHud() {
+        const stop = STOPS[here];
+        const next = STOPS[here + 1];
+        const complete = here >= STOPS.length;
+        const done = complete ? STOPS.length : here;
+        countEl.textContent = done + " de " + STOPS.length;
+        drawerTitle.textContent = done + " de " + STOPS.length + " paradas";
+        meter.style.width = Math.round((100 * done) / STOPS.length) + "%";
+        voltarEl.disabled = here === 0;
+        if (complete) {
+          qtyEl.textContent = String(STOPS.length);
+          slotEl.textContent = "Corrida concluída";
+          depoisEl.textContent = "8 pedidos · onda 14";
+          feitoEl.hidden = true;
+          return;
+        }
+        feitoEl.hidden = false;
+        qtyEl.textContent = String(stop.qty);
+        slotEl.textContent = stop.code;
+        depoisEl.textContent = next ? "depois " + next.code : "última parada";
+      }
+
+      function paintList() {
+        stopsEl.replaceChildren();
+        STOPS.forEach((stop, i) => {
+          const li = document.createElement("li");
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "stop" + (i === here ? " is-here" : "") + (i < here ? " is-done" : "");
+          btn.innerHTML =
+            '<span class="stop-n">' + (i + 1) + "</span>" +
+            "<div><div class=\"stop-slot\"></div><p class=\"stop-meta\"></p></div>" +
+            '<span class="stop-qty"></span>';
+          btn.querySelector(".stop-slot").textContent = stop.code;
+          btn.querySelector(".stop-meta").textContent =
+            stop.sku + " · ped. " + stop.pedido + (i < here ? " · feito" : i === here ? " · agora" : "");
+          btn.querySelector(".stop-qty").textContent = "×" + stop.qty;
+          btn.addEventListener("click", function () {
+            goTo(i);
+            closeDrawer();
+          });
+          li.appendChild(btn);
+          stopsEl.appendChild(li);
+        });
+      }
+
+      function goTo(index) {
+        here = Math.max(0, Math.min(index, STOPS.length));
+        paintHud();
+        paintList();
+        const at = here >= STOPS.length ? STOPS.length : here;
+        paintMap(Math.max(0, at - 1), at);
+      }
+
+      function openDrawer() {
+        drawer.classList.add("is-on");
+        drawer.setAttribute("aria-hidden", "false");
+        scrim.hidden = false;
+        scrim.classList.add("is-on");
+      }
+
+      function closeDrawer() {
+        drawer.classList.remove("is-on");
+        drawer.setAttribute("aria-hidden", "true");
+        scrim.classList.remove("is-on");
+        window.setTimeout(function () {
+          if (!drawer.classList.contains("is-on")) scrim.hidden = true;
+        }, 220);
+      }
+
+      feitoEl.addEventListener("click", function () {
+        if (here < STOPS.length) goTo(here + 1);
+      });
+      voltarEl.addEventListener("click", function () {
+        if (here > 0) goTo(here - 1);
+      });
+      countEl.addEventListener("click", openDrawer);
+      document.getElementById("drawer-hit").addEventListener("click", openDrawer);
+      scrim.addEventListener("click", closeDrawer);
+
+      paintHud();
+      paintList();
+      paintMap(Math.max(0, here - 1), here);
+      if (location.hash === "#lista") {
+        drawer.style.transition = "none";
+        openDrawer();
+        requestAnimationFrame(function () { drawer.style.transition = ""; });
+      }
+    })();
+  </script>
+</body>
+</html>
