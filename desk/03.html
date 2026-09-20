@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f7f6f2" />
+  <title>Pisoly — Mesa</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --accent: #635bff;
+      --accent-deep: #4f48d4;
+      --accent-soft: #eeedff;
+      --ink: #1a1b1a;
+      --ink-2: #3c3e3c;
+      --mute: #6d706c;
+      --line: #e3e1da;
+      --paper: #f7f6f2;
+      --paper-2: #efeee8;
+      --white: #fffcf8;
+      --ok: #3d6f60;
+      --ok-soft: #dce8e3;
+      --shadow: 0 18px 40px rgba(26, 27, 26, 0.06);
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    *,
+    *::before,
+    *::after { box-sizing: border-box; }
+
+    html { -webkit-text-size-adjust: 100%; }
+
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 15px;
+      line-height: 1.45;
+      color: var(--ink);
+      background: var(--paper);
+    }
+
+    .num { font-variant-numeric: tabular-nums; }
+
+    .shell {
+      width: min(390px, 100%);
+      min-height: 100dvh;
+      margin: 0 auto;
+      padding: calc(18px + var(--safe-top)) 20px calc(28px + var(--safe-bottom));
+    }
+
+    header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .wordmark {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+    }
+
+    .who {
+      font-size: 12px;
+      color: var(--mute);
+    }
+
+    .factory {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 22px;
+      color: var(--mute);
+      font-size: 13px;
+    }
+
+    .factory-pulse {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-soft);
+      flex: none;
+    }
+
+    .dot.is-paused {
+      background: var(--mute);
+      box-shadow: none;
+    }
+
+    .factory-copy {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .factory button {
+      flex: none;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      background: none;
+      color: var(--mute);
+      font: inherit;
+      font-size: 13px;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .hero {
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 28px;
+    }
+
+    .hero-hit {
+      display: block;
+      padding: 22px 22px 8px;
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .kicker {
+      margin: 0 0 6px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .hero h1 {
+      margin: 0 0 18px;
+      font-size: 34px;
+      font-weight: 600;
+      letter-spacing: -0.045em;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      padding-bottom: 6px;
+    }
+
+    .stat {
+      min-width: 0;
+    }
+
+    .stat b {
+      display: block;
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+
+    .stat span {
+      display: block;
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--mute);
+    }
+
+    .hero-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 16px 16px 16px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 46px;
+      padding: 12px 14px;
+      border: 0;
+      border-radius: 12px;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn:active { transform: scale(0.985); }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary:hover { background: var(--accent-deep); }
+
+    .btn-ghost {
+      background: var(--accent-soft);
+      color: var(--accent-deep);
+    }
+
+    .btn[disabled] {
+      opacity: 0.55;
+      cursor: default;
+      transform: none;
+    }
+
+    .ghost-head {
+      margin: 0 0 8px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--mute);
+    }
+
+    .ghost-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .ghost-list a {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 2px;
+      border-bottom: 1px solid var(--line);
+      color: inherit;
+      text-decoration: none;
+      opacity: 0.38;
+    }
+
+    .ghost-list a:last-child { border-bottom: 0; }
+
+    .ghost-list strong {
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    .ghost-list .meta {
+      font-size: 13px;
+      color: var(--mute);
+    }
+
+    .sheet {
+      position: fixed;
+      inset: 0;
+      display: none;
+      z-index: 20;
+    }
+
+    .sheet.is-open { display: block; }
+
+    .sheet-dim {
+      position: absolute;
+      inset: 0;
+      background: rgba(26, 27, 26, 0.32);
+    }
+
+    .sheet-card {
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      width: min(390px, 100%);
+      transform: translateX(-50%);
+      padding: 10px 16px calc(18px + var(--safe-bottom));
+      background: var(--white);
+      border-radius: 22px 22px 0 0;
+      box-shadow: var(--shadow);
+    }
+
+    .sheet-card h2 {
+      margin: 10px 0 4px;
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+    }
+
+    .sheet-card p {
+      margin: 0 0 16px;
+      color: var(--mute);
+      font-size: 13px;
+      word-break: break-all;
+    }
+
+    .sheet-card .btn { width: 100%; margin-bottom: 8px; }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(28px + var(--safe-bottom));
+      transform: translateX(-50%) translateY(12px);
+      opacity: 0;
+      pointer-events: none;
+      background: var(--ink);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 10px 14px;
+      border-radius: 999px;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      z-index: 30;
+    }
+
+    .toast.is-on {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .btn:active,
+      .toast { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <p class="wordmark">Pisoly</p>
+      <p class="who">Mesa · logado</p>
+    </header>
+
+    <div class="factory" role="status">
+      <span class="factory-pulse">
+        <span class="dot" id="factory-dot" aria-hidden="true"></span>
+        <span class="factory-copy" id="factory-copy">Fábrica ligada · Pedidos do dia</span>
+      </span>
+      <button type="button" id="pause-btn">Pausar</button>
+    </div>
+
+    <article class="hero" aria-label="Próxima onda">
+      <a class="hero-hit" href="../rich/03.html">
+        <p class="kicker">Próxima onda</p>
+        <h1>Onda #1043</h1>
+        <div class="stats">
+          <div class="stat">
+            <b class="num">14</b>
+            <span>pedidos</span>
+          </div>
+          <div class="stat">
+            <b class="num">86</b>
+            <span>itens</span>
+          </div>
+          <div class="stat">
+            <b class="num">~18</b>
+            <span>min</span>
+          </div>
+        </div>
+      </a>
+      <div class="hero-actions">
+        <button type="button" class="btn btn-primary" id="share-btn">Compartilhar</button>
+        <button type="button" class="btn btn-ghost" id="anticipate-btn">Antecipar</button>
+      </div>
+    </article>
+
+    <p class="ghost-head">Depois</p>
+    <ul class="ghost-list">
+      <li>
+        <a href="../rich/03.html">
+          <strong>Onda #1044</strong>
+          <span class="meta num">3 ped.</span>
+        </a>
+      </li>
+      <li>
+        <a href="../rich/03.html">
+          <strong>Onda #1045</strong>
+          <span class="meta">ainda vazia</span>
+        </a>
+      </li>
+      <li>
+        <a href="../rich/03.html">
+          <strong>Onda #1042</strong>
+          <span class="meta num">chão · 8/17</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+
+  <div class="sheet" id="share-sheet" hidden>
+    <div class="sheet-dim" data-close-sheet></div>
+    <div class="sheet-card" role="dialog" aria-labelledby="share-title">
+      <h2 id="share-title">Compartilhar onda</h2>
+      <p id="share-link">https://pisoly.com/r/7c3a9e2b</p>
+      <button type="button" class="btn btn-primary" id="copy-btn">Copiar link</button>
+      <button type="button" class="btn btn-ghost" data-close-sheet>Fechar</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    (function () {
+      var paused = false;
+      var anticipated = false;
+      var grant = "https://pisoly.com/r/7c3a9e2b";
+      var factoryCopy = document.getElementById("factory-copy");
+      var factoryDot = document.getElementById("factory-dot");
+      var pauseBtn = document.getElementById("pause-btn");
+      var anticipateBtn = document.getElementById("anticipate-btn");
+      var shareBtn = document.getElementById("share-btn");
+      var shareSheet = document.getElementById("share-sheet");
+      var copyBtn = document.getElementById("copy-btn");
+      var toast = document.getElementById("toast");
+      var toastTimer = 0;
+
+      function factoryLabel() {
+        if (paused) return "Fábrica pausada · Pedidos do dia";
+        if (anticipated) return "Onda antecipada · Pedidos do dia";
+        return "Fábrica ligada · Pedidos do dia";
+      }
+
+      function renderFactory() {
+        factoryCopy.textContent = factoryLabel();
+        factoryDot.classList.toggle("is-paused", paused);
+        pauseBtn.textContent = paused ? "Retomar" : "Pausar";
+      }
+
+      function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add("is-on");
+        window.clearTimeout(toastTimer);
+        toastTimer = window.setTimeout(function () {
+          toast.classList.remove("is-on");
+        }, 1800);
+      }
+
+      function openSheet() {
+        shareSheet.hidden = false;
+        shareSheet.classList.add("is-open");
+      }
+
+      function closeSheet() {
+        shareSheet.classList.remove("is-open");
+        shareSheet.hidden = true;
+      }
+
+      pauseBtn.addEventListener("click", function () {
+        paused = !paused;
+        renderFactory();
+        showToast(paused ? "Automático pausado" : "Automático retomado");
+      });
+
+      anticipateBtn.addEventListener("click", function () {
+        if (anticipated) return;
+        anticipated = true;
+        anticipateBtn.textContent = "Antecipada";
+        anticipateBtn.disabled = true;
+        renderFactory();
+        showToast("Onda #1043 antecipada");
+      });
+
+      shareBtn.addEventListener("click", function () {
+        if (navigator.share) {
+          navigator.share({
+            title: "Pisoly — Onda #1043",
+            text: "14 pedidos · 86 itens",
+            url: grant
+          }).catch(function () {
+            openSheet();
+          });
+          return;
+        }
+        openSheet();
+      });
+
+      shareSheet.addEventListener("click", function (event) {
+        if (event.target.hasAttribute("data-close-sheet")) closeSheet();
+      });
+
+      copyBtn.addEventListener("click", function () {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(grant).then(function () {
+            closeSheet();
+            showToast("Link copiado");
+          }).catch(function () {
+            showToast(grant);
+          });
+          return;
+        }
+        showToast(grant);
+      });
+    })();
+  </script>
+</body>
+</html>
