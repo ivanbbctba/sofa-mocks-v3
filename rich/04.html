@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Onda #1042 — Mapa + lista</title>
+  <style>
+    :root {
+      --accent: #635bff;
+      --accent-deep: #4f48d4;
+      --accent-soft: #eeedff;
+      --route-done: #a8a3ff;
+      --here: #1aa36a;
+      --here-ring: #2bb673;
+      --ink: #16324a;
+      --ink-2: #3c4d5c;
+      --mute: #5b7388;
+      --paper: #e8eef5;
+      --floor: #dce8f1;
+      --white: #ffffff;
+      --line: rgba(22, 50, 74, 0.1);
+      --ok: #3d6f60;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: var(--floor);
+      color: var(--ink);
+      font: 16px/1.35 "SF Pro Text", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    .app {
+      position: relative;
+      width: min(100%, 430px);
+      height: 100dvh;
+      margin: 0 auto;
+      overflow: hidden;
+      background: var(--floor);
+    }
+
+    .floor {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+    }
+
+    .floor svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .aisle {
+      fill: url(#aisleFade);
+    }
+
+    .path-rest {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 7;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: 0.16;
+    }
+
+    .path-done {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 11;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: 0.88;
+    }
+
+    .path-play {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 12;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .path-play.is-draw {
+      stroke-dasharray: var(--len);
+      stroke-dashoffset: var(--len);
+      animation: draw-leg 1.15s ease-out forwards;
+    }
+
+    .path-ahead {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 10;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 14 12;
+      opacity: 0.34;
+    }
+
+    .node { fill: rgba(22, 50, 74, 0.22); }
+    .node.is-done { fill: var(--route-done); }
+    .node.is-next {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 2.5;
+    }
+    .node-here {
+      fill: var(--here);
+    }
+    .node-ring {
+      fill: none;
+      stroke: var(--here-ring);
+      stroke-width: 3.5;
+    }
+
+    @keyframes draw-leg {
+      to { stroke-dashoffset: 0; }
+    }
+
+    .chrome {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 4;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: calc(10px + env(safe-area-inset-top, 0px)) 14px 0;
+      pointer-events: none;
+    }
+
+    .chrome > * { pointer-events: auto; }
+
+    .back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 13px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.86);
+      color: var(--ink);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 550;
+      letter-spacing: -0.02em;
+      box-shadow: 0 2px 10px rgba(22, 50, 74, 0.08);
+      backdrop-filter: blur(8px);
+    }
+
+    .count {
+      margin-top: 6px;
+      color: var(--mute);
+      font-size: 13px;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+    }
+
+    .sheet {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      max-height: 78dvh;
+      background: var(--white);
+      border-radius: 22px 22px 0 0;
+      box-shadow: 0 -12px 40px rgba(22, 50, 74, 0.14);
+      transform: translateY(0);
+    }
+
+    .sheet[data-size="peek"] { height: 292px; }
+    .sheet[data-size="half"] { height: 52dvh; }
+    .sheet[data-size="full"] { height: 78dvh; }
+
+    .handle {
+      flex-shrink: 0;
+      width: 100%;
+      padding: 10px 0 4px;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .handle::before {
+      content: "";
+      display: block;
+      width: 36px;
+      height: 4px;
+      margin: 0 auto;
+      border-radius: 999px;
+      background: rgba(22, 50, 74, 0.16);
+    }
+
+    .hud {
+      flex-shrink: 0;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      gap: 8px 16px;
+      padding: 2px 20px 12px;
+    }
+
+    .qty {
+      margin: 0;
+      font-size: 56px;
+      font-weight: 650;
+      letter-spacing: -0.07em;
+      line-height: 0.86;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .loc {
+      margin: 6px 0 0;
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .next {
+      margin: 2px 0 0;
+      color: var(--mute);
+      font-size: 13px;
+    }
+
+    .feito {
+      width: 76px;
+      height: 76px;
+      border: 0;
+      border-radius: 50%;
+      background: #0f1724;
+      color: #fff;
+      font: 650 15px/1 "SF Pro Text", system-ui, sans-serif;
+      letter-spacing: -0.03em;
+      cursor: pointer;
+    }
+
+    .feito:active { transform: scale(0.97); }
+    .feito:disabled {
+      opacity: 0.45;
+      cursor: default;
+    }
+
+    .feito:focus-visible,
+    .back:focus-visible,
+    .stop:focus-visible,
+    .handle:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 3px;
+    }
+
+    .sheet-head {
+      flex-shrink: 0;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      padding: 0 20px 8px;
+      color: var(--mute);
+      font-size: 12px;
+    }
+
+    .sheet-head strong {
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .stops {
+      flex: 1;
+      min-height: 0;
+      margin: 0;
+      padding: 0 10px calc(14px + var(--safe-bottom));
+      overflow: auto;
+      list-style: none;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .stop {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 18px 1fr auto;
+      grid-template-rows: auto auto;
+      column-gap: 10px;
+      padding: 11px 10px;
+      border: 0;
+      border-radius: 14px;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .stop + .stop { border-top: 1px solid var(--line); }
+
+    .stop.is-now {
+      background: var(--accent-soft);
+      border-top-color: transparent;
+    }
+
+    .stop.is-now + .stop { border-top-color: transparent; }
+
+    .stop.is-done .name,
+    .stop.is-done .sku { opacity: 0.46; }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      margin-top: 6px;
+      border-radius: 50%;
+      background: rgba(22, 50, 74, 0.2);
+    }
+
+    .stop.is-done .dot { background: var(--route-done); }
+    .stop.is-now .dot { background: var(--here); box-shadow: 0 0 0 4px rgba(26, 163, 106, 0.18); }
+    .stop.is-next .dot {
+      background: transparent;
+      box-shadow: inset 0 0 0 2px var(--accent);
+    }
+
+    .name {
+      font-size: 16px;
+      font-weight: 650;
+      letter-spacing: -0.03em;
+    }
+
+    .sku {
+      margin-top: 2px;
+      color: var(--ink-2);
+      font-size: 14px;
+    }
+
+    .qty-chip {
+      align-self: center;
+      color: var(--mute);
+      font-size: 13px;
+      font-variant-numeric: tabular-nums;
+      font-weight: 550;
+    }
+
+    .detail {
+      display: none;
+      grid-column: 2 / -1;
+      margin-top: 8px;
+      padding: 8px 0 2px;
+      color: var(--mute);
+      font-size: 13px;
+    }
+
+    .stop.is-open .detail { display: block; }
+
+    .detail span {
+      display: inline-block;
+      margin: 0 8px 4px 0;
+    }
+
+    .done-mark { color: var(--ok); font-weight: 600; }
+
+    .end {
+      display: none;
+      margin: 0;
+      padding: 4px 20px 10px;
+      color: var(--ok);
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .app.is-complete .end { display: block; }
+    .app.is-complete .next { visibility: hidden; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .path-play.is-draw {
+        animation: none;
+        stroke-dasharray: none;
+        stroke-dashoffset: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <div class="floor" id="floor" role="img" aria-label="Caminho desta corrida"></div>
+
+    <div class="chrome">
+      <a class="back" href="../desk/04.html">← Mesa</a>
+      <p class="count" id="count">4 de 18</p>
+    </div>
+
+    <section class="sheet" id="sheet" data-size="peek" aria-label="Paradas da onda">
+      <button class="handle" id="handle" type="button" aria-expanded="false">
+        <span class="visually-hidden" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Abrir lista</span>
+      </button>
+
+      <div class="hud">
+        <div>
+          <p class="qty" id="qty">42</p>
+          <p class="loc" id="loc">F-02</p>
+          <p class="next" id="depois">depois H-09</p>
+        </div>
+        <button class="feito" id="feito" type="button">Feito</button>
+      </div>
+
+      <p class="end" id="end">Corrida concluída.</p>
+
+      <div class="sheet-head">
+        <span>Todas as paradas · <strong>onda #1042</strong></span>
+        <span id="done-meta">4 feitas</span>
+      </div>
+
+      <ul class="stops" id="stops"></ul>
+    </section>
+  </div>
+
+  <script>
+    (function () {
+      var AISLE = { A: 44, B: 92, C: 140, D: 188, E: 236, F: 284, G: 332, H: 380 };
+
+      var STOPS = [
+        { loc: "A-01", sku: "Camiseta branca M", qty: 10, aisle: "A", y: 428, orders: ["#1841", "#1844"], units: 10 },
+        { loc: "C-02", sku: "Moletom cinza M", qty: 2, aisle: "C", y: 352, orders: ["#1842"], units: 2 },
+        { loc: "D-03", sku: "Calça jeans 42", qty: 1, aisle: "D", y: 276, orders: ["#1841"], units: 1 },
+        { loc: "E-05", sku: "Meia kit 3 pares", qty: 4, aisle: "E", y: 214, orders: ["#1843", "#1845"], units: 4 },
+        { loc: "F-02", sku: "Cueca boxer P", qty: 42, aisle: "F", y: 168, orders: ["#1841", "#1842", "#1846"], units: 42 },
+        { loc: "H-09", sku: "Toalha de banho", qty: 3, aisle: "H", y: 508, orders: ["#1844"], units: 3 },
+        { loc: "H-04", sku: "Fronha 50×70", qty: 6, aisle: "H", y: 236, orders: ["#1842"], units: 6 },
+        { loc: "G-03", sku: "Lençol casal", qty: 2, aisle: "G", y: 132, orders: ["#1845"], units: 2 },
+        { loc: "E-10", sku: "Pijama feminino G", qty: 1, aisle: "E", y: 548, orders: ["#1843"], units: 1 },
+        { loc: "D-08", sku: "Shorts moletom M", qty: 5, aisle: "D", y: 464, orders: ["#1841"], units: 5 },
+        { loc: "C-08", sku: "Boné preto", qty: 6, aisle: "C", y: 516, orders: ["#1846"], units: 6 },
+        { loc: "F-10", sku: "Chinelo 39", qty: 8, aisle: "F", y: 568, orders: ["#1842", "#1844"], units: 8 },
+        { loc: "G-07", sku: "Jaqueta jeans M", qty: 1, aisle: "G", y: 388, orders: ["#1845"], units: 1 },
+        { loc: "H-02", sku: "Cinto couro", qty: 2, aisle: "H", y: 108, orders: ["#1843"], units: 2 },
+        { loc: "B-06", sku: "Relógio digital", qty: 1, aisle: "B", y: 324, orders: ["#1846"], units: 1 },
+        { loc: "A-08", sku: "Meia invisível", qty: 12, aisle: "A", y: 548, orders: ["#1841", "#1845"], units: 12 },
+        { loc: "B-02", sku: "Camisa social 40", qty: 3, aisle: "B", y: 124, orders: ["#1844"], units: 3 },
+        { loc: "A-04", sku: "Bermuda cargo 40", qty: 2, aisle: "A", y: 204, orders: ["#1842"], units: 2 }
+      ];
+
+      var PATH = [
+        [44, 520], [44, 428],
+        [44, 390], [140, 390], [140, 352],
+        [140, 300], [188, 300], [188, 276],
+        [188, 230], [236, 230], [236, 214],
+        [236, 180], [284, 180], [284, 168],
+        [284, 140], [380, 140], [380, 508],
+        [380, 236],
+        [380, 160], [332, 160], [332, 132],
+        [332, 180], [236, 180], [236, 548],
+        [236, 500], [188, 500], [188, 464],
+        [188, 516], [140, 516],
+        [140, 568], [284, 568],
+        [284, 388], [332, 388],
+        [332, 108], [380, 108],
+        [380, 80], [92, 80], [92, 324],
+        [92, 400], [44, 400], [44, 548],
+        [44, 600], [92, 600], [92, 124],
+        [92, 204], [44, 204]
+      ];
+
+      var state = {
+        index: 4,
+        complete: false,
+        openRow: 4,
+        sheet: "peek"
+      };
+
+      var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      var firstPaint = true;
+
+      function pt(stop) {
+        return { x: AISLE[stop.aisle], y: stop.y };
+      }
+
+      function nearestPathIndex(stop) {
+        var p = pt(stop);
+        var best = 0;
+        var bestD = Infinity;
+        for (var i = 0; i < PATH.length; i += 1) {
+          var dx = PATH[i][0] - p.x;
+          var dy = PATH[i][1] - p.y;
+          var d = dx * dx + dy * dy;
+          if (d < bestD) {
+            bestD = d;
+            best = i;
+          }
+        }
+        return best;
+      }
+
+      function pathSlice(fromIdx, toIdx) {
+        var a = nearestPathIndex(STOPS[Math.max(0, fromIdx)]);
+        var b = nearestPathIndex(STOPS[Math.max(0, toIdx)]);
+        if (a > b) {
+          var t = a;
+          a = b;
+          b = t;
+        }
+        if (b <= a) b = Math.min(a + 1, PATH.length - 1);
+        return PATH.slice(a, b + 1);
+      }
+
+      function toD(pts) {
+        if (!pts.length) return "";
+        var d = "M " + pts[0][0] + " " + pts[0][1];
+        for (var i = 1; i < pts.length; i += 1) {
+          d += " L " + pts[i][0] + " " + pts[i][1];
+        }
+        return d;
+      }
+
+      function aisleRects() {
+        var html = "";
+        var keys = Object.keys(AISLE);
+        for (var i = 0; i < keys.length; i += 1) {
+          var x = AISLE[keys[i]] - 9;
+          html += '<rect class="aisle" x="' + x + '" y="36" width="18" height="620" rx="9" />';
+        }
+        return html;
+      }
+
+      function nodes(here) {
+        var html = "";
+        for (var i = 0; i < STOPS.length; i += 1) {
+          var p = pt(STOPS[i]);
+          if (i === here) {
+            html += '<circle class="node-ring" cx="' + p.x + '" cy="' + p.y + '" r="16" />';
+            html += '<circle class="node-here" cx="' + p.x + '" cy="' + p.y + '" r="8.5" />';
+          } else if (i === here + 1) {
+            html += '<circle class="node is-next" cx="' + p.x + '" cy="' + p.y + '" r="6" />';
+          } else if (i < here) {
+            html += '<circle class="node is-done" cx="' + p.x + '" cy="' + p.y + '" r="4.5" />';
+          } else {
+            html += '<circle class="node" cx="' + p.x + '" cy="' + p.y + '" r="4" />';
+          }
+        }
+        return html;
+      }
+
+      function drawMap(fromIdx, toIdx) {
+        var here = state.complete ? STOPS.length - 1 : toIdx;
+        var donePts = here > 0 ? pathSlice(0, here) : pathSlice(0, 0);
+        var playPts = pathSlice(fromIdx, here);
+        var aheadPts = here < STOPS.length - 1 ? PATH.slice(nearestPathIndex(STOPS[here])) : [];
+
+        document.getElementById("floor").innerHTML =
+          '<svg viewBox="0 0 424 700" preserveAspectRatio="xMidYMid slice" aria-hidden="true">' +
+            '<defs>' +
+              '<linearGradient id="aisleFade" x1="0" y1="0" x2="0" y2="1">' +
+                '<stop offset="0" stop-color="#c5ced8" stop-opacity="0.95" />' +
+                '<stop offset="0.82" stop-color="#c5ced8" stop-opacity="0.22" />' +
+                '<stop offset="1" stop-color="#c5ced8" stop-opacity="0" />' +
+              '</linearGradient>' +
+            '</defs>' +
+            '<rect width="424" height="700" fill="#dce8f1" />' +
+            aisleRects() +
+            '<path class="path-rest" d="' + toD(PATH) + '" />' +
+            (aheadPts.length > 1 ? '<path class="path-ahead" d="' + toD(aheadPts) + '" />' : "") +
+            (donePts.length > 1 ? '<path class="path-done" d="' + toD(donePts) + '" />' : "") +
+            (playPts.length > 1 ? '<path class="path-play" id="play-leg" d="' + toD(playPts) + '" />' : "") +
+            nodes(here) +
+          "</svg>";
+
+        var play = document.getElementById("play-leg");
+        if (play && !reduceMotion) {
+          var len = play.getTotalLength();
+          play.style.setProperty("--len", String(len));
+          play.classList.add("is-draw");
+        }
+      }
+
+      function qtyLabel(n) {
+        return n === 1 ? "1 un." : n + " un.";
+      }
+
+      function paintHud() {
+        var here = STOPS[Math.min(state.index, STOPS.length - 1)];
+        var nxt = STOPS[state.index + 1];
+        document.getElementById("qty").textContent = String(here.qty);
+        document.getElementById("loc").textContent = here.loc;
+        document.getElementById("depois").textContent = nxt ? "depois " + nxt.loc : "última parada";
+        document.getElementById("count").textContent = state.complete
+          ? "18 de 18"
+          : state.index + " de 18";
+        document.getElementById("done-meta").textContent = state.complete
+          ? "18 feitas"
+          : state.index + " feitas";
+        document.getElementById("feito").disabled = state.complete;
+        document.getElementById("app").classList.toggle("is-complete", state.complete);
+      }
+
+      function paintList() {
+        var ul = document.getElementById("stops");
+        var html = "";
+        for (var i = 0; i < STOPS.length; i += 1) {
+          var s = STOPS[i];
+          var klass = "stop";
+          if (state.complete || i < state.index) klass += " is-done";
+          else if (i === state.index) klass += " is-now";
+          else if (i === state.index + 1) klass += " is-next";
+          if (state.openRow === i) klass += " is-open";
+          var status = state.complete || i < state.index
+            ? '<span class="done-mark">feita</span>'
+            : i === state.index
+              ? "<span>agora</span>"
+              : "<span>depois</span>";
+          html +=
+            '<li>' +
+              '<button class="' + klass + '" type="button" data-i="' + i + '" aria-expanded="' + (state.openRow === i) + '">' +
+                '<span class="dot" aria-hidden="true"></span>' +
+                '<span>' +
+                  '<span class="name">' + s.loc + "</span>" +
+                  '<span class="sku">' + s.sku + "</span>" +
+                "</span>" +
+                '<span class="qty-chip">' + qtyLabel(s.qty) + "</span>" +
+                '<span class="detail">' +
+                  status +
+                  "<span>SKU · " + s.sku + "</span>" +
+                  "<span>qtd · " + qtyLabel(s.qty) + "</span>" +
+                  "<span>local · " + s.loc + "</span>" +
+                  "<span>pedidos · " + s.orders.join(" · ") + "</span>" +
+                "</span>" +
+              "</button>" +
+            "</li>";
+        }
+        ul.innerHTML = html;
+      }
+
+      function goTo(next, from) {
+        var prev = from == null ? state.index : from;
+        state.index = Math.max(0, Math.min(next, STOPS.length - 1));
+        state.complete = false;
+        state.openRow = state.index;
+        paintHud();
+        paintList();
+        drawMap(prev, state.index);
+        var row = document.querySelector('.stop[data-i="' + state.index + '"]');
+        if (row) row.scrollIntoView({ block: "nearest", behavior: reduceMotion ? "auto" : "smooth" });
+      }
+
+      function feito() {
+        if (state.complete) return;
+        if (state.index >= STOPS.length - 1) {
+          state.complete = true;
+          state.index = STOPS.length - 1;
+          state.openRow = state.index;
+          paintHud();
+          paintList();
+          drawMap(STOPS.length - 2, STOPS.length - 1);
+          return;
+        }
+        goTo(state.index + 1, state.index);
+      }
+
+      function cycleSheet() {
+        var order = ["peek", "half", "full"];
+        var i = order.indexOf(state.sheet);
+        state.sheet = order[(i + 1) % order.length];
+        document.getElementById("sheet").setAttribute("data-size", state.sheet);
+        document.getElementById("handle").setAttribute("aria-expanded", state.sheet !== "peek" ? "true" : "false");
+      }
+
+      document.getElementById("feito").addEventListener("click", feito);
+      document.getElementById("handle").addEventListener("click", cycleSheet);
+      document.getElementById("stops").addEventListener("click", function (ev) {
+        var btn = ev.target.closest("button.stop");
+        if (!btn) return;
+        var i = Number(btn.getAttribute("data-i"));
+        if (state.openRow === i && i === state.index) {
+          state.openRow = -1;
+          paintList();
+          return;
+        }
+        if (i !== state.index && !state.complete) {
+          goTo(i, state.index);
+          return;
+        }
+        state.openRow = state.openRow === i ? -1 : i;
+        paintList();
+      });
+
+      paintHud();
+      paintList();
+      if (firstPaint) {
+        firstPaint = false;
+        drawMap(0, state.index);
+      }
+    })();
+  </script>
+</body>
+</html>
