@@ -20,9 +20,9 @@
       --ok: #3dcc70;
       --ok-deep: #2f9a55;
       --feito: #14151a;
-      --run-paper: #e8edf5;
-      --aisle: rgba(176, 184, 200, 0.42);
-      --glass: rgba(248, 250, 255, 0.58);
+      --run-paper: #dce6f2;
+      --aisle: rgba(148, 160, 184, 0.55);
+      --glass: rgba(232, 237, 245, 0.38);
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
@@ -106,27 +106,27 @@
     .path-rest {
       fill: none;
       stroke: var(--accent);
-      stroke-width: 5.5;
+      stroke-width: 14;
       stroke-linecap: round;
       stroke-linejoin: round;
-      opacity: 0.22;
+      opacity: 0.34;
     }
 
     .path-dash {
       fill: none;
       stroke: var(--accent);
-      stroke-width: 8;
+      stroke-width: 16;
       stroke-linecap: round;
       stroke-linejoin: round;
-      stroke-dasharray: 7 11;
-      opacity: 0.38;
+      stroke-dasharray: 14 18;
+      opacity: 0.42;
     }
 
     .path-solid,
     .path-play {
       fill: none;
       stroke: var(--accent);
-      stroke-width: 9;
+      stroke-width: 18;
       stroke-linecap: round;
       stroke-linejoin: round;
     }
@@ -142,7 +142,7 @@
     .node.upcoming {
       fill: var(--run-paper);
       stroke: #9aa3f5;
-      stroke-width: 2.5;
+      stroke-width: 4;
     }
     .node.current {
       fill: url(#nodeGreen);
@@ -151,7 +151,7 @@
     .node-ring {
       fill: none;
       stroke: var(--ok);
-      stroke-width: 3.5;
+      stroke-width: 5;
     }
     .node.current.is-live {
       transform-box: fill-box;
@@ -164,13 +164,12 @@
       left: 0;
       right: 0;
       bottom: 0;
-      height: 38%;
+      height: 26%;
       background: linear-gradient(
         180deg,
-        rgba(232, 237, 245, 0) 0%,
-        rgba(232, 237, 245, 0.38) 40%,
-        rgba(232, 237, 245, 0.86) 78%,
-        #e8edf5 100%
+        rgba(220, 230, 242, 0) 0%,
+        rgba(220, 230, 242, 0.28) 46%,
+        rgba(220, 230, 242, 0.78) 100%
       );
       pointer-events: none;
     }
@@ -211,17 +210,17 @@
       top: calc(52px + var(--safe-top));
       right: 12px;
       z-index: 5;
-      width: 148px;
-      max-height: calc(100% - 220px);
+      width: 136px;
+      max-height: calc(100% - 236px);
       display: flex;
       flex-direction: column;
-      padding: 10px 8px 8px;
+      padding: 10px 6px 8px;
       border-radius: 16px;
       background: var(--glass);
-      border: 1px solid rgba(255, 255, 255, 0.55);
-      box-shadow: 0 10px 28px rgba(17, 19, 24, 0.08);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.36);
+      box-shadow: 0 8px 22px rgba(17, 19, 24, 0.06);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
     }
 
     .checklist h2 {
@@ -407,7 +406,7 @@
   <div class="run" id="run">
     <div class="map" aria-hidden="true">
       <div class="aisles"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-      <svg id="route-svg" class="route-svg" viewBox="0 20 412 680" preserveAspectRatio="xMidYMid slice">
+      <svg id="route-svg" class="route-svg" viewBox="8 40 396 620" preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="nodeGreen" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stop-color="#6ad88a" />
@@ -554,6 +553,30 @@
         return d;
       }
 
+      function fitBox(points, pad) {
+        var xs = points.map(function (p) { return p[0]; });
+        var ys = points.map(function (p) { return p[1]; });
+        var minX = Math.min.apply(null, xs) - pad;
+        var maxX = Math.max.apply(null, xs) + pad;
+        var minY = Math.min.apply(null, ys) - pad;
+        var maxY = Math.max.apply(null, ys) + pad;
+        var w = Math.max(maxX - minX, 120);
+        var h = Math.max(maxY - minY, 200);
+        maxX += 92;
+        w = maxX - minX;
+        var aspect = 390 / 844;
+        if (w / h > aspect) {
+          var extraH = w / aspect - h;
+          minY -= extraH / 2;
+          h += extraH;
+        } else {
+          var extraW = h * aspect - w;
+          minX -= extraW * 0.15;
+          w += extraW;
+        }
+        return [minX, minY, w, h].map(function (n) { return n.toFixed(1); }).join(" ");
+      }
+
       function sliceBetween(route, fromCode, toCode) {
         var a = indexOnRoute(route, fromCode);
         var b = indexOnRoute(route, toCode);
@@ -576,6 +599,7 @@
       if (index > STOPS.length - 1) index = STOPS.length - 1;
 
       var route = buildRoute();
+      var svg = document.getElementById("route-svg");
       var rest = document.getElementById("path-rest");
       var dash = document.getElementById("path-dash");
       var solid = document.getElementById("path-solid");
@@ -645,6 +669,7 @@
         var solidPts = route.slice(0, solidEnd + 1);
         var dashPts = route.slice(solidEnd);
         if (solidPts.length === 1) solidPts = [solidPts[0], solidPts[0]];
+        svg.setAttribute("viewBox", fitBox(route, 48));
         rest.setAttribute("d", toPath(route));
         solid.setAttribute("d", toPath(solidPts));
         dash.setAttribute("d", toPath(dashPts.length ? dashPts : solidPts));
@@ -657,12 +682,13 @@
           if (i === index) continue;
           var p = xy(STOPS[i].loc);
           var cls = i < index ? "node done" : "node upcoming";
-          html += '<circle class="' + cls + '" cx="' + p[0] + '" cy="' + p[1] + '" r="' + (i < index ? 4.5 : 5) + '" />';
+          html += '<circle class="' + cls + '" cx="' + p[0] + '" cy="' + p[1] + '" r="' + (i < index ? 7 : 8) + '" />';
         }
         if (stop.next !== "Fim") {
-          html += '<circle class="node-ring" cx="' + nextXY[0] + '" cy="' + nextXY[1] + '" r="13" />';
+          html += '<circle class="node-ring" cx="' + nextXY[0] + '" cy="' + nextXY[1] + '" r="18" />';
         }
-        html += '<circle class="node current is-live" cx="' + current[0] + '" cy="' + current[1] + '" r="8.5" />';
+        html += '<circle class="node-ring" cx="' + current[0] + '" cy="' + current[1] + '" r="18" />';
+        html += '<circle class="node current is-live" cx="' + current[0] + '" cy="' + current[1] + '" r="12" />';
         nodes.innerHTML = html;
 
         qtyEl.textContent = String(stop.qty);
