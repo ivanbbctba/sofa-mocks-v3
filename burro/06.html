@@ -47,9 +47,9 @@
       position: relative;
       overflow: hidden;
       background:
-        radial-gradient(120% 52% at 50% -8%, rgba(255, 176, 32, 0.16), transparent 52%),
-        radial-gradient(70% 40% at 12% 88%, rgba(2, 132, 200, 0.1), transparent 50%),
-        radial-gradient(50% 30% at 88% 18%, rgba(99, 91, 255, 0.12), transparent 46%),
+        radial-gradient(120% 48% at 50% -6%, rgba(255, 176, 32, 0.28), transparent 54%),
+        radial-gradient(70% 40% at 12% 88%, rgba(2, 132, 200, 0.14), transparent 50%),
+        radial-gradient(50% 30% at 88% 18%, rgba(99, 91, 255, 0.16), transparent 46%),
         var(--floor);
     }
 
@@ -92,52 +92,49 @@
       inset: 0;
       pointer-events: none;
       background:
-        linear-gradient(180deg, rgba(5, 6, 10, 0.22) 0%, transparent 18%, transparent 52%, rgba(5, 6, 10, 0.78) 100%),
-        radial-gradient(ellipse at 50% 42%, transparent 42%, rgba(5, 6, 10, 0.55) 100%);
+        linear-gradient(180deg, rgba(5, 6, 10, 0.08) 0%, transparent 16%, transparent 58%, rgba(5, 6, 10, 0.62) 100%);
     }
 
     .yard.is-zen .vignette {
       background:
-        linear-gradient(180deg, rgba(5, 6, 10, 0.12) 0%, transparent 28%, transparent 60%, rgba(5, 6, 10, 0.72) 100%),
-        radial-gradient(ellipse at 50% 40%, transparent 50%, rgba(5, 6, 10, 0.42) 100%);
+        linear-gradient(180deg, rgba(5, 6, 10, 0.06) 0%, transparent 28%, transparent 62%, rgba(5, 6, 10, 0.58) 100%);
     }
 
+    .hall { fill: rgba(255, 176, 32, 0.045); }
     .rack { fill: url(#rackFill); }
-    .rack-edge { fill: none; stroke: rgba(180, 198, 230, 0.22); stroke-width: 1.2; }
-    .shelf { stroke: rgba(180, 198, 230, 0.1); stroke-width: 1; }
-    .dock { fill: #1a140c; stroke: rgba(255, 176, 32, 0.35); stroke-width: 1.4; }
+    .rack-edge { fill: none; stroke: rgba(214, 226, 248, 0.42); stroke-width: 1.4; }
+    .rack-led { fill: rgba(255, 176, 32, 0.55); }
+    .shelf { stroke: rgba(200, 214, 240, 0.16); stroke-width: 1; }
+    .dock { fill: #2a1d0c; stroke: rgba(255, 176, 32, 0.55); stroke-width: 1.6; }
     .aisle-mark {
-      fill: var(--mute);
+      fill: #c6cddb;
       font-family: "IBM Plex Mono", ui-monospace, monospace;
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 600;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.06em;
     }
 
     .hop {
       fill: none;
       stroke-linecap: round;
       stroke-linejoin: round;
+      filter: url(#glow);
     }
 
     .hop.is-dash {
-      stroke-dasharray: 8 12;
+      stroke-dasharray: 10 11;
       animation: ants 1.05s linear infinite;
     }
 
     .hop.is-done {
       stroke-dasharray: none;
-      opacity: 0.42;
+      opacity: 0.55;
+      filter: none;
     }
 
-    .hop.is-now {
-      filter: url(#glow);
-      stroke-width: 9;
-    }
+    .hop.is-now { stroke-width: 10; }
 
-    .hop.is-wait {
-      opacity: 0.28;
-    }
+    .hop.is-wait { opacity: 0.38; }
 
     .node-done { fill: #6b7280; }
     .node-miss {
@@ -273,7 +270,11 @@
       font-size: 18px;
       font-weight: 600;
       letter-spacing: -0.03em;
-      line-height: 1.25;
+      line-height: 1.3;
+    }
+
+    .speak-line .loc {
+      white-space: nowrap;
     }
 
     .speak-face {
@@ -321,9 +322,9 @@
     .btn-miss {
       border: 0;
       background: transparent;
-      color: var(--mute);
+      color: var(--paper-2);
       font: inherit;
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 600;
       letter-spacing: -0.01em;
       padding: 6px 4px;
@@ -402,11 +403,11 @@
       <svg id="floor" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice">
         <defs>
           <linearGradient id="rackFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#0c1018" />
-            <stop offset="8%" stop-color="#1a2230" />
-            <stop offset="50%" stop-color="#151b26" />
-            <stop offset="92%" stop-color="#1a2230" />
-            <stop offset="100%" stop-color="#0c1018" />
+            <stop offset="0%" stop-color="#141820" />
+            <stop offset="10%" stop-color="#2a3448" />
+            <stop offset="50%" stop-color="#232c3d" />
+            <stop offset="90%" stop-color="#2a3448" />
+            <stop offset="100%" stop-color="#141820" />
           </linearGradient>
           <linearGradient id="nowFill" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stop-color="#7ae89a" />
@@ -421,10 +422,12 @@
           </filter>
         </defs>
         <rect width="390" height="844" fill="#0b0f16" />
-        <ellipse cx="195" cy="70" rx="150" ry="46" fill="rgba(255,176,32,0.08)" />
-        <ellipse cx="70" cy="430" rx="40" ry="160" fill="rgba(2,132,200,0.05)" />
-        <ellipse cx="320" cy="300" rx="46" ry="150" fill="rgba(99,91,255,0.06)" />
-        <rect class="dock" x="148" y="708" width="94" height="22" rx="6" />
+        <ellipse cx="195" cy="64" rx="168" ry="58" fill="rgba(255,176,32,0.16)" />
+        <ellipse cx="70" cy="390" rx="44" ry="150" fill="rgba(2,132,200,0.08)" />
+        <ellipse cx="320" cy="280" rx="50" ry="140" fill="rgba(99,91,255,0.09)" />
+        <rect class="hall" x="18" y="78" width="354" height="36" rx="10" />
+        <rect class="hall" x="18" y="528" width="354" height="36" rx="10" />
+        <rect class="dock" x="148" y="582" width="94" height="22" rx="6" />
         <g id="aisles"></g>
         <g id="hops"></g>
         <g id="nodes"></g>
@@ -476,8 +479,8 @@
       var TOTAL = 18;
       var PATH_COLORS = ["#635bff", "#059669", "#ea580c", "#9333ea", "#e11d48", "#0284c8"];
       var AISLE_X = { A: 36, B: 84, C: 132, D: 180, E: 228, F: 276, G: 324, H: 372 };
-      var BACK_Y = 92;
-      var FRONT_Y = 640;
+      var BACK_Y = 96;
+      var FRONT_Y = 546;
       var OVERVIEW = [0, 0, 390, 844];
       var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -582,8 +585,12 @@
         return WORDS[n] || String(n);
       }
 
+      function speakName(name) {
+        return name.charAt(0).toLowerCase() + name.slice(1);
+      }
+
       function speakText(stop) {
-        return qtyWord(stop.qty) + " " + stop.name.toLowerCase() + " no " + stop.loc + ".";
+        return qtyWord(stop.qty) + " " + speakName(stop.name) + " no " + stop.loc + ".";
       }
 
       function ease(t) {
@@ -623,10 +630,11 @@
         }
         return (
           '<g>' +
-            '<rect class="rack" x="' + (x - 12) + '" y="70" width="24" height="590" rx="12"></rect>' +
-            '<rect class="rack-edge" x="' + (x - 12) + '" y="70" width="24" height="590" rx="12"></rect>' +
+            '<rect class="rack" x="' + (x - 13) + '" y="86" width="26" height="476" rx="13"></rect>' +
+            '<rect class="rack-edge" x="' + (x - 13) + '" y="86" width="26" height="476" rx="13"></rect>' +
+            '<circle class="rack-led" cx="' + x + '" cy="92" r="2.4"></circle>' +
             shelves +
-            '<text class="aisle-mark" x="' + x + '" y="678" text-anchor="middle">' + key + "</text>" +
+            '<text class="aisle-mark" x="' + x + '" y="578" text-anchor="middle">' + key + "</text>" +
           "</g>"
         );
       }).join("");
@@ -697,7 +705,7 @@
         for (i = 0; i < hops.length; i += 1) {
           var color = PATH_COLORS[i % PATH_COLORS.length];
           var cls = "hop is-dash";
-          var width = 7;
+          var width = 8;
           if (phase === "zen") {
             cls = "hop is-done";
             width = 8;
@@ -764,7 +772,8 @@
       function paintSpeak() {
         var stop = STOPS[index];
         var next = STOPS[index + 1];
-        document.getElementById("speak-line").textContent = speakText(stop);
+        document.getElementById("speak-line").innerHTML =
+          qtyWord(stop.qty) + " " + speakName(stop.name) + " no <span class=\"loc\">" + stop.loc + ".</span>";
         document.getElementById("speak-qty").textContent = String(stop.qty);
         document.getElementById("speak-loc").textContent = stop.loc;
         document.getElementById("speak-sku").textContent = stop.sku;
