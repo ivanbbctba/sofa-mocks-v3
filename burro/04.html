@@ -15,7 +15,7 @@
       --line: #e3e1da;
       --paper: #e8edf5;
       --white: #fffcf8;
-      --ok: #2f9a55;
+      --ok: #22a06b;
       --feito: #14151a;
       --night: #0c1016;
       --dusk: #161c26;
@@ -68,9 +68,9 @@
       position: absolute;
       inset: 0;
       background:
-        radial-gradient(120% 80% at 50% 18%, rgba(99, 91, 255, 0.16), transparent 56%),
-        radial-gradient(80% 50% at 50% 100%, rgba(10, 12, 16, 0.55), transparent 70%),
-        #10151d;
+        radial-gradient(120% 80% at 50% 18%, rgba(99, 91, 255, 0.28), transparent 56%),
+        radial-gradient(80% 50% at 50% 100%, rgba(8, 10, 14, 0.35), transparent 70%),
+        #243044;
       transition: background 2.2s ease;
     }
 
@@ -93,18 +93,27 @@
     }
 
     .aisle {
-      fill: #1c2430;
+      fill: #4a5568;
       transition: fill 2.2s ease;
     }
 
     .stage.is-lit .aisle { fill: #c5cddb; }
 
+    .hop-case {
+      fill: none;
+      stroke: rgba(8, 12, 18, 0.45);
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 14;
+    }
+
     .hop {
       fill: none;
       stroke-linecap: round;
       stroke-linejoin: round;
-      stroke-dasharray: 10 14;
-      animation: crawl 1.6s linear infinite;
+      stroke-dasharray: 12 16;
+      stroke-dashoffset: 0;
+      animation: dash-move 1.15s linear infinite;
     }
 
     .hop.is-future {
@@ -121,15 +130,14 @@
 
     .hop.is-done {
       stroke-width: 9;
-      stroke-dasharray: none;
       opacity: 0.72;
-      animation: none;
     }
 
     .stage.is-link .hop.is-future,
-    .stage.is-link .hop.is-now {
-      opacity: 0.55;
-      stroke-width: 8;
+    .stage.is-link .hop.is-now,
+    .stage.is-zen .hop.is-done {
+      opacity: 0.92;
+      stroke-width: 10;
     }
 
     .node-done { fill: #8b93a3; }
@@ -143,10 +151,10 @@
       fill: #e8edf5;
       stroke: #9aa3b8;
     }
-    .node-here { fill: url(#hereGlow); }
+    .node-here { fill: #22a06b; }
     .node-halo {
       fill: none;
-      stroke: #3dcc70;
+      stroke: #22a06b;
       stroke-width: 3;
       opacity: 0.7;
     }
@@ -176,26 +184,6 @@
 
     .stage.is-lit .vignette { opacity: 0.18; }
 
-    .letter {
-      position: absolute;
-      left: 0;
-      right: 0;
-      z-index: 8;
-      height: 72px;
-      background: #05070b;
-      pointer-events: none;
-      transition: transform 1.8s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .letter.top { top: 0; }
-    .letter.bot { bottom: 0; }
-
-    .stage.is-opening .letter.top,
-    .stage.is-run .letter.top { transform: translateY(-100%); }
-
-    .stage.is-opening .letter.bot,
-    .stage.is-run .letter.bot { transform: translateY(100%); }
-
     .chrome {
       position: absolute;
       inset: 0;
@@ -211,22 +199,19 @@
       top: calc(14px + var(--safe-top));
       right: 16px;
       margin: 0;
-      color: rgba(255, 255, 255, 0.46);
+      color: #8b93a3;
       font-size: 13px;
       letter-spacing: 0.01em;
       font-variant-numeric: tabular-nums;
-      transition: color 1.2s ease, opacity 0.6s ease;
+      opacity: 0;
     }
 
-    .stage.is-lit .count { color: #8b93a3; }
-
-    .stage.is-link .count,
-    .stage.is-opening .count,
-    .stage.is-zen .count { opacity: 0; }
+    .stage.is-run .count { opacity: 1; }
 
     .link-card,
     .hud,
-    .zen {
+    .zen,
+    .empty {
       position: absolute;
       left: 0;
       right: 0;
@@ -238,7 +223,7 @@
     .link-card {
       padding: 0 22px calc(28px + var(--safe-bottom));
       text-align: center;
-      background: linear-gradient(180deg, transparent, rgba(5, 7, 11, 0.88) 36%, #05070b 100%);
+      background: linear-gradient(180deg, transparent 0%, rgba(8, 10, 16, 0.28) 28%, rgba(8, 10, 16, 0.82) 100%);
       transition: opacity 0.45s ease, transform 0.7s ease;
     }
 
@@ -250,35 +235,13 @@
 
     .grant {
       display: inline-flex;
-      margin: 0 0 12px;
+      margin: 0 0 16px;
       padding: 5px 10px;
       border-radius: 999px;
       border: 1px solid rgba(255, 255, 255, 0.12);
       color: rgba(255, 252, 248, 0.62);
       font-size: 11px;
       letter-spacing: 0.04em;
-    }
-
-    .link-kicker {
-      margin: 0;
-      color: rgba(255, 252, 248, 0.5);
-      font-size: 12px;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-    }
-
-    .link-title {
-      margin: 8px 0 0;
-      font-size: 42px;
-      font-weight: 650;
-      letter-spacing: -0.05em;
-      line-height: 0.95;
-    }
-
-    .link-meta {
-      margin: 10px 0 22px;
-      color: rgba(255, 252, 248, 0.58);
-      font-size: 14px;
     }
 
     .iniciar {
@@ -292,6 +255,7 @@
       font: 650 17px/1 "SF Pro Text", system-ui, sans-serif;
       letter-spacing: -0.02em;
       cursor: pointer;
+      box-shadow: 0 12px 32px rgba(99, 91, 255, 0.38);
     }
 
     .iniciar:active { transform: scale(0.98); background: var(--accent-deep); }
@@ -324,22 +288,12 @@
 
     .speak {
       min-width: 0;
-      padding: 0;
-      border: 0;
-      background: transparent;
-      color: inherit;
-      text-align: left;
-      cursor: pointer;
-    }
-
-    .speak:focus-visible {
-      outline: 2px solid var(--accent);
-      outline-offset: 4px;
+      color: var(--ink);
     }
 
     .qty {
       margin: 0;
-      font-size: 76px;
+      font-size: 80px;
       font-weight: 680;
       letter-spacing: -0.07em;
       line-height: 0.82;
@@ -348,8 +302,8 @@
     }
 
     .slot {
-      margin: 8px 0 0;
-      font-size: 18px;
+      margin: 10px 0 0;
+      font-size: 20px;
       font-weight: 600;
       letter-spacing: -0.02em;
       color: var(--ink);
@@ -364,17 +318,9 @@
 
     .line {
       margin-top: 8px;
-      max-width: 16rem;
+      max-width: 18rem;
       color: var(--ink-2);
-    }
-
-    .speak.is-open .full { display: block; }
-
-    .full {
-      display: none;
-      margin: 6px 0 0;
-      font-size: 13px;
-      color: var(--mute);
+      line-height: 1.35;
     }
 
     .actions {
@@ -415,9 +361,9 @@
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
-      min-height: 42%;
-      padding: 0 24px calc(36px + var(--safe-bottom));
-      background: linear-gradient(180deg, transparent, rgba(8, 10, 14, 0.08) 20%, rgba(8, 10, 14, 0.55) 100%);
+      min-height: 38%;
+      padding: 0 24px calc(28px + var(--safe-bottom));
+      background: linear-gradient(180deg, transparent 0%, rgba(12, 16, 22, 0.08) 24%, rgba(12, 16, 22, 0.78) 100%);
       opacity: 0;
       pointer-events: none;
       transition: opacity 1.1s ease;
@@ -438,16 +384,55 @@
 
     .zen-title {
       margin: 10px 0 0;
-      font-size: 48px;
+      font-size: 36px;
       font-weight: 650;
-      letter-spacing: -0.06em;
-      line-height: 0.92;
+      letter-spacing: -0.05em;
+      line-height: 1;
     }
 
     .zen-meta {
       margin: 12px 0 0;
       color: rgba(255, 252, 248, 0.62);
       font-size: 15px;
+    }
+
+    .again {
+      pointer-events: auto;
+      display: none;
+      width: min(100%, 280px);
+      height: 52px;
+      margin: 22px auto 0;
+      border: 0;
+      border-radius: 999px;
+      background: #fff;
+      color: var(--ink);
+      font: 650 16px/1 "SF Pro Text", system-ui, sans-serif;
+      cursor: pointer;
+    }
+
+    .again.is-on { display: block; }
+
+    .again:active { transform: scale(0.98); }
+
+    .empty {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      min-height: 42%;
+      padding: 0 24px calc(48px + var(--safe-bottom));
+      background: linear-gradient(180deg, transparent 0%, rgba(8, 10, 16, 0.2) 30%, rgba(8, 10, 16, 0.88) 100%);
+      text-align: center;
+      opacity: 0;
+    }
+
+    .stage.is-empty .empty { opacity: 1; }
+
+    .empty-text {
+      margin: 0;
+      font-size: 40px;
+      font-weight: 650;
+      letter-spacing: -0.05em;
+      line-height: 1;
     }
 
     .whisper {
@@ -477,13 +462,12 @@
       clip: rect(0, 0, 0, 0);
     }
 
-    @keyframes crawl {
-      to { stroke-dashoffset: -24; }
+    @keyframes dash-move {
+      to { stroke-dashoffset: -28; }
     }
 
     @media (prefers-reduced-motion: reduce) {
       .hop,
-      .letter,
       .floor,
       .aisle,
       .hud,
@@ -505,49 +489,48 @@
     </div>
     <div class="grain" aria-hidden="true"></div>
     <div class="vignette" aria-hidden="true"></div>
-    <div class="letter top" aria-hidden="true"></div>
-    <div class="letter bot" aria-hidden="true"></div>
 
     <div class="chrome">
       <p class="count" id="count">0 de 18</p>
     </div>
 
     <section class="link-card" id="link-card">
-      <p class="grant">pisoly.com/r/7c3a9f2e</p>
-      <p class="link-kicker">Onda compartilhada</p>
-      <h1 class="link-title">Onda 14</h1>
-      <p class="link-meta">18 paradas · 8 pedidos</p>
+      <p class="grant">WhatsApp · onda 14</p>
       <button type="button" class="iniciar" id="iniciar">Iniciar</button>
     </section>
 
     <section class="hud" id="hud" aria-hidden="true">
-      <button type="button" class="speak" id="speak" aria-expanded="false">
+      <div class="speak" id="speak">
         <p class="qty" id="qty">10</p>
         <p class="slot" id="slot">A-01</p>
         <p class="depois" id="depois">depois C-02</p>
         <p class="line" id="line">Dez toalha 220 no A-01.</p>
-        <p class="full" id="full">Corredor A · posição 01 · chão</p>
-      </button>
+      </div>
       <div class="actions">
         <button type="button" class="feito" id="feito">Feito</button>
         <button type="button" class="skip" id="skip">Não achei</button>
       </div>
     </section>
 
+    <section class="empty" id="empty" aria-hidden="true">
+      <p class="empty-text">Todos pegos</p>
+    </section>
+
     <section class="zen" id="zen" aria-hidden="true">
       <p class="zen-kicker">Corrida encerrada</p>
-      <h2 class="zen-title">Todos pegos.</h2>
+      <h2 class="zen-title">Onda feita.</h2>
       <p class="zen-meta" id="zen-meta">18 paradas · onda 14</p>
+      <button type="button" class="again" id="again">Começar de novo</button>
     </section>
 
     <div class="whisper" id="whisper" role="status"></div>
-    <p class="sr-only">Burro no link da onda. Iniciar reclama. Só avança. Feito ou Não achei. Fim zen.</p>
+      <p class="sr-only">Um link de onda no WhatsApp. Mapa inteiro e Iniciar. Reclamar dá zoom na perna. Speek é texto. Feito sempre. Não achei registra e avança. Sem voltar. Sem onda livre: Todos pegos.</p>
   </main>
 
   <script>
     (function () {
       const NS = "http://www.w3.org/2000/svg";
-      const TOUR = ["#635bff", "#3d6a8a", "#7c6cf0", "#4a3fbf", "#5b7cff", "#8a6b3d"];
+      const COLORS = ["#635bff", "#059669", "#ea580c", "#9333ea", "#e11d48", "#0284c8"];
       const AISLE_X = { A: 40, B: 88, C: 136, D: 184, E: 232, F: 280, G: 328, H: 372 };
       const BACK_Y = 86;
       const FRONT_Y = 628;
@@ -682,19 +665,26 @@
       const slotEl = document.getElementById("slot");
       const depoisEl = document.getElementById("depois");
       const lineEl = document.getElementById("line");
-      const fullEl = document.getElementById("full");
-      const speakEl = document.getElementById("speak");
       const feitoEl = document.getElementById("feito");
       const skipEl = document.getElementById("skip");
       const hudEl = document.getElementById("hud");
       const zenEl = document.getElementById("zen");
+      const emptyEl = document.getElementById("empty");
       const zenMeta = document.getElementById("zen-meta");
       const whisperEl = document.getElementById("whisper");
       const iniciarEl = document.getElementById("iniciar");
+      const againEl = document.getElementById("again");
 
       let mode = "link";
       let here = 0;
+      let runTint = 0;
+      let freeRuns = 2;
       let marks = STOPS.map(() => null);
+      const log = [];
+
+      function hopColor(i) {
+        return COLORS[(i + runTint) % COLORS.length];
+      }
       let svg = null;
       let viewEl = null;
       let camera = FULL_BOX.slice();
@@ -702,12 +692,19 @@
 
       function setMode(next) {
         mode = next;
-        stage.classList.remove("is-link", "is-opening", "is-run", "is-zen", "is-lit");
+        stage.classList.remove("is-link", "is-opening", "is-run", "is-zen", "is-empty", "is-lit");
         stage.classList.add("is-" + next);
-        if (next === "run" || next === "opening") stage.classList.add("is-lit");
+        if (next === "run" || next === "opening" || next === "zen") stage.classList.add("is-lit");
         hudEl.setAttribute("aria-hidden", next === "run" ? "false" : "true");
         zenEl.setAttribute("aria-hidden", next === "zen" ? "false" : "true");
-        document.title = next === "zen" ? "Todos pegos · Onda 14" : next === "link" ? "Onda 14 · link" : "Corrida · Onda 14";
+        emptyEl.setAttribute("aria-hidden", next === "empty" ? "false" : "true");
+        document.title = next === "empty"
+          ? "Todos pegos · Onda 14"
+          : next === "zen"
+            ? "Onda feita · Onda 14"
+            : next === "link"
+              ? "Onda 14 · link"
+              : "Corrida · Onda 14";
       }
 
       function whisper(text) {
@@ -716,7 +713,7 @@
         window.clearTimeout(whisper.tid);
         whisper.tid = window.setTimeout(function () {
           whisperEl.classList.remove("is-on");
-        }, 1200);
+        }, 1800);
       }
 
       function paintMap() {
@@ -726,13 +723,6 @@
           preserveAspectRatio: "xMidYMid slice",
           "aria-hidden": "true"
         });
-        const defs = el("defs", {});
-        const glow = el("linearGradient", { id: "hereGlow", x1: "0", y1: "0", x2: "0", y2: "1" });
-        glow.appendChild(el("stop", { offset: "0%", "stop-color": "#6ad88a" }));
-        glow.appendChild(el("stop", { offset: "100%", "stop-color": "#2f9a55" }));
-        defs.appendChild(glow);
-        svg.appendChild(defs);
-
         Object.keys(AISLE_X).forEach((letter) => {
           const x = AISLE_X[letter];
           svg.appendChild(el("rect", {
@@ -745,17 +735,25 @@
           }));
         });
 
-        hops.forEach((pts, i) => {
-          let kind = "is-future";
-          if (mode === "zen" || i < here) kind = "is-done";
-          else if (mode !== "link" && i === here) kind = "is-now";
-          const path = el("path", {
-            class: "hop " + kind,
-            d: toD(pts),
-            stroke: TOUR[i % TOUR.length]
+        if (mode !== "empty") {
+          hops.forEach((pts, i) => {
+            let kind = "is-future";
+            if (mode === "zen" || i < here) kind = "is-done";
+            else if (mode !== "link" && i === here) kind = "is-now";
+            svg.appendChild(el("path", { class: "hop-case", d: toD(pts) }));
+            svg.appendChild(el("path", {
+              class: "hop " + kind,
+              d: toD(pts),
+              stroke: hopColor(i)
+            }));
           });
-          svg.appendChild(path);
-        });
+        }
+
+        if (mode === "empty") {
+          map.appendChild(svg);
+          viewEl = svg;
+          return;
+        }
 
         STOPS.forEach((stop, i) => {
           const p = xy(stop.code);
@@ -775,8 +773,8 @@
           }
           if (mode !== "link" && i === here + 1) {
             const nxt = el("circle", { class: "node-next", cx: p.x, cy: p.y, r: 6.5 });
-            nxt.setAttribute("stroke", TOUR[here % TOUR.length]);
-            nxt.setAttribute("fill", TOUR[here % TOUR.length]);
+            nxt.setAttribute("stroke", hopColor(here));
+            nxt.setAttribute("fill", hopColor(here));
             svg.appendChild(nxt);
             return;
           }
@@ -820,24 +818,25 @@
       }
 
       function paintHud() {
+        if (here >= STOPS.length) return;
         const stop = STOPS[here];
         const next = STOPS[here + 1];
-        const last = here === STOPS.length - 1;
-        countEl.textContent = (mode === "zen" ? STOPS.length : here) + " de " + STOPS.length;
+        countEl.textContent = here + " de " + STOPS.length;
         qtyEl.textContent = String(stop.qty);
         slotEl.textContent = stop.code;
         depoisEl.textContent = next ? "depois " + next.code : "última parada";
         lineEl.textContent = cap(qtyWord(stop.qty)) + " " + stop.say + " no " + stop.code + ".";
-        fullEl.textContent = stop.full + " · " + stop.sku;
-        feitoEl.textContent = last ? "Todos pegos" : "Feito";
+        feitoEl.textContent = "Feito";
+        feitoEl.hidden = false;
+        feitoEl.disabled = false;
       }
 
       function paintZen() {
         const skipped = marks.filter((m) => m === "skip").length;
         const done = STOPS.length - skipped;
-        zenMeta.textContent = skipped
-          ? done + " feitos · " + skipped + " não achei · onda 14"
-          : STOPS.length + " paradas · onda 14";
+        zenMeta.textContent = done + " feitos · " + skipped + " não achei · " + STOPS.length + " paradas";
+        againEl.classList.toggle("is-on", freeRuns > 0);
+        againEl.hidden = freeRuns <= 0;
       }
 
       function finish() {
@@ -845,7 +844,7 @@
         setMode("zen");
         paintZen();
         paintMap();
-        pushCamera(boxOf(allPts, 28, 0), reduce ? 0 : 1400);
+        pushCamera(legBox(STOPS.length - 1), reduce ? 0 : 780);
       }
 
       function advance(kind) {
@@ -859,16 +858,29 @@
         paintHud();
         paintMap();
         pushCamera(legBox(here), reduce ? 0 : 780);
-        speakEl.classList.remove("is-open");
-        speakEl.setAttribute("aria-expanded", "false");
+      }
+
+      function showEmpty() {
+        here = 0;
+        marks = STOPS.map(() => null);
+        setMode("empty");
+        setCamera(FULL_BOX);
+        paintMap();
       }
 
       function claim() {
         if (mode !== "link") return;
+        if (freeRuns <= 0) {
+          showEmpty();
+          return;
+        }
+        freeRuns -= 1;
+        log.length = 0;
+        here = 0;
+        marks = STOPS.map(() => null);
         setMode("opening");
         paintMap();
-        const openMs = reduce ? 0 : 2400;
-        pushCamera(legBox(0), openMs, function () {
+        pushCamera(legBox(0), reduce ? 0 : 900, function () {
           setMode("run");
           paintHud();
           paintMap();
@@ -880,31 +892,51 @@
         }
       }
 
+      function restart() {
+        if (freeRuns <= 0) {
+          showEmpty();
+          return;
+        }
+        runTint += 1;
+        here = 0;
+        marks = STOPS.map(() => null);
+        setMode("link");
+        setCamera(FULL_BOX);
+        paintMap();
+      }
+
       iniciarEl.addEventListener("click", claim);
       feitoEl.addEventListener("click", function () { advance("done"); });
       skipEl.addEventListener("click", function () {
+        if (mode !== "run") return;
+        log.push({ at: here, code: STOPS[here].code, kind: "nao_achei" });
         whisper("Seguinte.");
         advance("skip");
       });
-      speakEl.addEventListener("click", function () {
-        const open = speakEl.classList.toggle("is-open");
-        speakEl.setAttribute("aria-expanded", open ? "true" : "false");
-      });
+      againEl.addEventListener("click", restart);
 
       paintMap();
       setCamera(FULL_BOX);
       paintMap();
 
+      const bootLivres = parseInt(params.get("livres") || "2", 10);
+      freeRuns = isNaN(bootLivres) ? 1 : Math.max(0, bootLivres);
+      if (params.get("vazio") === "1" || params.get("livre") === "0") freeRuns = 0;
       const bootClaimed = params.get("claimed") === "1";
       const bootZen = params.get("zen") === "1";
       const bootIndex = parseInt(params.get("i") || "0", 10);
+      const bootTint = parseInt(params.get("c") || "0", 10);
+      if (!isNaN(bootTint) && bootTint >= 0) runTint = bootTint;
 
-      if (bootZen) {
+      if (freeRuns <= 0 && !bootClaimed && !bootZen) {
+        showEmpty();
+      } else if (bootZen) {
         marks = STOPS.map(() => "done");
         finish();
       } else if (bootClaimed) {
         here = isNaN(bootIndex) ? 0 : Math.max(0, Math.min(STOPS.length - 1, bootIndex));
         marks = STOPS.map((_, i) => (i < here ? "done" : null));
+        if (freeRuns > 0) freeRuns -= 1;
         setMode("run");
         setCamera(legBox(here));
         paintHud();
