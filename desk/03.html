@@ -155,8 +155,8 @@
       width: 36px;
       height: 36px;
       border-radius: 11px;
-      background: var(--accent-soft);
-      color: var(--accent);
+      background: var(--accent);
+      color: #fff;
       display: grid;
       place-items: center;
     }
@@ -166,7 +166,7 @@
     }
 
     .glance b {
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 600;
       letter-spacing: -0.04em;
       line-height: 1;
@@ -180,8 +180,8 @@
     }
 
     body.is-paused .glance-icon {
-      background: var(--paper-2);
-      color: var(--mute);
+      background: #b8b6c9;
+      color: #fff;
     }
 
     body.is-anticipated .glance b {
@@ -400,7 +400,36 @@
     </div>
 
     <article class="hero" aria-label="Próxima onda">
-      <ul class="glances" id="glances" aria-label="Gatilhos ativos da próxima onda"></ul>
+      <ul class="glances" id="glances" aria-label="Gatilhos ativos da próxima onda">
+        <li class="glance" data-kind="order_count">
+          <span class="glance-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5.2 7.2h9.6l-.7 8.1a1.4 1.4 0 0 1-1.4 1.3H7.3a1.4 1.4 0 0 1-1.4-1.3L5.2 7.2Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M7.4 7.1V5.6a2.6 2.6 0 0 1 5.2 0v1.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+          </span>
+          <b class="num" data-meter>8</b>
+          <span data-unit>pedidos</span>
+        </li>
+        <li class="glance" data-kind="quantity">
+          <span class="glance-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3.8 7.4 10 4.2l6.2 3.2L10 10.6 3.8 7.4Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M3.8 7.4v5.2L10 15.8V10.6M16.2 7.4v5.2L10 15.8" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+          </span>
+          <b class="num" data-meter>40</b>
+          <span data-unit>un.</span>
+        </li>
+        <li class="glance" data-kind="schedule">
+          <span class="glance-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="7.1" stroke="currentColor" stroke-width="1.7"/><path d="M10 6.4V10l2.6 1.7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          <b class="num" data-meter>16:00</b>
+          <span data-unit>horário</span>
+        </li>
+        <li class="glance" data-kind="elapsed">
+          <span class="glance-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M7.2 3.4h5.6M10 3.4v2.1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="10" cy="11.4" r="5.2" stroke="currentColor" stroke-width="1.7"/><path d="M10 9.1v2.5l1.8 1.1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          <b class="num" data-meter>18</b>
+          <span data-unit>tempo</span>
+        </li>
+      </ul>
       <a class="hero-hit" href="../rich/03.html">
         <p class="kicker">Próxima onda</p>
         <h1>Onda #1043</h1>
@@ -514,18 +543,21 @@
       }
 
       function renderGlances() {
-        glances.replaceChildren();
+        var armedKinds = {};
         ARMED.forEach(function (trigger) {
-          var icon = ICONS[trigger.kind];
-          if (!icon) return;
-          var li = document.createElement("li");
-          li.className = "glance";
-          li.setAttribute("data-kind", trigger.kind);
-          li.innerHTML =
-            '<span class="glance-icon">' + icon + "</span>" +
-            '<b class="num">' + meterValue(trigger) + "</b>" +
-            "<span>" + meterUnit(trigger) + "</span>";
-          glances.appendChild(li);
+          armedKinds[trigger.kind] = trigger;
+        });
+        Array.prototype.forEach.call(glances.querySelectorAll(".glance"), function (li) {
+          var kind = li.getAttribute("data-kind");
+          var trigger = armedKinds[kind];
+          if (!trigger) {
+            li.remove();
+            return;
+          }
+          var meter = li.querySelector("[data-meter]");
+          var unit = li.querySelector("[data-unit]");
+          if (meter) meter.textContent = meterValue(trigger);
+          if (unit) unit.textContent = meterUnit(trigger);
         });
         glances.hidden = ARMED.length === 0;
       }
