@@ -795,7 +795,8 @@
       ev.stopPropagation();
       const url = new URL(RICH, window.location.href).href;
       const payload = { title: "Pisoly · " + wave.title, text: wave.share, url: url };
-      if (navigator.share) {
+      const native = navigator.canShare && navigator.canShare(payload);
+      if (native && navigator.share) {
         try {
           await navigator.share(payload);
           return;
@@ -807,7 +808,7 @@
         await navigator.clipboard.writeText(url);
         showToast("Link copiado");
       } catch (_err) {
-        showToast(url);
+        showToast(wave.share);
       }
     }
 
@@ -843,8 +844,8 @@
     function onPointerMove(ev) {
       if (!drag) return;
       drag.dx = ev.clientX - drag.x;
-      if (Math.abs(drag.dx) > 8) drag.moved = true;
-      layout(drag.dx);
+      if (Math.abs(drag.dx) > 18) drag.moved = true;
+      if (drag.moved) layout(drag.dx);
     }
 
     function onPointerUp() {
@@ -935,6 +936,7 @@
     });
 
     render();
+    if (location.hash === "#factory") openSheet();
   </script>
 </body>
 </html>
