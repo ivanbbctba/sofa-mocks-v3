@@ -21,9 +21,6 @@
       --radius: 18px;
       --safe-t: env(safe-area-inset-top, 0px);
       --safe-b: env(safe-area-inset-bottom, 0px);
-      --orb: 628.31853;
-      --glance: 138.23008;
-      --sheet: 87.96459;
     }
 
     *,
@@ -160,8 +157,8 @@
       stroke: var(--accent);
       stroke-width: 7;
       stroke-linecap: round;
-      stroke-dasharray: var(--orb);
-      stroke-dashoffset: calc(var(--orb) * (1 - var(--p, 0.75)));
+      stroke-dasharray: 100;
+      stroke-dashoffset: 25;
       transition: stroke-dashoffset 0.45s ease;
     }
 
@@ -249,10 +246,10 @@
     .dial .fill {
       fill: none;
       stroke: var(--accent);
-      stroke-width: 3.2;
+      stroke-width: 3.4;
       stroke-linecap: round;
-      stroke-dasharray: var(--glance);
-      stroke-dashoffset: calc(var(--glance) * (1 - var(--p, 0)));
+      stroke-dasharray: 100;
+      stroke-dashoffset: 100;
     }
 
     .glyph {
@@ -689,11 +686,6 @@
       stroke-width: 2.6;
     }
 
-    .sheet-meters .dial .fill {
-      stroke-dasharray: var(--sheet);
-      stroke-dashoffset: calc(var(--sheet) * (1 - var(--p, 0)));
-    }
-
     .sheet-meters .glyph svg {
       width: 14px;
       height: 14px;
@@ -840,7 +832,7 @@
           <div class="orb">
             <svg class="ring" viewBox="0 0 216 216" aria-hidden="true">
               <circle class="orb-track" cx="108" cy="108" r="100"></circle>
-              <circle class="orb-fill" id="orbFill" cx="108" cy="108" r="100"></circle>
+              <circle class="orb-fill" id="orbFill" cx="108" cy="108" r="100" pathLength="100"></circle>
             </svg>
             <div class="orb-core">
               <p class="countdown" id="countdown" aria-live="polite">01:13</p>
@@ -1042,18 +1034,21 @@
       }
 
       function setOrb(fill) {
-        orbFill.style.setProperty("--p", String(Math.max(0, Math.min(1, fill))));
+        var spent = Math.max(0, Math.min(1, fill));
+        orbFill.setAttribute("stroke-dashoffset", String(100 * (1 - spent)));
       }
 
       function dialHtml(trigger, size) {
         var r = size === "sheet" ? 14 : 22;
         var vb = size === "sheet" ? 34 : 52;
+        var spent = Math.max(0, Math.min(1, Number(trigger.fill) || 0));
+        var offset = (100 * (1 - spent)).toFixed(2);
         var icon = ICONS[trigger.id] || ICONS.orders;
         return (
-          '<span class="dial" style="--p:' + trigger.fill + '">' +
+          '<span class="dial">' +
             '<svg class="ring" viewBox="0 0 ' + vb + " " + vb + '" aria-hidden="true">' +
               '<circle class="track" cx="' + (vb / 2) + '" cy="' + (vb / 2) + '" r="' + r + '"></circle>' +
-              '<circle class="fill" cx="' + (vb / 2) + '" cy="' + (vb / 2) + '" r="' + r + '"></circle>' +
+              '<circle class="fill" cx="' + (vb / 2) + '" cy="' + (vb / 2) + '" r="' + r + '" pathLength="100" stroke-dasharray="100" stroke-dashoffset="' + offset + '"></circle>' +
             "</svg>" +
             '<span class="glyph">' + icon + "</span>" +
           "</span>"
