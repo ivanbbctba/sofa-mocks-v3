@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>Onda 14 · Burro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --paper: #f7f6f2;
+      --surface: #fffcf8;
+      --ink: #1a1b1a;
+      --muted: #6d706c;
+      --mute: #6d706c;
+      --faint: #9a9c98;
+      --line: #e3e1da;
+      --accent: #4f8a78;
+      --accent-soft: #dce8e3;
+      --go: #0f766e;
+      --warn: #b45309;
+      --floor: #efe8dc;
+      --feito: #1a1b1a;
+      --here: #0f766e;
+      --run1: #4f8a78;
+      --run2: #0f766e;
+      --run3: #0284c7;
+      --run4: #c2410c;
+      --run5: #be123c;
+      --run6: #4d7c0f;
+      --c0: #4f8a78;
+      --c1: #0f766e;
+      --c2: #0284c7;
+      --c3: #c2410c;
+      --c4: #be123c;
+      --c5: #4d7c0f;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: #e3e1da;
+      color: var(--ink);
+      font: 560 16px/1.3 Manrope, "Segoe UI", system-ui, sans-serif;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      min-height: 100dvh;
+    }
+
+    .app {
+      position: relative;
+      width: min(390px, 100%);
+      height: 100dvh;
+      margin: 0 auto;
+      overflow: hidden;
+      container-type: inline-size;
+      background:
+        radial-gradient(120% 70% at 50% 0%, rgba(255, 252, 248, 0.74), transparent 58%),
+        var(--floor);
+    }
+
+    .map {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .map svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .aisle { fill: #e3e1da; }
+
+    .path-done,
+    .path-play {
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .path-done {
+      stroke-width: 0.34;
+      opacity: 0.5;
+    }
+
+    .path-play {
+      stroke-width: 0.26;
+      stroke-linecap: butt;
+      stroke-dasharray: 0.34 0.3;
+      animation: dash-crawl 0.7s linear infinite;
+    }
+
+    .node-done { fill: #9a9c98; }
+    .node-miss { fill: var(--warn); }
+    .node-here { fill: var(--here); }
+    .node-halo {
+      fill: none;
+      stroke: var(--here);
+      stroke-width: 0.08;
+      opacity: 0.42;
+    }
+
+    .chrome,
+    .hud,
+    .dock {
+      position: absolute;
+      z-index: 4;
+      pointer-events: none;
+    }
+
+    .chrome {
+      inset: 0 auto auto 0;
+      right: 0;
+    }
+
+    .chrome button { pointer-events: auto; }
+
+    .top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: calc(12px + env(safe-area-inset-top)) 18px 0;
+    }
+
+    .share {
+      border: 0;
+      background: transparent;
+      color: var(--mute);
+      font: 650 13px/1 Manrope, sans-serif;
+      padding: 6px 2px;
+      cursor: pointer;
+    }
+
+    .share b { color: var(--ink); }
+
+    .count {
+      margin: 0;
+      color: var(--mute);
+      font-variant-numeric: tabular-nums;
+      font-size: 13px;
+    }
+
+    .hud,
+    .dock {
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 0 20px calc(18px + env(safe-area-inset-bottom));
+    }
+
+    .hud {
+      background: linear-gradient(180deg, rgba(247, 246, 242, 0) 0%, rgba(247, 246, 242, 0.78) 30%, var(--paper) 100%);
+    }
+
+    .dock {
+      background: linear-gradient(180deg, rgba(247, 246, 242, 0) 0%, rgba(247, 246, 242, 0.62) 42%, var(--paper) 100%);
+      padding-bottom: calc(28px + env(safe-area-inset-bottom));
+    }
+
+    .hud-grid,
+    .dock-inner {
+      width: min(28rem, 100%);
+      margin: 0 auto;
+      pointer-events: auto;
+    }
+
+    .hud-grid {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      gap: 12px;
+    }
+
+    .qty {
+      margin: 0;
+      font-family: Anton, Impact, sans-serif;
+      font-size: clamp(104px, 38cqw, 156px);
+      line-height: 0.76;
+      letter-spacing: -0.04em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .slot {
+      margin: 8px 0 0;
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .depois {
+      margin: 3px 0 0;
+      color: var(--mute);
+      font-size: 14px;
+    }
+
+    .speek {
+      grid-column: 1 / -1;
+      margin: 6px 0 0;
+      color: var(--ink);
+      font-size: 14px;
+    }
+
+    .speek b {
+      display: block;
+      margin-bottom: 2px;
+      color: var(--mute);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-weight: 800;
+    }
+
+    .actions {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding-bottom: 4px;
+    }
+
+    .feito,
+    .iniciar,
+    .again,
+    .miss {
+      border: 0;
+      cursor: pointer;
+    }
+
+    .feito {
+      width: 78px;
+      height: 78px;
+      border-radius: 50%;
+      background: var(--feito);
+      color: #fff;
+      font: 800 15px/1 Manrope, sans-serif;
+    }
+
+    .miss {
+      background: transparent;
+      color: var(--mute);
+      font: 650 13px/1 Manrope, sans-serif;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      padding: 6px;
+    }
+
+    .iniciar,
+    .again {
+      width: 100%;
+      height: 56px;
+      border-radius: 999px;
+      font: 800 17px/1 Manrope, sans-serif;
+    }
+
+    .iniciar {
+      background: var(--feito);
+      color: #fff;
+    }
+
+    .again {
+      margin-top: 16px;
+      background: transparent;
+      color: var(--ink);
+      box-shadow: inset 0 0 0 1.5px rgba(22, 24, 29, 0.2);
+    }
+
+    .feito:active,
+    .iniciar:active,
+    .again:active,
+    .miss:active { transform: scale(0.97); }
+
+    .empty-text {
+      margin: 0;
+      font-family: Anton, Impact, sans-serif;
+      font-size: clamp(40px, 13cqw, 52px);
+      letter-spacing: -0.03em;
+      line-height: 0.9;
+    }
+
+    .zen-kicker {
+      margin: 0;
+      color: var(--mute);
+      font-size: 13px;
+    }
+
+    .zen-title {
+      margin: 8px 0 0;
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .zen-metrics {
+      margin: 8px 0 0;
+      color: var(--mute);
+      font-size: 15px;
+    }
+
+    .claim[hidden],
+    .empty[hidden],
+    .zen[hidden],
+    .hud[hidden] { display: none; }
+
+    @keyframes dash-crawl {
+      to { stroke-dashoffset: -1.28; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <div class="map" role="img" aria-label="Caminho desta onda">
+      <svg id="svg" viewBox="0 0 9.55 18.2" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg>
+    </div>
+
+    <div class="chrome">
+      <div class="top">
+        <button type="button" class="share" id="share">Onda <b>14</b></button>
+        <p class="count" id="count"></p>
+      </div>
+    </div>
+
+    <div class="hud" id="hud" hidden>
+      <div class="hud-grid">
+        <div>
+          <p class="qty" id="qty">10</p>
+          <p class="slot" id="slot">A-01</p>
+          <p class="depois" id="depois">depois C-02</p>
+        </div>
+        <div class="actions">
+          <button type="button" class="feito" id="feito">Feito</button>
+          <button type="button" class="miss" id="miss">Não achei</button>
+        </div>
+        <p class="speek"><b>Speek</b><span id="speek-text"></span></p>
+      </div>
+    </div>
+
+    <section class="dock claim" id="claim">
+      <div class="dock-inner">
+        <button type="button" class="iniciar" id="iniciar">Iniciar</button>
+      </div>
+    </section>
+
+    <section class="dock empty" id="empty" hidden>
+      <div class="dock-inner">
+        <p class="empty-text">Todos pegos</p>
+      </div>
+    </section>
+
+    <section class="dock zen" id="zen" hidden>
+      <div class="dock-inner">
+        <p class="zen-kicker">Onda feita</p>
+        <h1 class="zen-title" id="zen-title">18 de 18</h1>
+        <p class="zen-metrics" id="zen-metrics"></p>
+        <button type="button" class="again" id="again" hidden>Começar de novo</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      const AISLE_X = { A: 0.78, B: 1.92, C: 3.06, D: 4.2, E: 5.34, F: 6.48, G: 7.62, H: 8.76 };
+      const Y0 = 1.55;
+      const Y1 = 15.85;
+      const TOP = 0.85;
+      const BOT = 16.65;
+      const NS = "http://www.w3.org/2000/svg";
+      const FULL_VIEW = "0 0 9.55 18.2";
+      const LANES = ["#4f8a78", "#0f766e", "#0284c7", "#c2410c", "#be123c", "#4d7c0f"];
+      const WAVE_URL = "https://pisoly.com/r/onda14";
+      const STOPS = [
+        { code: "A-01", qty: 10, sku: "TOALHA-220" },
+        { code: "C-02", qty: 8, sku: "JOGO-LENCOL" },
+        { code: "E-01", qty: 10, sku: "FRONHA-PAR" },
+        { code: "E-10", qty: 10, sku: "COBERTOR-CAS" },
+        { code: "F-02", qty: 42, sku: "KIT-HIGIENE" },
+        { code: "H-09", qty: 3, sku: "SABONETE" },
+        { code: "H-03", qty: 12, sku: "SHAMPOO-400" },
+        { code: "B-09", qty: 5, sku: "ESC-DENTES" },
+        { code: "G-01", qty: 7, sku: "CREME-HID" },
+        { code: "G-08", qty: 4, sku: "ALGODAO" },
+        { code: "C-08", qty: 6, sku: "PILLOW-TOP" },
+        { code: "F-10", qty: 9, sku: "TAPETE-BAN" },
+        { code: "D-04", qty: 2, sku: "CORTINA-180" },
+        { code: "D-09", qty: 15, sku: "TOALHA-MAO" },
+        { code: "A-08", qty: 1, sku: "ROUPAO-M" },
+        { code: "B-02", qty: 11, sku: "SACO-LIXO" },
+        { code: "H-01", qty: 8, sku: "PAPEL-HIG" },
+        { code: "G-05", qty: 3, sku: "AMACIANTE" }
+      ];
+
+      /**
+       * @typedef {"claim" | "run" | "zen" | "empty"} Mode
+       */
+
+      function slotY(n) {
+        return Y0 + ((n - 1) * (Y1 - Y0)) / 9;
+      }
+
+      function parseCode(code) {
+        return { aisle: code[0], n: Number(code.slice(2)) };
+      }
+
+      function xy(code) {
+        const parsed = parseCode(code);
+        return { x: AISLE_X[parsed.aisle], y: slotY(parsed.n), aisle: parsed.aisle, n: parsed.n };
+      }
+
+      function hop(a, b) {
+        if (a.aisle === b.aisle) return [a, { x: a.x, y: b.y }];
+        const mid = (Y0 + Y1) / 2;
+        const sameTop = a.y <= mid && b.y <= mid;
+        const sameBot = a.y >= mid && b.y >= mid;
+        let end;
+        if (sameTop) {
+          end = Math.min(a.y, b.y) - 0.7;
+        } else if (sameBot) {
+          end = Math.max(a.y, b.y) + 0.7;
+        } else {
+          const viaTop = Math.abs(a.y - TOP) + Math.abs(b.y - TOP);
+          const viaBot = Math.abs(a.y - BOT) + Math.abs(b.y - BOT);
+          end = viaTop <= viaBot ? TOP : BOT;
+        }
+        end = Math.max(TOP, Math.min(BOT, end));
+        return [a, { x: a.x, y: end }, { x: b.x, y: end }, { x: b.x, y: b.y }];
+      }
+
+      function el(name, attrs) {
+        const node = document.createElementNS(NS, name);
+        Object.keys(attrs).forEach((key) => node.setAttribute(key, String(attrs[key])));
+        return node;
+      }
+
+      function lane() {
+        return LANES[runTint % LANES.length];
+      }
+
+      function onesPt(n) {
+        switch (n) {
+          case 0: return "zero";
+          case 1: return "um";
+          case 2: return "dois";
+          case 3: return "três";
+          case 4: return "quatro";
+          case 5: return "cinco";
+          case 6: return "seis";
+          case 7: return "sete";
+          case 8: return "oito";
+          case 9: return "nove";
+          default: {
+            const _never = n;
+            return String(_never);
+          }
+        }
+      }
+
+      function teensPt(n) {
+        switch (n) {
+          case 10: return "dez";
+          case 11: return "onze";
+          case 12: return "doze";
+          case 13: return "treze";
+          case 14: return "quatorze";
+          case 15: return "quinze";
+          case 16: return "dezesseis";
+          case 17: return "dezessete";
+          case 18: return "dezoito";
+          case 19: return "dezenove";
+          default: {
+            const _never = n;
+            return String(_never);
+          }
+        }
+      }
+
+      function tensPt(n) {
+        switch (n) {
+          case 2: return "vinte";
+          case 3: return "trinta";
+          case 4: return "quarenta";
+          case 5: return "cinquenta";
+          case 6: return "sessenta";
+          case 7: return "setenta";
+          case 8: return "oitenta";
+          case 9: return "noventa";
+          default: {
+            const _never = n;
+            return String(_never);
+          }
+        }
+      }
+
+      function qtyPt(n) {
+        if (n < 10) return onesPt(n);
+        if (n < 20) return teensPt(n);
+        const ten = Math.floor(n / 10);
+        const one = n % 10;
+        return one === 0 ? tensPt(ten) : tensPt(ten) + " e " + onesPt(one);
+      }
+
+      function cleanLoc(code) {
+        return code.replace(/\s+/g, "").toUpperCase();
+      }
+
+      function speekLine(stop) {
+        const unit = stop.qty === 1 ? "unidade" : "unidades";
+        const spoken = qtyPt(stop.qty);
+        return spoken.charAt(0).toUpperCase() + spoken.slice(1) + " " + unit + ". " + cleanLoc(stop.code) + ". " + stop.sku.replace(/-/g, " ").toLowerCase() + ".";
+      }
+
+      function dOf(seg) {
+        return seg.map(function (p, i) {
+          return (i === 0 ? "M " : "L ") + p.x + " " + p.y;
+        }).join(" ");
+      }
+
+      function bbox(seg) {
+        let minX = 99;
+        let minY = 99;
+        let maxX = -99;
+        let maxY = -99;
+        seg.forEach(function (p) {
+          if (p.x < minX) minX = p.x;
+          if (p.y < minY) minY = p.y;
+          if (p.x > maxX) maxX = p.x;
+          if (p.y > maxY) maxY = p.y;
+        });
+        const padX = 1.35;
+        const padY = 2.1;
+        const w = Math.max(3.4, maxX - minX + padX * 2);
+        const h = Math.max(5.2, maxY - minY + padY * 2);
+        return (minX - padX) + " " + (minY - padY) + " " + w + " " + h;
+      }
+
+      function activeSeg(index) {
+        if (index < hops.length) return hops[index];
+        return hops[hops.length - 1];
+      }
+
+      const points = STOPS.map(function (stop) { return xy(stop.code); });
+      const hops = points.slice(1).map(function (pt, i) { return hop(points[i], pt); });
+
+      const svg = document.getElementById("svg");
+      const claim = document.getElementById("claim");
+      const empty = document.getElementById("empty");
+      const zen = document.getElementById("zen");
+      const hud = document.getElementById("hud");
+      const qtyEl = document.getElementById("qty");
+      const slotEl = document.getElementById("slot");
+      const depoisEl = document.getElementById("depois");
+      const countEl = document.getElementById("count");
+      const speekEl = document.getElementById("speek-text");
+      const zenTitle = document.getElementById("zen-title");
+      const zenMetrics = document.getElementById("zen-metrics");
+      const againEl = document.getElementById("again");
+
+      /** @type {Mode} */
+      let mode = "claim";
+      let here = 0;
+      let freeRuns = 2;
+      let runTint = 0;
+      /** @type {Array<"open" | "feito" | "miss">} */
+      let marks = STOPS.map(function () { return "open"; });
+
+      function assertMode(value) {
+        switch (value) {
+          case "claim":
+          case "run":
+          case "zen":
+          case "empty":
+            return value;
+          default: {
+            const _never = value;
+            throw new Error("modo inválido: " + String(_never));
+          }
+        }
+      }
+
+      function paintMap(drawPlay) {
+        svg.replaceChildren();
+        Object.keys(AISLE_X).forEach(function (letter) {
+          svg.appendChild(el("rect", {
+            class: "aisle",
+            x: AISLE_X[letter] - 0.22,
+            y: 0.45,
+            width: 0.44,
+            height: 16.5,
+            rx: 0.22
+          }));
+        });
+
+        if (mode === "run") {
+          hops.forEach(function (seg, i) {
+            if (i >= here) return;
+            svg.appendChild(el("path", {
+              class: "path-done",
+              d: dOf(seg),
+              stroke: lane()
+            }));
+          });
+          const playSeg = activeSeg(here);
+          const play = el("path", {
+            class: "path-play",
+            d: dOf(playSeg),
+            stroke: lane()
+          });
+          svg.appendChild(play);
+          const len = play.getTotalLength();
+          play.style.strokeDasharray = "0.34 0.3";
+          if (drawPlay) {
+            play.style.strokeDashoffset = String(len);
+            requestAnimationFrame(function () {
+              play.style.transition = "stroke-dashoffset 0.8s ease-out";
+              play.style.strokeDashoffset = "0";
+              window.setTimeout(function () {
+                play.style.transition = "";
+                play.style.strokeDashoffset = "";
+                play.style.strokeDasharray = "";
+              }, 820);
+            });
+          }
+        }
+
+        points.forEach(function (p, i) {
+          if (mode === "run" && i === here) {
+            svg.appendChild(el("circle", { class: "node-halo", cx: p.x, cy: p.y, r: 0.38 }));
+            svg.appendChild(el("circle", { class: "node-here", cx: p.x, cy: p.y, r: 0.2 }));
+            return;
+          }
+          if (mode !== "run" && i !== 0 && i !== points.length - 1) {
+            svg.appendChild(el("circle", { class: "node-done", cx: p.x, cy: p.y, r: 0.08 }));
+            return;
+          }
+          const mark = marks[i];
+          svg.appendChild(el("circle", {
+            class: mark === "miss" ? "node-miss" : (mode === "run" && i < here ? "node-done" : "node-done"),
+            cx: p.x,
+            cy: p.y,
+            r: 0.1
+          }));
+        });
+      }
+
+      function setView(nextMode, index) {
+        if (nextMode === "run") {
+          svg.setAttribute("viewBox", bbox(activeSeg(index).concat([points[index]])));
+          return;
+        }
+        svg.setAttribute("viewBox", FULL_VIEW);
+      }
+
+      function paintHud() {
+        if (mode !== "run") {
+          countEl.textContent = "";
+          return;
+        }
+        const stop = STOPS[here];
+        const next = STOPS[here + 1];
+        qtyEl.textContent = String(stop.qty);
+        slotEl.textContent = cleanLoc(stop.code);
+        depoisEl.textContent = next ? "depois " + cleanLoc(next.code) : "última parada";
+        countEl.textContent = (here + 1) + " de " + STOPS.length;
+        speekEl.textContent = speekLine(stop);
+      }
+
+      function setMode(nextMode, index, drawPlay) {
+        mode = assertMode(nextMode);
+        claim.hidden = mode !== "claim";
+        empty.hidden = mode !== "empty";
+        zen.hidden = mode !== "zen";
+        hud.hidden = mode !== "run";
+        if (mode === "zen") {
+          const missed = marks.filter(function (m) { return m === "miss"; }).length;
+          const done = STOPS.length - missed;
+          zenTitle.textContent = STOPS.length + " de " + STOPS.length;
+          zenMetrics.textContent = done + " feitos · " + missed + " sem achar";
+          againEl.hidden = freeRuns < 1;
+        }
+        setView(mode, index);
+        paintMap(Boolean(drawPlay));
+        paintHud();
+      }
+
+      function goNext(kind) {
+        if (mode !== "run") return;
+        marks[here] = kind;
+        if (here >= STOPS.length - 1) {
+          setMode(freeRuns < 1 ? "empty" : "zen", here, false);
+          return;
+        }
+        here += 1;
+        setMode("run", here, true);
+      }
+
+      function startRun() {
+        if (freeRuns < 1) {
+          setMode("empty", 0, false);
+          return;
+        }
+        freeRuns -= 1;
+        here = 0;
+        marks = STOPS.map(function () { return "open"; });
+        setMode("run", 0, true);
+      }
+
+      function again() {
+        if (freeRuns < 1) {
+          setMode("empty", 0, false);
+          return;
+        }
+        runTint = (runTint + 1) % LANES.length;
+        setMode("claim", 0, false);
+      }
+
+      function shareWave() {
+        const title = "Onda 14";
+        const wa = "https://wa.me/?text=" + encodeURIComponent(title + " " + WAVE_URL);
+        if (navigator.share) {
+          navigator.share({ title: title, text: title, url: WAVE_URL }).catch(function () {
+            window.location.href = wa;
+          });
+          return;
+        }
+        window.location.href = wa;
+      }
+
+      function boot() {
+        const hash = (location.hash || "").replace("#", "");
+        if (hash === "vazio" || hash === "todos-pegos") {
+          freeRuns = 0;
+          setMode("empty", 0, false);
+          return;
+        }
+        freeRuns = 2;
+        setMode("claim", 0, false);
+      }
+
+      document.getElementById("iniciar").addEventListener("click", startRun);
+      document.getElementById("feito").addEventListener("click", function () {
+        goNext("feito");
+      });
+      document.getElementById("miss").addEventListener("click", function () {
+        goNext("miss");
+      });
+      againEl.addEventListener("click", again);
+      document.getElementById("share").addEventListener("click", shareWave);
+      window.addEventListener("hashchange", boot);
+
+      boot();
+    })();
+  </script>
+</body>
+</html>
