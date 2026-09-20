@@ -3,22 +3,20 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-  <meta name="theme-color" content="#b7cfe0"/>
+  <meta name="theme-color" content="#e8eef4"/>
   <title>Onda 14 · Pisoly</title>
   <style>
     :root {
-      --ink: #14202c;
-      --ink-2: #334556;
-      --mute: #5a6d7e;
-      --paper: #8fb6ce;
-      --road: #fff8ea;
-      --rack: #d8c49a;
-      --rack-edge: #b89a6a;
-      --ok: #1f9d5c;
-      --feito: #14171c;
-      --white: #fffdf7;
+      --ink: #16181d;
+      --ink-2: #3c3e3c;
+      --mute: #6d706c;
+      --paper: #e8eef4;
+      --aisle: #cfd6e3;
+      --ok: #22a06b;
+      --feito: #16181d;
+      --white: #fffcf8;
       --run: #635bff;
-      --shadow: 0 12px 32px rgba(12, 28, 40, 0.22);
+      --shadow: 0 12px 28px rgba(16, 22, 32, 0.12);
     }
 
     * { box-sizing: border-box; }
@@ -26,9 +24,9 @@
     html, body {
       margin: 0;
       height: 100%;
-      background: #1c2a36;
+      background: #d5dde6;
       color: var(--ink);
-      font: 16px/1.25 "Trebuchet MS", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+      font: 17px/1.25 "SF Pro Text", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
       -webkit-text-size-adjust: 100%;
     }
 
@@ -44,7 +42,6 @@
       height: min(844px, 100dvh);
       overflow: hidden;
       background: var(--paper);
-      box-shadow: 0 24px 60px rgba(16, 28, 40, 0.28);
     }
 
     .map {
@@ -59,81 +56,34 @@
       height: 100%;
     }
 
-    .floor-wash {
-      fill: #7eafc8;
+    .floor { fill: #e8eef4; }
+
+    .aisle {
+      fill: #cfd6e3;
     }
 
-    .yard {
-      fill: #95c0d6;
-    }
-
-    .rack {
-      fill: var(--rack);
-      stroke: var(--rack-edge);
-      stroke-width: 0.035;
-    }
-
-    .road {
+    .path-rest {
       fill: none;
-      stroke: var(--road);
-      stroke-width: 0.78;
-      stroke-linecap: round;
-    }
-
-    .road-cross {
-      fill: none;
-      stroke: var(--road);
-      stroke-width: 0.7;
-      stroke-linecap: round;
-    }
-
-    .aisle-tag {
-      fill: #3d5566;
-      font-size: 0.42px;
-      font-family: "Trebuchet MS", system-ui, sans-serif;
-      font-weight: 700;
-    }
-
-    .path-case {
-      fill: none;
-      stroke: #fff8ea;
+      stroke: var(--run);
+      stroke-width: 0.2;
       stroke-linecap: round;
       stroke-linejoin: round;
-      stroke-width: 0.62;
-      opacity: 0.95;
-    }
-
-    .path-ghost {
-      fill: none;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      stroke-width: 0.34;
-      opacity: 0.92;
-      stroke-dasharray: 0.36 0.22;
-      animation: march 1.05s linear infinite;
-    }
-
-    .path-claimed {
-      fill: none;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      stroke-width: 0.3;
-      opacity: 0.42;
+      opacity: 0.16;
     }
 
     .path-done {
       fill: none;
       stroke: var(--run);
-      stroke-width: 0.42;
+      stroke-width: 0.4;
       stroke-linecap: round;
       stroke-linejoin: round;
-      opacity: 0.78;
+      opacity: 0.72;
     }
 
     .path-play {
       fill: none;
       stroke: var(--run);
-      stroke-width: 0.58;
+      stroke-width: 0.52;
       stroke-linecap: round;
       stroke-linejoin: round;
     }
@@ -141,38 +91,52 @@
     .path-play.is-draw {
       stroke-dasharray: var(--len);
       stroke-dashoffset: var(--len);
-      animation: draw-leg 0.95s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+      animation: draw-leg 0.9s cubic-bezier(0.22, 0.7, 0.2, 1) forwards;
     }
 
     .path-ahead {
       fill: none;
       stroke: var(--run);
-      stroke-width: 0.32;
+      stroke-width: 0.36;
       stroke-linecap: round;
       stroke-linejoin: round;
-      opacity: 0.55;
-      stroke-dasharray: 0.34 0.26;
-      animation: march 0.85s linear infinite;
+      opacity: 0.78;
     }
 
-    .node-done { fill: #9aa6b4; }
-    .node-future { fill: #d7dde4; }
+    .path-ahead.is-march {
+      animation: dash-travel 0.7s linear infinite;
+    }
+
+    .path-wave {
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 0.3;
+      opacity: 0.88;
+    }
+
+    .path-wave.is-march {
+      animation: dash-travel 0.85s linear infinite;
+    }
+
+    .node-done { fill: #b8bcc8; }
+    .node-future { fill: #c5cad6; opacity: 0.55; }
     .node-next {
-      fill: var(--white);
+      fill: #fff;
       stroke: var(--run);
-      stroke-width: 0.09;
+      stroke-width: 0.1;
     }
     .node-here { fill: var(--ok); }
     .node-halo {
       fill: none;
       stroke: var(--ok);
-      stroke-width: 0.07;
-      opacity: 0.45;
+      stroke-width: 0.08;
+      opacity: 0.42;
     }
     .node-here.is-live {
       transform-box: fill-box;
       transform-origin: center;
-      animation: here-pulse 2.2s ease-in-out infinite;
+      animation: here-pulse 2.3s ease-in-out infinite;
     }
 
     .chrome {
@@ -182,119 +146,71 @@
       pointer-events: none;
     }
 
-    .chrome button,
-    .chrome a {
-      pointer-events: auto;
-    }
+    .chrome button { pointer-events: auto; }
 
-    .top-chip {
+    .count {
       position: absolute;
-      top: calc(10px + env(safe-area-inset-top));
-      left: 14px;
-      right: 14px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .share-pill,
-    .count-pill {
-      background: rgba(255, 253, 248, 0.88);
-      backdrop-filter: blur(10px);
-      border-radius: 999px;
-      box-shadow: var(--shadow);
-      color: var(--ink-2);
-      font-size: 12px;
-      letter-spacing: -0.02em;
-      padding: 7px 12px;
-    }
-
-    .count-pill {
-      font-variant-numeric: tabular-nums;
-    }
-
-    .banner {
-      position: absolute;
-      top: calc(52px + env(safe-area-inset-top));
-      left: 12px;
-      right: 12px;
-      display: flex;
-      gap: 14px;
-      align-items: center;
-      padding: 10px 16px 12px;
-      border-radius: 26px;
-      background: var(--white);
-      box-shadow: var(--shadow);
-    }
-
-    .qty {
+      top: calc(12px + env(safe-area-inset-top));
+      right: 16px;
       margin: 0;
-      min-width: 1.1em;
-      color: var(--run);
-      font-size: 72px;
-      font-weight: 800;
-      letter-spacing: -0.08em;
-      line-height: 0.84;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .banner-copy { min-width: 0; }
-
-    .slot {
-      margin: 0;
-      font-size: 28px;
-      font-weight: 800;
-      letter-spacing: -0.04em;
-    }
-
-    .depois {
-      margin: 4px 0 0;
       color: var(--mute);
-      font-size: 15px;
+      font-size: 13px;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
     }
 
-    .dock {
+    .hud {
       position: absolute;
       left: 0;
       right: 0;
       bottom: 0;
-      padding: 0 18px calc(18px + env(safe-area-inset-bottom));
+      z-index: 5;
+      padding: 0 20px calc(18px + env(safe-area-inset-bottom));
+      background: linear-gradient(
+        180deg,
+        rgba(232, 238, 244, 0) 0%,
+        rgba(232, 238, 244, 0.72) 28%,
+        rgba(232, 238, 244, 0.96) 62%,
+        #e8eef4 100%
+      );
+      pointer-events: none;
+    }
+
+    .hud-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      gap: 14px;
+      width: min(28rem, 100%);
+      margin: 0 auto;
+      pointer-events: auto;
+    }
+
+    .hud.is-start .hud-row {
       display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      background: linear-gradient(180deg, rgba(143, 182, 206, 0) 0%, rgba(143, 182, 206, 0.78) 46%, #8fb6ce 100%);
+      justify-content: center;
     }
 
-    .speak {
-      width: min(100%, 22rem);
-      border: 0;
-      border-radius: 18px;
-      background: var(--white);
-      box-shadow: var(--shadow);
-      color: inherit;
-      font: inherit;
-      text-align: left;
-      padding: 12px 14px;
-      cursor: pointer;
-    }
-
-    .speak[hidden] { display: none; }
-
-    .speak-kicker {
+    .qty {
       margin: 0;
-      color: var(--mute);
-      font-size: 11px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
+      font-size: 76px;
+      font-weight: 650;
+      letter-spacing: -0.07em;
+      line-height: 0.84;
+      font-variant-numeric: tabular-nums;
     }
 
-    .speak-body {
-      margin: 4px 0 0;
-      font-size: 16px;
-      font-weight: 700;
-      letter-spacing: -0.02em;
+    .slot {
+      margin: 8px 0 0;
+      font-size: 20px;
+      font-weight: 620;
+      letter-spacing: -0.03em;
+    }
+
+    .depois {
+      margin: 3px 0 0;
+      color: var(--mute);
+      font-size: 14px;
     }
 
     .actions {
@@ -302,128 +218,130 @@
       flex-direction: column;
       align-items: center;
       gap: 8px;
+      padding-bottom: 4px;
     }
 
     .feito,
     .go {
-      width: 88px;
-      height: 88px;
+      width: 80px;
+      height: 80px;
       border: 0;
       border-radius: 50%;
       background: var(--feito);
       color: #fff;
-      font: 800 16px/1 "Trebuchet MS", "Avenir Next", system-ui, sans-serif;
+      font: 650 15px/1 "SF Pro Text", system-ui, sans-serif;
       letter-spacing: -0.03em;
       cursor: pointer;
-      box-shadow: 0 14px 28px rgba(22, 24, 29, 0.28);
     }
 
     .go {
+      width: 96px;
+      height: 96px;
       background: var(--run);
-      width: 104px;
-      height: 104px;
-      font-size: 17px;
+      font-size: 16px;
     }
 
     .feito:active,
-    .go:active {
-      transform: scale(0.96);
-    }
+    .go:active { transform: scale(0.96); }
 
-    .skip,
-    .ghost {
+    .skip {
       border: 0;
       background: transparent;
-      color: var(--ink-2);
-      font: 700 14px/1 "Trebuchet MS", system-ui, sans-serif;
+      color: var(--mute);
+      font: 560 13px/1 "SF Pro Text", system-ui, sans-serif;
       cursor: pointer;
-      padding: 8px 10px;
+      padding: 6px 4px;
     }
 
-    .overview-copy,
-    .taken-copy,
-    .zen {
-      position: absolute;
-      left: 14px;
-      right: 14px;
-      border-radius: 24px;
+    .speak {
+      display: block;
+      width: min(28rem, 100%);
+      margin: 0 auto 12px;
+      border: 0;
+      border-radius: 16px;
       background: var(--white);
       box-shadow: var(--shadow);
-      padding: 16px 16px 14px;
+      color: inherit;
+      font: inherit;
+      text-align: left;
+      padding: 12px 14px;
+      cursor: pointer;
+      pointer-events: auto;
     }
 
-    .overview-copy,
-    .taken-copy {
-      top: calc(52px + env(safe-area-inset-top));
-    }
-
-    .kicker {
+    .speak-kicker {
       margin: 0;
+      color: var(--mute);
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .speak-line {
+      margin: 4px 0 0;
+      font-size: 15px;
+      font-weight: 620;
+      letter-spacing: -0.02em;
+    }
+
+    .speak-more {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #eceae4;
+    }
+
+    .speak-more p {
+      margin: 0 0 4px;
+      color: var(--ink-2);
+      font-size: 14px;
+    }
+
+    .empty {
+      margin: 0 auto 16px;
+      color: var(--ink);
+      font-size: 22px;
+      font-weight: 650;
+      letter-spacing: -0.03em;
+      text-align: center;
+    }
+
+    .zen {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      top: 16%;
+      z-index: 6;
+      border-radius: 22px;
+      background: var(--white);
+      box-shadow: var(--shadow);
+      padding: 22px 18px 18px;
+      text-align: center;
+    }
+
+    .zen h1 {
+      margin: 0;
+      font-size: 26px;
+      letter-spacing: -0.04em;
+    }
+
+    .zen-kicker {
+      margin: 0 0 6px;
       color: var(--mute);
       font-size: 12px;
       letter-spacing: 0.06em;
       text-transform: uppercase;
     }
 
-    .title {
-      margin: 4px 0 0;
-      font-size: 26px;
-      font-weight: 800;
-      letter-spacing: -0.04em;
-    }
-
-    .lede {
-      margin: 6px 0 0;
-      color: var(--ink-2);
-      font-size: 14px;
-    }
-
-    .swatches {
-      display: flex;
-      gap: 6px;
-      margin-top: 12px;
-    }
-
-    .swatches i {
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      display: block;
-      box-shadow: inset 0 0 0 2px rgba(255, 253, 248, 0.7);
-    }
-
-    .swatches i.is-taken {
-      opacity: 0.28;
-    }
-
-    .zen {
-      top: 18%;
-      text-align: center;
-    }
-
-    .zen-mark {
-      width: 64px;
-      height: 64px;
-      margin: 0 auto 10px;
-      border-radius: 50%;
-      background: var(--ok);
-      color: #fff;
-      display: grid;
-      place-items: center;
-      font-size: 28px;
-      font-weight: 800;
-    }
-
     .stats {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 8px;
-      margin: 16px 0 4px;
+      margin: 16px 0 8px;
       text-align: left;
     }
 
     .stat {
-      background: #f3efe6;
+      background: #f3f1eb;
       border-radius: 14px;
       padding: 10px 12px;
     }
@@ -442,13 +360,13 @@
 
     .again {
       width: 100%;
-      margin-top: 12px;
+      margin-top: 10px;
       border: 0;
       border-radius: 999px;
       background: var(--feito);
       color: #fff;
-      font: 800 16px/1 "Trebuchet MS", system-ui, sans-serif;
-      padding: 16px;
+      font: 650 16px/1 "SF Pro Text", system-ui, sans-serif;
+      padding: 15px;
       cursor: pointer;
     }
 
@@ -458,26 +376,18 @@
       to { stroke-dashoffset: 0; }
     }
 
-    @keyframes march {
-      to { stroke-dashoffset: -0.5; }
+    @keyframes dash-travel {
+      to { stroke-dashoffset: var(--march); }
     }
 
     @keyframes here-pulse {
       0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
+      50% { opacity: 0.55; }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .path-play.is-draw,
-      .path-ahead,
-      .path-ghost,
-      .node-here.is-live {
-        animation: none !important;
-      }
-      .path-play.is-draw {
-        stroke-dasharray: none !important;
-        stroke-dashoffset: 0 !important;
-      }
+      .path-play.is-draw { animation: none; stroke-dashoffset: 0; }
+      .node-here.is-live { animation: none; }
     }
   </style>
 </head>
@@ -485,56 +395,37 @@
   <main class="phone" id="app">
     <div class="map" id="map" role="img" aria-label="Mapa do galpão"></div>
     <div class="chrome">
-      <div class="top-chip">
-        <p class="share-pill" id="share-pill">Onda 14 · 1 link</p>
-        <p class="count-pill" id="count-pill">0 de 18</p>
-      </div>
-
-      <section class="overview-copy" id="overview-card">
-        <p class="kicker">Onda compartilhada</p>
-        <h1 class="title">Mapa do galpão</h1>
-        <p class="lede" id="overview-lede">Seis corridas livres. Iniciar pega a próxima.</p>
-        <div class="swatches" id="swatches" aria-hidden="true"></div>
-      </section>
-
-      <section class="taken-copy hidden" id="taken-card">
-        <p class="kicker">Onda 14</p>
-        <h1 class="title">Todos pegos</h1>
-        <p class="lede">Nenhuma corrida livre neste link.</p>
-      </section>
-
-      <section class="banner hidden" id="pick-banner">
-        <p class="qty" id="qty">10</p>
-        <div class="banner-copy">
-          <p class="slot" id="slot">A-01</p>
-          <p class="depois" id="depois">depois C-02</p>
-        </div>
-      </section>
-
+      <p class="count" id="count"></p>
       <section class="zen hidden" id="zen">
-        <div class="zen-mark" aria-hidden="true">✓</div>
-        <p class="kicker">Chegou</p>
-        <h1 class="title">Corrida feita</h1>
+        <p class="zen-kicker">Corrida</p>
+        <h1>Feita</h1>
         <div class="stats">
           <p class="stat"><b id="zen-time">0:00</b><span>tempo</span></p>
           <p class="stat"><b id="zen-qty">0 un.</b><span>quantidade</span></p>
           <p class="stat"><b id="zen-kg">0 kg</b><span>peso</span></p>
           <p class="stat"><b id="zen-m3">0 m³</b><span>volume</span></p>
         </div>
-        <p class="lede" id="zen-latency">aceite 0,0 s</p>
-        <button type="button" class="again" id="again">Começar de novo</button>
+        <p class="depois" id="zen-latency">aceite 0,0 s</p>
+        <button type="button" class="again hidden" id="again">Começar de novo</button>
       </section>
-
-      <div class="dock" id="dock">
-        <button type="button" class="speak hidden" id="speak" aria-expanded="false">
-          <p class="speak-kicker">Falar</p>
-          <p class="speak-body" id="speak-body">Dez toalhas 220 no A-01.</p>
-        </button>
+    </div>
+    <div class="hud" id="hud">
+      <button type="button" class="speak hidden" id="speak" aria-expanded="false">
+        <p class="speak-kicker">Falar</p>
+        <p class="speak-line" id="speak-line"></p>
+        <div class="speak-more hidden" id="speak-more"></div>
+      </button>
+      <p class="empty hidden" id="empty">Todos pegos</p>
+      <div class="hud-row">
+        <div class="hud-copy hidden" id="hud-copy">
+          <p class="qty" id="qty">10</p>
+          <p class="slot" id="slot">A-01</p>
+          <p class="depois" id="depois">depois C-02</p>
+        </div>
         <div class="actions">
           <button type="button" class="go" id="go">Iniciar</button>
           <button type="button" class="feito hidden" id="feito">Feito</button>
           <button type="button" class="skip hidden" id="skip">Não achei</button>
-          <button type="button" class="ghost hidden" id="reset-wave">Nova onda</button>
         </div>
       </div>
     </div>
@@ -548,7 +439,8 @@
       const TOP = 0.85;
       const BOT = 16.65;
       const NS = "http://www.w3.org/2000/svg";
-      const FULL_VB = [0, -0.4, 9.55, 18.4];
+      const STORE = "pisoly-onda14-claimed";
+      const FULL_VB = [-0.15, -0.2, 9.85, 17.9];
 
       const RUNS = [
         {
@@ -609,8 +501,12 @@
         return { aisle: code[0], n: Number(code.slice(2)) };
       }
 
+      function cleanLoc(code) {
+        return String(code || "").replace(/\$\{|\}\$/g, "").trim();
+      }
+
       function xy(code) {
-        const parsed = parseCode(code);
+        const parsed = parseCode(cleanLoc(code));
         return { x: AISLE_X[parsed.aisle], y: slotY(parsed.n), aisle: parsed.aisle, n: parsed.n };
       }
 
@@ -620,16 +516,13 @@
         const sameTop = a.y <= mid && b.y <= mid;
         const sameBot = a.y >= mid && b.y >= mid;
         let end;
-        if (sameTop) {
-          end = Math.min(a.y, b.y) - 0.7;
-        } else if (sameBot) {
-          end = Math.max(a.y, b.y) + 0.7;
-        } else {
+        if (sameTop) end = Math.min(a.y, b.y) - 0.7;
+        else if (sameBot) end = Math.max(a.y, b.y) + 0.7;
+        else {
           const viaTop = Math.abs(a.y - TOP) + Math.abs(b.y - TOP);
           const viaBot = Math.abs(a.y - BOT) + Math.abs(b.y - BOT);
           end = viaTop <= viaBot ? TOP : BOT;
         }
-        end = Math.max(TOP, Math.min(BOT, end));
         return [a, { x: a.x, y: end }, { x: b.x, y: end }, { x: b.x, y: b.y }];
       }
 
@@ -664,18 +557,16 @@
       }
 
       const tours = RUNS.map(function (run, i) {
-        return {
-          color: COLORS[i],
-          stops: run.stops,
-          geo: geometryFor(run.stops)
-        };
+        return { color: COLORS[i], stops: run.stops, geo: geometryFor(run.stops) };
       });
 
       function slicePath(geo, fromIdx, toIdx) {
-        if (!geo.hopSpans.length || toIdx <= 0) return geo.fullPath.slice(0, 1);
+        if (!geo.hopSpans.length || toIdx <= fromIdx) return [];
         const last = geo.hopSpans.length - 1;
+        if (fromIdx > last) return [];
         const startHop = Math.max(0, Math.min(fromIdx, last));
         const endHop = Math.max(0, Math.min(toIdx - 1, last));
+        if (endHop < startHop) return [];
         return geo.fullPath.slice(geo.hopSpans[startHop].from, geo.hopSpans[endHop].to + 1);
       }
 
@@ -685,34 +576,48 @@
 
       function el(name, attrs) {
         const node = document.createElementNS(NS, name);
-        Object.keys(attrs).forEach(function (key) {
+        Object.keys(attrs || {}).forEach(function (key) {
           node.setAttribute(key, String(attrs[key]));
         });
         return node;
       }
 
+      function loadClaimed() {
+        try {
+          const raw = sessionStorage.getItem(STORE);
+          const parsed = raw ? JSON.parse(raw) : [];
+          if (!Array.isArray(parsed)) return [];
+          return parsed.filter(function (n) {
+            return Number.isInteger(n) && n >= 0 && n < tours.length;
+          });
+        } catch (err) {
+          return [];
+        }
+      }
+
+      function saveClaimed() {
+        sessionStorage.setItem(STORE, JSON.stringify(claimed));
+      }
+
       const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       const map = document.getElementById("map");
-      const sharePill = document.getElementById("share-pill");
-      const countPill = document.getElementById("count-pill");
-      const overviewCard = document.getElementById("overview-card");
-      const overviewLede = document.getElementById("overview-lede");
-      const takenCard = document.getElementById("taken-card");
-      const pickBanner = document.getElementById("pick-banner");
+      const countEl = document.getElementById("count");
+      const hudCopy = document.getElementById("hud-copy");
       const qtyEl = document.getElementById("qty");
       const slotEl = document.getElementById("slot");
       const depoisEl = document.getElementById("depois");
-      const zenEl = document.getElementById("zen");
       const speakEl = document.getElementById("speak");
-      const speakBody = document.getElementById("speak-body");
+      const speakLine = document.getElementById("speak-line");
+      const speakMore = document.getElementById("speak-more");
+      const emptyEl = document.getElementById("empty");
       const goEl = document.getElementById("go");
       const feitoEl = document.getElementById("feito");
       const skipEl = document.getElementById("skip");
-      const resetEl = document.getElementById("reset-wave");
-      const swatches = document.getElementById("swatches");
+      const zenEl = document.getElementById("zen");
+      const againEl = document.getElementById("again");
 
       let mode = "overview";
-      let claimed = [];
+      let claimed = loadClaimed();
       let runIndex = -1;
       let here = 0;
       let missed = {};
@@ -733,58 +638,73 @@
         return runIndex >= 0 ? tours[runIndex] : null;
       }
 
-      function setVar(color) {
+      function setRun(color) {
         document.documentElement.style.setProperty("--run", color);
-      }
-
-      function fmtTime(ms) {
-        const total = Math.max(0, Math.round(ms / 1000));
-        const m = Math.floor(total / 60);
-        const s = total % 60;
-        return m + ":" + String(s).padStart(2, "0");
-      }
-
-      function fmtLat(ms) {
-        const sec = Math.max(0, ms / 1000);
-        return sec.toFixed(1).replace(".", ",") + " s";
-      }
-
-      function fmtNum(n, digits) {
-        return n.toFixed(digits).replace(".", ",");
       }
 
       function hide(node, on) {
         node.classList.toggle("hidden", on);
       }
 
-      function targetViewBox() {
-        if (mode !== "pick") return FULL_VB.slice();
+      function fmtTime(ms) {
+        const total = Math.max(0, Math.round(ms / 1000));
+        return Math.floor(total / 60) + ":" + String(total % 60).padStart(2, "0");
+      }
+
+      function fmtLat(ms) {
+        return (Math.max(0, ms) / 1000).toFixed(1).replace(".", ",") + " s";
+      }
+
+      function fmtNum(n, digits) {
+        return n.toFixed(digits).replace(".", ",");
+      }
+
+      function march(node, dash, gap) {
+        if (!node) return;
+        const len = node.getTotalLength();
+        if (!len) return;
+        const d = dash;
+        const g = gap;
+        node.style.strokeDasharray = d + " " + g;
+        node.style.setProperty("--march", String(-(d + g)));
+        node.classList.add("is-march");
+        if (!reduce) {
+          const anim = el("animate", {
+            attributeName: "stroke-dashoffset",
+            from: "0",
+            to: String(-(d + g)),
+            dur: "0.7s",
+            repeatCount: "indefinite"
+          });
+          node.appendChild(anim);
+        }
+      }
+
+      function activeViewBox() {
         const tour = currentTour();
         const geo = tour.geo;
         const a = geo.points[here];
         const b = geo.points[Math.min(here + 1, geo.points.length - 1)];
         const xs = [a.x, b.x];
         const ys = [a.y, b.y];
-        const minX = Math.min.apply(null, xs) - 2.15;
-        const maxX = Math.max.apply(null, xs) + 2.15;
-        const minY = Math.min.apply(null, ys) - 2.4;
-        const maxY = Math.max.apply(null, ys) + 2.7;
-        return [minX, minY, Math.max(6.2, maxX - minX), Math.max(7.4, maxY - minY)];
+        const minX = Math.min.apply(null, xs) - 1.15;
+        const maxX = Math.max.apply(null, xs) + 1.15;
+        const minY = Math.min.apply(null, ys) - 1.35;
+        const maxY = Math.max.apply(null, ys) + 1.55;
+        return [minX, minY, Math.max(3.35, maxX - minX), Math.max(4.2, maxY - minY)];
       }
 
-      function applyViewBox(svg, next, animate) {
-        const dest = next.slice();
+      function applyViewBox(svg, dest, animate) {
         if (!animate || reduce) {
-          viewBox = dest;
+          viewBox = dest.slice();
           svg.setAttribute("viewBox", viewBox.join(" "));
           return;
         }
         const from = viewBox.slice();
         const t0 = performance.now();
-        const dur = 720;
         if (vbTimer) cancelAnimationFrame(vbTimer);
         function frame(now) {
-          const u = Math.min(1, (now - t0) / dur);
+          const u = Math.min(1, (now - t0) / 680);
           const e = 1 - Math.pow(1 - u, 3);
           viewBox = from.map(function (v, i) { return v + (dest[i] - v) * e; });
           svg.setAttribute("viewBox", viewBox.join(" "));
@@ -793,74 +713,47 @@
         vbTimer = requestAnimationFrame(frame);
       }
 
-      function paintSwatches() {
-        swatches.replaceChildren();
-        COLORS.forEach(function (color, i) {
-          const dot = document.createElement("i");
-          dot.style.background = color;
-          if (claimed.indexOf(i) !== -1) dot.className = "is-taken";
-          swatches.appendChild(dot);
-        });
-      }
-
       function paintMap(fromIdx, toIdx, fly) {
         map.replaceChildren();
         const svg = el("svg", {
           viewBox: viewBox.join(" "),
-          preserveAspectRatio: "xMidYMid meet",
+          preserveAspectRatio: "xMidYMid slice",
           "aria-hidden": "true"
         });
-        svg.appendChild(el("rect", { class: "floor-wash", x: -2, y: -2, width: 14, height: 22 }));
-        svg.appendChild(el("rect", { class: "yard", x: 0.1, y: 0.08, width: 9.35, height: 17.35, rx: 0.28 }));
-        svg.appendChild(el("line", { class: "road-cross", x1: 0.4, y1: TOP, x2: 9.15, y2: TOP }));
-        svg.appendChild(el("line", { class: "road-cross", x1: 0.4, y1: BOT, x2: 9.15, y2: BOT }));
-
+        svg.appendChild(el("rect", { class: "floor", x: -4, y: -4, width: 18, height: 26 }));
         Object.keys(AISLE_X).forEach(function (letter) {
           const x = AISLE_X[letter];
-          svg.appendChild(el("line", { class: "road", x1: x, y1: 0.45, x2: x, y2: 16.9 }));
           svg.appendChild(el("rect", {
-            class: "rack",
-            x: x - 0.46,
-            y: 1.2,
-            width: 0.28,
-            height: 15.05,
-            rx: 0.07
+            class: "aisle",
+            x: x - 0.24,
+            y: 0.45,
+            width: 0.48,
+            height: 16.5,
+            rx: 0.24
           }));
-          svg.appendChild(el("rect", {
-            class: "rack",
-            x: x + 0.18,
-            y: 1.2,
-            width: 0.28,
-            height: 15.05,
-            rx: 0.07
-          }));
-          const tag = el("text", { class: "aisle-tag", x: x, y: 0.52, "text-anchor": "middle" });
-          tag.textContent = letter;
-          svg.appendChild(tag);
         });
 
-        if (mode === "overview" || mode === "taken") {
+        if (mode === "overview" || mode === "empty") {
+          const nextFree = freeIndexes()[0];
+          setRun(COLORS[nextFree] || COLORS[0]);
           tours.forEach(function (tour, i) {
             if (tour.geo.fullPath.length < 2) return;
             const taken = claimed.indexOf(i) !== -1;
-            svg.appendChild(el("polyline", {
-              class: "path-case",
-              points: pts(tour.geo.fullPath)
-            }));
-            svg.appendChild(el("polyline", {
-              class: taken ? "path-claimed" : "path-ghost",
+            const line = el("polyline", {
+              class: taken ? "path-rest" : "path-wave",
               points: pts(tour.geo.fullPath),
-              stroke: tour.color
-            }));
+              stroke: tour.color,
+              opacity: taken ? "0.28" : "0.9"
+            });
+            svg.appendChild(line);
+            if (!taken) march(line, 0.42, 0.3);
             tour.geo.points.forEach(function (p) {
               svg.appendChild(el("circle", {
                 cx: p.x,
                 cy: p.y,
-                r: taken ? 0.12 : 0.16,
+                r: 0.13,
                 fill: tour.color,
-                stroke: "#fff8ea",
-                "stroke-width": 0.05,
-                opacity: taken ? "0.5" : "1"
+                opacity: taken ? "0.35" : "1"
               }));
             });
           });
@@ -869,43 +762,38 @@
         if (mode === "pick") {
           const tour = currentTour();
           const geo = tour.geo;
+          setRun(tour.color);
           if (geo.fullPath.length > 1) {
-            svg.appendChild(el("polyline", {
-              class: "path-claimed",
-              points: pts(geo.fullPath),
-              stroke: tour.color,
-              opacity: "0.18"
-            }));
+            svg.appendChild(el("polyline", { class: "path-rest", points: pts(geo.fullPath) }));
           }
           const doneSeg = slicePath(geo, 0, toIdx);
           if (doneSeg.length > 1) {
-            svg.appendChild(el("polyline", { class: "path-case", points: pts(doneSeg) }));
             svg.appendChild(el("polyline", { class: "path-done", points: pts(doneSeg) }));
           }
           const aheadSeg = slicePath(geo, toIdx, geo.points.length);
+          let aheadNode = null;
           if (aheadSeg.length > 1) {
-            svg.appendChild(el("polyline", { class: "path-case", points: pts(aheadSeg), "stroke-width": 0.48 }));
-            svg.appendChild(el("polyline", { class: "path-ahead", points: pts(aheadSeg) }));
+            aheadNode = el("polyline", { class: "path-ahead", points: pts(aheadSeg) });
+            svg.appendChild(aheadNode);
           }
           let playNode = null;
           if (toIdx > 0) {
             const playSeg = slicePath(geo, fromIdx, toIdx);
             if (playSeg.length > 1) {
-              svg.appendChild(el("polyline", { class: "path-case", points: pts(playSeg) }));
               playNode = el("polyline", { class: "path-play", points: pts(playSeg) });
               svg.appendChild(playNode);
             }
           }
           geo.points.forEach(function (p, i) {
             if (i === toIdx) {
-              svg.appendChild(el("circle", { class: "node-halo", cx: p.x, cy: p.y, r: 0.5 }));
-              const hereNode = el("circle", { class: "node-here", cx: p.x, cy: p.y, r: 0.26 });
+              svg.appendChild(el("circle", { class: "node-halo", cx: p.x, cy: p.y, r: 0.4 }));
+              const hereNode = el("circle", { class: "node-here", cx: p.x, cy: p.y, r: 0.21 });
               svg.appendChild(hereNode);
               if (!reduce) hereNode.classList.add("is-live");
               return;
             }
             if (i === toIdx + 1) {
-              svg.appendChild(el("circle", { class: "node-next", cx: p.x, cy: p.y, r: 0.18 }));
+              svg.appendChild(el("circle", { class: "node-next", cx: p.x, cy: p.y, r: 0.17 }));
               return;
             }
             svg.appendChild(el("circle", {
@@ -916,7 +804,8 @@
             }));
           });
           map.appendChild(svg);
-          applyViewBox(svg, targetViewBox(), fly);
+          applyViewBox(svg, activeViewBox(), fly);
+          if (aheadNode) march(aheadNode, 0.38, 0.26);
           if (playNode && !reduce) {
             const len = playNode.getTotalLength();
             playNode.style.setProperty("--len", String(len));
@@ -929,59 +818,83 @@
         applyViewBox(svg, FULL_VB, fly);
       }
 
+      function paintSpeak() {
+        const tour = currentTour();
+        if (!tour) return;
+        const stop = tour.stops[here];
+        const loc = cleanLoc(stop.code);
+        speakLine.textContent = stop.qty + " · " + stop.sku + " · " + loc;
+        speakMore.innerHTML =
+          "<p><strong>" + stop.sku + "</strong></p>" +
+          "<p>" + stop.qty + " un. · " + loc + "</p>" +
+          "<p>" + stop.speak + "</p>";
+        hide(speakMore, !speakOpen);
+        speakEl.setAttribute("aria-expanded", speakOpen ? "true" : "false");
+      }
+
       function paintChrome() {
         const free = freeIndexes();
-        paintSwatches();
-        hide(overviewCard, mode !== "overview");
-        hide(takenCard, mode !== "taken");
-        hide(pickBanner, mode !== "pick");
         hide(zenEl, mode !== "zen");
+        hide(hudCopy, mode !== "pick");
+        hide(speakEl, mode !== "pick");
+        hide(emptyEl, mode !== "empty");
         hide(goEl, mode !== "overview");
         hide(feitoEl, mode !== "pick");
         hide(skipEl, mode !== "pick");
-        hide(resetEl, mode !== "taken");
-        hide(speakEl, mode !== "pick");
-        speakEl.setAttribute("aria-expanded", "true");
+        hide(againEl, !(mode === "zen" && free.length > 0));
+        document.getElementById("hud").classList.toggle("is-start", mode === "overview" || mode === "empty");
 
         if (mode === "overview") {
-          setVar(COLORS[free[0]] || COLORS[0]);
-          sharePill.textContent = "Onda 14 · 1 link";
-          countPill.textContent = free.length + " livres";
-          overviewLede.textContent = free.length === 1
-            ? "Uma corrida livre. Iniciar pega ela."
-            : free.length + " corridas livres. Iniciar pega a próxima.";
+          setRun(COLORS[free[0]] || COLORS[0]);
+          countEl.textContent = "";
         }
 
-        if (mode === "taken") {
-          setVar("#16181d");
-          sharePill.textContent = "Onda 14 · 1 link";
-          countPill.textContent = "0 livres";
+        if (mode === "empty") {
+          countEl.textContent = "";
         }
 
         if (mode === "pick") {
           const tour = currentTour();
           const stop = tour.stops[here];
           const next = tour.stops[here + 1];
-          setVar(tour.color);
+          const loc = cleanLoc(stop.code);
           qtyEl.textContent = String(stop.qty);
-          slotEl.textContent = stop.code;
-          depoisEl.textContent = next ? "depois " + next.code : "última parada";
-          countPill.textContent = here + " de " + tour.stops.length;
-          sharePill.textContent = "Corrida " + (runIndex + 1);
-          speakBody.textContent = stop.speak;
+          slotEl.textContent = loc;
+          depoisEl.textContent = next ? "depois " + cleanLoc(next.code) : "última parada";
+          countEl.textContent = here + " de " + tour.stops.length;
+          paintSpeak();
         }
 
         if (mode === "zen") {
           const tour = currentTour();
-          sharePill.textContent = "Corrida " + (runIndex + 1);
-          countPill.textContent = tour.stops.length + " de " + tour.stops.length;
+          countEl.textContent = tour.stops.length + " de " + tour.stops.length;
         }
       }
 
-      function showSpeak(open) {
-        speakOpen = open;
-        speakEl.setAttribute("aria-expanded", mode === "pick" ? "true" : "false");
-        hide(speakEl, mode !== "pick");
+      function enterPick(index, fly) {
+        runIndex = index;
+        here = 0;
+        missed = {};
+        speakOpen = false;
+        mode = "pick";
+        pickStartedAt = Date.now();
+        paintChrome();
+        paintMap(0, 0, fly);
+      }
+
+      function claimFree() {
+        const free = freeIndexes();
+        if (!free.length) {
+          mode = "empty";
+          paintChrome();
+          paintMap(0, 0, false);
+          return false;
+        }
+        acceptMs = Date.now() - openedAt;
+        claimed.push(free[0]);
+        saveClaimed();
+        enterPick(free[0], true);
+        return true;
       }
 
       function finishRun() {
@@ -1001,20 +914,8 @@
         document.getElementById("zen-m3").textContent = fmtNum(m3, 2) + " m³";
         document.getElementById("zen-latency").textContent = "aceite " + fmtLat(acceptMs);
         mode = "zen";
-        showSpeak(false);
         paintChrome();
         paintMap(0, 0, true);
-      }
-
-      function enterPick(index, fromOverview) {
-        runIndex = index;
-        here = 0;
-        missed = {};
-        speakOpen = false;
-        mode = "pick";
-        pickStartedAt = Date.now();
-        paintChrome();
-        paintMap(0, 0, fromOverview);
       }
 
       function advance() {
@@ -1025,23 +926,13 @@
         }
         const from = here;
         here += 1;
-        showSpeak(false);
+        speakOpen = false;
         paintChrome();
         paintMap(from, here, true);
       }
 
       goEl.addEventListener("click", function () {
-        const free = freeIndexes();
-        if (!free.length) {
-          mode = "taken";
-          paintChrome();
-          paintMap(0, 0, false);
-          return;
-        }
-        acceptMs = Date.now() - openedAt;
-        const next = free[0];
-        claimed.push(next);
-        enterPick(next, true);
+        claimFree();
       });
 
       feitoEl.addEventListener("click", function () {
@@ -1054,25 +945,13 @@
         advance();
       });
 
-      document.getElementById("again").addEventListener("click", function () {
-        openedAt = Date.now();
-        runIndex = -1;
-        here = 0;
-        mode = freeIndexes().length ? "overview" : "taken";
-        showSpeak(false);
-        paintChrome();
-        paintMap(0, 0, true);
+      speakEl.addEventListener("click", function () {
+        speakOpen = !speakOpen;
+        paintSpeak();
       });
 
-      resetEl.addEventListener("click", function () {
-        claimed = [];
-        runIndex = -1;
-        here = 0;
-        openedAt = Date.now();
-        mode = "overview";
-        showSpeak(false);
-        paintChrome();
-        paintMap(0, 0, true);
+      againEl.addEventListener("click", function () {
+        claimFree();
       });
 
       paintChrome();
