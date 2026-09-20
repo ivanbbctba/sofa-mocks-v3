@@ -21,6 +21,7 @@
       --ok-dot: #3cb371;
       --radius: 18px;
       --ring: 138.23;
+      --ring-w: 5.5;
       --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
 
@@ -253,16 +254,16 @@
     .glance-dial .track {
       fill: none;
       stroke: #ececf3;
-      stroke-width: 4.5;
+      stroke-width: var(--ring-w);
     }
 
     .glance-dial .fill {
       fill: none;
       stroke: var(--accent);
-      stroke-width: 4.5;
+      stroke-width: var(--ring-w);
       stroke-linecap: round;
       stroke-dasharray: var(--ring);
-      stroke-dashoffset: calc(var(--ring) * (1 - var(--p, 0)));
+      stroke-dashoffset: var(--gap, var(--ring));
       transition: stroke-dashoffset 0.35s ease;
     }
 
@@ -711,11 +712,14 @@
       var hint = document.getElementById("proxima-hint");
       var glances = document.getElementById("glances");
 
+      var RING = 138.23;
+
       function glanceHtml(trigger, remain, p) {
+        var gap = (RING * (1 - p)).toFixed(2);
         return (
           '<div class="glance" data-kind="' + trigger.id + '">' +
             '<span class="visually-hidden">' + trigger.name + "</span>" +
-            '<div class="glance-dial" style="--p:' + p + '">' +
+            '<div class="glance-dial" style="--gap:' + gap + '">' +
               '<svg class="ring" viewBox="0 0 56 56" aria-hidden="true">' +
                 '<circle class="track" cx="28" cy="28" r="22"></circle>' +
                 '<circle class="fill" cx="28" cy="28" r="22"></circle>' +
