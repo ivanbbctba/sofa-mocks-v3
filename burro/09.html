@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Burro 09 — Mapa + Speek</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #14151a;
+      --ink-2: #3c3e3c;
+      --mute: #6d706c;
+      --line: #d9d2c6;
+      --map-paper: #e7ecf4;
+      --speek-paper: #f3eee4;
+      --white: #fffcf6;
+      --mine: #3b5bfd;
+      --mine-soft: #dfe4ff;
+      --ghost-a: #e36a6a;
+      --ghost-b: #2f9a7a;
+      --ghost-c: #c9a227;
+      --ok: #2f9a55;
+      --feito: #14151a;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    *,
+    *::before,
+    *::after { box-sizing: border-box; }
+
+    html { -webkit-text-size-adjust: 100%; }
+
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      font-family: Inter, system-ui, -apple-system, sans-serif;
+      color: var(--ink);
+      background: #cfd6e2;
+    }
+
+    .phone {
+      width: 100%;
+      max-width: 390px;
+      height: 100dvh;
+      max-height: 844px;
+      margin: 0 auto;
+      position: relative;
+      overflow: hidden;
+      background: var(--speek-paper);
+      display: flex;
+      flex-direction: column;
+    }
+
+    @media (min-height: 900px) {
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .phone {
+        height: 844px;
+        border-radius: 28px;
+        box-shadow: 0 18px 50px rgba(17, 19, 24, 0.16);
+      }
+    }
+
+    .map-pane,
+    .speek-pane {
+      flex: 1 1 50%;
+      min-height: 0;
+      position: relative;
+    }
+
+    .map-pane {
+      background: var(--map-paper);
+    }
+
+    .speek-pane {
+      background: var(--speek-paper);
+      display: flex;
+      flex-direction: column;
+      padding: 18px 20px calc(18px + var(--safe-bottom));
+    }
+
+    .split-rail {
+      flex: 0 0 10px;
+      position: relative;
+      background: linear-gradient(180deg, #d5dce8 0%, #efe8db 100%);
+      z-index: 3;
+    }
+
+    .split-rail::before {
+      content: "";
+      position: absolute;
+      left: 22px;
+      right: 22px;
+      top: 4px;
+      height: 2px;
+      border-radius: 99px;
+      background: rgba(20, 21, 26, 0.16);
+    }
+
+    .route-svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .aisle-pill { fill: url(#aisleFade); }
+
+    .run-dash {
+      fill: none;
+      stroke-width: 7;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 7 11;
+      animation: dash-walk 1.6s linear infinite;
+    }
+
+    .run-dash.ghost-a { stroke: var(--ghost-a); opacity: 0.72; animation-duration: 1.35s; }
+    .run-dash.ghost-b { stroke: var(--ghost-b); opacity: 0.7; animation-duration: 1.8s; }
+    .run-dash.ghost-c { stroke: var(--ghost-c); opacity: 0.68; animation-duration: 2.1s; }
+
+    .run-mine-wait {
+      fill: none;
+      stroke: var(--mine);
+      stroke-width: 9;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 8 12;
+      opacity: 0.55;
+      animation: dash-walk 1.5s linear infinite;
+    }
+
+    .run-solid {
+      fill: none;
+      stroke: var(--mine);
+      stroke-width: 11;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .run-remain {
+      fill: none;
+      stroke: var(--mine);
+      stroke-width: 8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 8 12;
+      opacity: 0.38;
+      animation: dash-walk 1.7s linear infinite;
+    }
+
+    @keyframes dash-walk {
+      to { stroke-dashoffset: -36; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .run-dash,
+      .run-mine-wait,
+      .run-remain { animation: none; }
+    }
+
+    .node { fill: #c5cad6; }
+    .node.mine { fill: var(--mine); }
+    .node.upcoming {
+      fill: var(--map-paper);
+      stroke: #9aa8f5;
+      stroke-width: 2.2;
+    }
+    .node.current { fill: url(#nodeGreen); }
+    .node-ring {
+      fill: none;
+      stroke: #3dcc70;
+      stroke-width: 3.2;
+    }
+    .ghost-dot { opacity: 0.7; }
+
+    .map-chrome {
+      position: absolute;
+      inset: calc(10px + var(--safe-top)) 14px auto 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .map-chrome > * { pointer-events: auto; }
+
+    .progress {
+      margin: 0;
+      font-size: 12px;
+      font-weight: 500;
+      color: #8b93a3;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .btn-share {
+      border: 0;
+      background: rgba(255, 252, 246, 0.82);
+      color: var(--ink-2);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(17, 19, 24, 0.08);
+    }
+
+    .legend {
+      position: absolute;
+      left: 12px;
+      bottom: 10px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      z-index: 2;
+    }
+
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      color: var(--mute);
+      background: rgba(255, 252, 246, 0.72);
+      padding: 3px 7px;
+      border-radius: 99px;
+    }
+
+    .legend i {
+      width: 10px;
+      height: 2px;
+      border-radius: 99px;
+      display: block;
+    }
+
+    .legend .me { background: var(--mine); }
+    .legend .a { background: var(--ghost-a); }
+    .legend .b { background: var(--ghost-b); }
+    .legend .c { background: var(--ghost-c); }
+
+    .kicker {
+      margin: 0 0 8px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--mute);
+    }
+
+    .speek-qty {
+      margin: 0;
+      font-family: Fraunces, Georgia, serif;
+      font-size: clamp(56px, 16vw, 84px);
+      font-weight: 700;
+      letter-spacing: -0.05em;
+      line-height: 0.86;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .speek-line {
+      margin: 12px 0 0;
+      font-family: Fraunces, Georgia, serif;
+      font-size: 22px;
+      font-weight: 500;
+      line-height: 1.25;
+      max-width: 18ch;
+    }
+
+    .speek-loc {
+      margin: 8px 0 0;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .speek-after,
+    .speek-sku,
+    .speek-quiet {
+      margin: 8px 0 0;
+      font-size: 13px;
+      color: var(--mute);
+      line-height: 1.4;
+    }
+
+    .speek-sku { color: var(--ink-2); font-weight: 600; }
+
+    .speek-actions {
+      margin-top: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-top: 16px;
+    }
+
+    .btn-text {
+      border: 0;
+      background: none;
+      color: var(--mute);
+      font: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 10px 4px;
+      cursor: pointer;
+    }
+
+    .btn-text:active { transform: scale(0.98); }
+
+    .btn-feito {
+      width: 78px;
+      height: 78px;
+      border: 0;
+      border-radius: 50%;
+      background: var(--feito);
+      color: #fff;
+      font: inherit;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      box-shadow: 0 10px 24px rgba(17, 19, 24, 0.22);
+      flex: 0 0 78px;
+    }
+
+    .btn-feito:active { transform: scale(0.96); }
+
+    .btn-go {
+      border: 0;
+      border-radius: 18px;
+      background: var(--mine);
+      color: #fff;
+      font: inherit;
+      font-size: 16px;
+      font-weight: 600;
+      padding: 14px 22px;
+      cursor: pointer;
+      min-width: 148px;
+    }
+
+    .btn-go:active { transform: scale(0.98); }
+
+    .btn-ghost {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--white);
+      color: var(--ink);
+      font: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 14px 16px;
+      cursor: pointer;
+    }
+
+    .phone.is-claim .speek-qty { font-size: 42px; letter-spacing: -0.04em; }
+    .phone.is-todos .speek-pane,
+    .phone.is-zen .speek-pane { justify-content: center; }
+    .phone.is-todos .speek-qty,
+    .phone.is-zen .speek-qty { font-size: 40px; }
+    .phone.is-zen .map-pane { filter: saturate(0.7) brightness(1.04); }
+
+    .toast {
+      position: absolute;
+      left: 50%;
+      top: 22%;
+      transform: translateX(-50%);
+      z-index: 8;
+      display: none;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(20, 21, 26, 0.86);
+      color: #fff;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .toast.is-on { display: block; }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="phone is-claim" id="app">
+    <section class="map-pane" aria-hidden="true">
+      <svg id="route-svg" class="route-svg" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <linearGradient id="nodeGreen" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#6ad88a" />
+            <stop offset="100%" stop-color="#2f9a55" />
+          </linearGradient>
+          <linearGradient id="aisleFade" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#b0b8c8" stop-opacity="0" />
+            <stop offset="12%" stop-color="#b0b8c8" stop-opacity="0.4" />
+            <stop offset="50%" stop-color="#b0b8c8" stop-opacity="0.5" />
+            <stop offset="88%" stop-color="#b0b8c8" stop-opacity="0.4" />
+            <stop offset="100%" stop-color="#b0b8c8" stop-opacity="0" />
+          </linearGradient>
+        </defs>
+        <g id="aisle-pills"></g>
+        <path id="ghost-a" class="run-dash ghost-a" d="" />
+        <path id="ghost-b" class="run-dash ghost-b" d="" />
+        <path id="ghost-c" class="run-dash ghost-c" d="" />
+        <path id="mine-wait" class="run-mine-wait" d="" />
+        <path id="mine-remain" class="run-remain" d="" />
+        <path id="mine-solid" class="run-solid" d="" />
+        <g id="ghost-nodes"></g>
+        <g id="route-nodes"></g>
+      </svg>
+      <div class="map-chrome">
+        <p class="progress" id="progress">Onda #1042</p>
+        <button type="button" class="btn-share" id="btn-share-map" aria-label="Compartilhar onda">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M8 12h8M14 8l4 4-4 4M8 7H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+      </div>
+      <div class="legend" id="legend">
+        <span><i class="me"></i> sua</span>
+        <span><i class="a"></i> Ana</span>
+        <span><i class="b"></i> Bia</span>
+        <span><i class="c"></i> Caio</span>
+      </div>
+    </section>
+
+    <div class="split-rail" aria-hidden="true"></div>
+
+    <section class="speek-pane" aria-live="polite">
+      <p class="kicker" id="kicker">Speek</p>
+      <p class="speek-qty" id="speek-qty">18</p>
+      <p class="speek-line" id="speek-line">Onda pronta no chão.</p>
+      <p class="speek-loc" id="speek-loc">A-01 → H-10</p>
+      <p class="speek-sku" id="speek-sku">8 pedidos · 157 un.</p>
+      <p class="speek-after" id="speek-after">Outras ondas já andam em tracejado.</p>
+      <p class="speek-quiet" id="speek-quiet">Iniciar pega a onda e aproxima o mapa.</p>
+      <div class="speek-actions" id="actions"></div>
+    </section>
+
+    <div class="toast" id="toast" role="status"></div>
+    <p class="sr-only">Colaborador. Só avança. Mapa e Speek pela metade. Iniciar reclama a onda.</p>
+  </div>
+
+  <script>
+    (function () {
+      var TOTAL = 18;
+      var WAVE = "#1042";
+      var AISLE_X = { A: 40, B: 88, C: 136, D: 184, E: 232, F: 280, G: 328, H: 372 };
+      var BACK_Y = 78;
+      var FRONT_Y = 620;
+      var QTY_WORDS = {
+        1: "Um",
+        2: "Dois",
+        3: "Três",
+        4: "Quatro",
+        5: "Cinco",
+        6: "Seis",
+        7: "Sete",
+        8: "Oito",
+        9: "Nove",
+        10: "Dez",
+        11: "Onze",
+        42: "Quarenta e dois"
+      };
+
+      var STOPS = [
+        { qty: 10, loc: "A-01", sku: "ML-CINZA-M", speak: "moletom cinza M" },
+        { qty: 8, loc: "C-02", sku: "CJ-JEANS-42", speak: "calça jeans 42" },
+        { qty: 10, loc: "E-01", sku: "CT-BRANCA-P", speak: "camiseta branca P" },
+        { qty: 10, loc: "E-10", sku: "VN-PRETA-38", speak: "vestido preto 38" },
+        { qty: 42, loc: "F-02", sku: "MK-MEIA-3", speak: "meia kit 3 pares" },
+        { qty: 5, loc: "H-09", sku: "BL-LINHO-M", speak: "blusa linho M" },
+        { qty: 7, loc: "B-03", sku: "CL-CHINO-40", speak: "calça chino 40" },
+        { qty: 5, loc: "B-09", sku: "JA-NYLON-G", speak: "jaqueta nylon G" },
+        { qty: 9, loc: "G-01", sku: "TN-BASIC-M", speak: "tênis básico 40" },
+        { qty: 7, loc: "G-09", sku: "SH-SLIM-P", speak: "shorts slim P" },
+        { qty: 6, loc: "C-08", sku: "RG-ALGOD-M", speak: "regata algodão M" },
+        { qty: 4, loc: "F-10", sku: "CS-LISA-G", speak: "camisa lisa G" },
+        { qty: 8, loc: "D-04", sku: "SA-MIDI-36", speak: "saia midi 36" },
+        { qty: 3, loc: "D-10", sku: "CR-TRICOT-P", speak: "cardigã tricot P" },
+        { qty: 11, loc: "A-06", sku: "CL-MOLE-M", speak: "calça moletom M" },
+        { qty: 6, loc: "H-02", sku: "BT-COURO-37", speak: "bota couro 37" },
+        { qty: 4, loc: "A-10", sku: "BL-POLO-G", speak: "polo piqué G" },
+        { qty: 2, loc: "H-10", sku: "CN-LA-U", speak: "cinto lã único" }
+      ];
+
+      var GHOSTS = [
+        { id: "ghost-a", stops: ["B-01", "B-08", "D-08", "D-03"] },
+        { id: "ghost-b", stops: ["H-01", "H-06", "G-06", "G-03"] },
+        { id: "ghost-c", stops: ["C-10", "C-04", "F-04", "F-08"] }
+      ];
+
+      function binY(n) {
+        return BACK_Y + (n - 1) * ((FRONT_Y - BACK_Y) / 9);
+      }
+
+      function parseLoc(code) {
+        var parts = code.split("-");
+        return { aisle: parts[0], bin: parseInt(parts[1], 10) };
+      }
+
+      function xy(code) {
+        var loc = parseLoc(code);
+        return [AISLE_X[loc.aisle], binY(loc.bin)];
+      }
+
+      function corridorY(fromCode, toCode) {
+        var a = parseLoc(fromCode);
+        var b = parseLoc(toCode);
+        var y1 = binY(a.bin);
+        var y2 = binY(b.bin);
+        var viaBack = Math.abs(y1 - BACK_Y) + Math.abs(y2 - BACK_Y);
+        var viaFront = Math.abs(y1 - FRONT_Y) + Math.abs(y2 - FRONT_Y);
+        return viaBack <= viaFront ? BACK_Y : FRONT_Y;
+      }
+
+      function segment(fromCode, toCode) {
+        var p1 = xy(fromCode);
+        var p2 = xy(toCode);
+        if (fromCode.charAt(0) === toCode.charAt(0)) return [p1, p2];
+        var via = corridorY(fromCode, toCode);
+        var pts = [p1];
+        if (Math.abs(p1[1] - via) > 1) pts.push([p1[0], via]);
+        pts.push([p2[0], via]);
+        if (Math.abs(p2[1] - via) > 1) pts.push(p2);
+        return pts;
+      }
+
+      function samePoint(a, b) {
+        return Math.abs(a[0] - b[0]) < 0.5 && Math.abs(a[1] - b[1]) < 0.5;
+      }
+
+      function buildFromStops(codes) {
+        var pts = [];
+        var i;
+        for (i = 0; i < codes.length - 1; i += 1) {
+          var seg = segment(codes[i], codes[i + 1]);
+          if (pts.length && samePoint(pts[pts.length - 1], seg[0])) {
+            pts = pts.concat(seg.slice(1));
+          } else {
+            pts = pts.concat(seg);
+          }
+        }
+        return pts;
+      }
+
+      function indexOnRoute(route, code) {
+        var target = xy(code);
+        var best = 0;
+        var bestD = Infinity;
+        var i;
+        for (i = 0; i < route.length; i += 1) {
+          var dx = route[i][0] - target[0];
+          var dy = route[i][1] - target[1];
+          var d = dx * dx + dy * dy;
+          if (d < bestD) {
+            bestD = d;
+            best = i;
+          }
+        }
+        return best;
+      }
+
+      function toPath(points) {
+        if (!points.length) return "";
+        var d = "M " + points[0][0].toFixed(1) + " " + points[0][1].toFixed(1);
+        var i;
+        for (i = 1; i < points.length; i += 1) {
+          d += " L " + points[i][0].toFixed(1) + " " + points[i][1].toFixed(1);
+        }
+        return d;
+      }
+
+      function frameBox(points, extra) {
+        var xs = points.map(function (p) { return p[0]; });
+        var ys = points.map(function (p) { return p[1]; });
+        var minX = Math.min.apply(null, xs) - extra;
+        var maxX = Math.max.apply(null, xs) + extra;
+        var minY = Math.min.apply(null, ys) - extra;
+        var maxY = Math.max.apply(null, ys) + extra;
+        var aspect = 390 / 422;
+        var w = Math.max(180, maxX - minX);
+        var h = Math.max(220, maxY - minY);
+        if (w / h > aspect) h = w / aspect;
+        else w = h * aspect;
+        var cx = (minX + maxX) / 2;
+        var cy = (minY + maxY) / 2;
+        return [cx - w / 2, cy - h / 2, w, h];
+      }
+
+      function lerpBox(a, b, t) {
+        return [
+          a[0] + (b[0] - a[0]) * t,
+          a[1] + (b[1] - a[1]) * t,
+          a[2] + (b[2] - a[2]) * t,
+          a[3] + (b[3] - a[3]) * t
+        ];
+      }
+
+      function boxAttr(box) {
+        return box.map(function (n) { return n.toFixed(1); }).join(" ");
+      }
+
+      function speakQty(n) {
+        return QTY_WORDS[n] || String(n);
+      }
+
+      var app = document.getElementById("app");
+      var svg = document.getElementById("route-svg");
+      var params = new URLSearchParams(window.location.search);
+      var state = params.get("state") || "claim";
+      if (state !== "claim" && state !== "run" && state !== "todos" && state !== "zen") {
+        state = "claim";
+      }
+      var index = parseInt(params.get("i") || "0", 10);
+      if (isNaN(index) || index < 0) index = 0;
+      if (index > STOPS.length - 1) index = STOPS.length - 1;
+      var missed = parseInt(params.get("miss") || "0", 10);
+      if (isNaN(missed) || missed < 0) missed = 0;
+
+      var mineCodes = STOPS.map(function (s) { return s.loc; });
+      var route = buildFromStops(mineCodes);
+      var fullBox = [0, 20, 390, 720];
+      var currentBox = fullBox.slice();
+      var zoomTid = 0;
+
+      document.getElementById("aisle-pills").innerHTML = Object.keys(AISLE_X).map(function (key) {
+        var x = AISLE_X[key];
+        return '<rect class="aisle-pill" x="' + (x - 11).toFixed(1) + '" y="0" width="22" height="844" rx="11"></rect>';
+      }).join("");
+
+      GHOSTS.forEach(function (ghost) {
+        document.getElementById(ghost.id).setAttribute("d", toPath(buildFromStops(ghost.stops)));
+      });
+      document.getElementById("ghost-nodes").innerHTML = GHOSTS.map(function (ghost, gi) {
+        var colors = ["var(--ghost-a)", "var(--ghost-b)", "var(--ghost-c)"];
+        return ghost.stops.map(function (code) {
+          var p = xy(code);
+          return '<circle class="ghost-dot" cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="4" fill="' + colors[gi] + '"></circle>';
+        }).join("");
+      }).join("");
+
+      var mineWait = document.getElementById("mine-wait");
+      var mineSolid = document.getElementById("mine-solid");
+      var mineRemain = document.getElementById("mine-remain");
+      var nodes = document.getElementById("route-nodes");
+      var qtyEl = document.getElementById("speek-qty");
+      var lineEl = document.getElementById("speek-line");
+      var locEl = document.getElementById("speek-loc");
+      var skuEl = document.getElementById("speek-sku");
+      var afterEl = document.getElementById("speek-after");
+      var quietEl = document.getElementById("speek-quiet");
+      var actionsEl = document.getElementById("actions");
+      var progressEl = document.getElementById("progress");
+      var toastEl = document.getElementById("toast");
+
+      mineWait.setAttribute("d", toPath(route));
+
+      function toast(msg) {
+        toastEl.textContent = msg;
+        toastEl.classList.add("is-on");
+        window.clearTimeout(toast.tid);
+        toast.tid = window.setTimeout(function () {
+          toastEl.classList.remove("is-on");
+        }, 1400);
+      }
+
+      function persist() {
+        var url = new URL(window.location.href);
+        url.searchParams.set("state", state);
+        url.searchParams.set("i", String(index));
+        url.searchParams.set("miss", String(missed));
+        window.history.replaceState({}, "", url);
+      }
+
+      function focusBox() {
+        if (state === "claim") return fullBox.slice();
+        var stop = STOPS[Math.min(index, STOPS.length - 1)];
+        var here = indexOnRoute(route, stop.loc);
+        var nextStop = STOPS[index + 1];
+        var nextPt = nextStop ? indexOnRoute(route, nextStop.loc) : here;
+        var start = Math.max(0, here - 4);
+        var end = Math.min(route.length, nextPt + 6);
+        var pts = route.slice(start, end);
+        if (!pts.length) pts = [xy(stop.loc)];
+        return frameBox(pts, state === "zen" || state === "todos" ? 90 : 64);
+      }
+
+      function setViewBox(box) {
+        currentBox = box.slice();
+        svg.setAttribute("viewBox", boxAttr(box));
+      }
+
+      function zoomTo(nextBox) {
+        var from = currentBox.slice();
+        var start = performance.now();
+        window.cancelAnimationFrame(zoomTid);
+        function tick(now) {
+          var t = Math.min(1, (now - start) / 720);
+          var ease = 1 - Math.pow(1 - t, 3);
+          setViewBox(lerpBox(from, nextBox, ease));
+          if (t < 1) zoomTid = window.requestAnimationFrame(tick);
+        }
+        zoomTid = window.requestAnimationFrame(tick);
+      }
+
+      function animateSolid(pathEl) {
+        var len = 0;
+        try { len = pathEl.getTotalLength(); } catch (err) { return; }
+        if (!len) return;
+        pathEl.style.transition = "none";
+        pathEl.style.strokeDasharray = String(len);
+        pathEl.style.strokeDashoffset = String(Math.min(len, 80));
+        pathEl.getBoundingClientRect();
+        window.requestAnimationFrame(function () {
+          pathEl.style.transition = "stroke-dashoffset 0.7s ease";
+          pathEl.style.strokeDashoffset = "0";
+        });
+      }
+
+      function drawMine() {
+        var claimed = state !== "claim";
+        mineWait.style.display = claimed ? "none" : "block";
+        mineSolid.style.display = claimed ? "block" : "none";
+        mineRemain.style.display = claimed ? "block" : "none";
+        if (!claimed) {
+          nodes.innerHTML = "";
+          return;
+        }
+        var stop = STOPS[Math.min(index, STOPS.length - 1)];
+        var here = indexOnRoute(route, stop.loc);
+        var nextStop = STOPS[index + 1];
+        var nextPt = nextStop ? indexOnRoute(route, nextStop.loc) : here;
+        var solidEnd = state === "zen" || state === "todos" ? route.length - 1 : Math.max(here, nextPt);
+        var solidPts = route.slice(0, solidEnd + 1);
+        var dashPts = route.slice(solidEnd);
+        if (solidPts.length === 1) solidPts = [solidPts[0], solidPts[0]];
+        mineSolid.setAttribute("d", toPath(solidPts));
+        mineRemain.setAttribute("d", toPath(dashPts.length ? dashPts : solidPts));
+        if (state === "run") animateSolid(mineSolid);
+
+        var html = "";
+        var i;
+        for (i = 0; i < STOPS.length; i += 1) {
+          var p = xy(STOPS[i].loc);
+          if (state === "zen" || state === "todos") {
+            html += '<circle class="node mine" cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="5"></circle>';
+            continue;
+          }
+          if (i === index) continue;
+          var cls = i < index ? "node mine" : "node upcoming";
+          html += '<circle class="' + cls + '" cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="5"></circle>';
+        }
+        if (state === "run") {
+          var cur = xy(stop.loc);
+          html += '<circle class="node current" cx="' + cur[0].toFixed(1) + '" cy="' + cur[1].toFixed(1) + '" r="8"></circle>';
+          html += '<circle class="node-ring" cx="' + cur[0].toFixed(1) + '" cy="' + cur[1].toFixed(1) + '" r="13"></circle>';
+        }
+        nodes.innerHTML = html;
+      }
+
+      function button(label, className, onClick) {
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = className;
+        btn.textContent = label;
+        btn.addEventListener("click", onClick);
+        return btn;
+      }
+
+      function shareWave() {
+        var shareUrl = new URL(window.location.href);
+        shareUrl.search = "";
+        var payload = {
+          title: "Onda " + WAVE,
+          text: "Onda " + WAVE + " · 18 paradas no Pisoly",
+          url: shareUrl.toString()
+        };
+        if (navigator.share) {
+          navigator.share(payload).catch(function () {
+            copyShare(payload.url);
+          });
+          return;
+        }
+        copyShare(payload.url);
+      }
+
+      function copyShare(url) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(url).then(function () {
+            toast("Link copiado");
+          }).catch(function () {
+            toast(url);
+          });
+          return;
+        }
+        toast("Link da onda pronto");
+      }
+
+      function renderActions() {
+        actionsEl.innerHTML = "";
+        if (state === "claim") {
+          actionsEl.appendChild(button("Iniciar", "btn-go", startClaim));
+          actionsEl.appendChild(button("Compartilhar", "btn-ghost", shareWave));
+          return;
+        }
+        if (state === "run") {
+          actionsEl.appendChild(button("Não achei", "btn-text", missStop));
+          actionsEl.appendChild(button("Feito", "btn-feito", nextStop));
+          return;
+        }
+        if (state === "todos") {
+          actionsEl.appendChild(button("Seguir", "btn-go", goZen));
+          return;
+        }
+        actionsEl.appendChild(button("Compartilhar", "btn-ghost", shareWave));
+      }
+
+      function renderSpeek() {
+        app.classList.remove("is-claim", "is-run", "is-todos", "is-zen");
+        app.classList.add("is-" + state);
+        if (state === "claim") {
+          progressEl.textContent = "Onda " + WAVE;
+          qtyEl.textContent = "18";
+          lineEl.textContent = "Onda pronta no chão.";
+          locEl.textContent = "A-01 → H-10";
+          skuEl.textContent = "8 pedidos · 157 un.";
+          afterEl.textContent = "Outras ondas já andam em tracejado.";
+          quietEl.textContent = "Iniciar pega a onda e aproxima o mapa.";
+          renderActions();
+          return;
+        }
+        if (state === "todos") {
+          progressEl.textContent = TOTAL + " de " + TOTAL;
+          qtyEl.textContent = "Todos";
+          lineEl.textContent = "Todos pegos.";
+          locEl.textContent = "18 paradas";
+          skuEl.textContent = missed ? (TOTAL - missed) + " pegos · " + missed + " não achei" : "Nada ficou para trás.";
+          afterEl.textContent = "";
+          quietEl.textContent = "O chão pode descansar.";
+          renderActions();
+          return;
+        }
+        if (state === "zen") {
+          progressEl.textContent = "Onda " + WAVE;
+          qtyEl.textContent = "Feita";
+          lineEl.textContent = "Onda feita.";
+          locEl.textContent = "";
+          skuEl.textContent = "";
+          afterEl.textContent = missed ? missed + " paradas sem achar." : "Silêncio no corredor.";
+          quietEl.textContent = "Pode compartilhar a onda, se quiser.";
+          renderActions();
+          return;
+        }
+        var stop = STOPS[index];
+        var next = STOPS[index + 1];
+        progressEl.textContent = index + " de " + TOTAL;
+        qtyEl.textContent = String(stop.qty);
+        lineEl.textContent = speakQty(stop.qty) + " " + stop.speak + ".";
+        locEl.textContent = "no " + stop.loc;
+        skuEl.textContent = stop.sku;
+        afterEl.textContent = next ? "depois " + next.loc : "última parada";
+        quietEl.textContent = "Só para frente. Feito ou não achei.";
+        renderActions();
+      }
+
+      function paint(animateZoom) {
+        drawMine();
+        renderSpeek();
+        var nextBox = focusBox();
+        if (animateZoom) zoomTo(nextBox);
+        else setViewBox(nextBox);
+      }
+
+      function startClaim() {
+        state = "run";
+        index = 0;
+        persist();
+        paint(true);
+      }
+
+      function nextStop() {
+        if (index >= STOPS.length - 1) {
+          finishAll();
+          return;
+        }
+        index += 1;
+        persist();
+        paint(true);
+      }
+
+      function missStop() {
+        missed += 1;
+        if (index >= STOPS.length - 1) {
+          finishAll();
+          return;
+        }
+        index += 1;
+        persist();
+        paint(true);
+      }
+
+      function finishAll() {
+        state = "todos";
+        persist();
+        paint(true);
+      }
+
+      function goZen() {
+        state = "zen";
+        persist();
+        paint(true);
+      }
+
+      document.getElementById("btn-share-map").addEventListener("click", shareWave);
+      paint(false);
+    })();
+  </script>
+</body>
+</html>
