@@ -4,24 +4,18 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
   <title>Corrida · dock de um polegar</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Fraunces:opsz,wght@9..144,560;9..144,680&display=swap" rel="stylesheet"/>
   <style>
     :root {
-      --run: #e23d28;
-      --run-ink: #3a120c;
-      --run-soft: #ffd8cf;
-      --paper: #efe7db;
-      --fog: #d8cfc0;
-      --ink: #1b1714;
-      --mute: #6d6458;
-      --dock: #161310;
-      --dock-2: #221c18;
-      --line: rgba(255, 244, 230, 0.12);
-      --ok: #2f9a55;
+      --run: #635bff;
+      --here: #22a06b;
+      --paper: #eef2f7;
+      --ink: #1a1b1a;
+      --mute: #6d706c;
+      --aisle: #cfd6e3;
+      --white: #fffcf8;
+      --feito: #16181d;
+      --dock: #16181d;
       --miss: #c9a227;
-      --white: #fff8f1;
     }
 
     * { box-sizing: border-box; }
@@ -29,9 +23,9 @@
     html, body {
       margin: 0;
       height: 100%;
-      background: #c9bfb0;
+      background: #d8dee8;
       color: var(--ink);
-      font: 16px/1.35 Manrope, "Segoe UI", system-ui, sans-serif;
+      font: 17px/1.3 "SF Pro Text", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
       -webkit-text-size-adjust: 100%;
     }
 
@@ -47,8 +41,9 @@
       height: 100dvh;
       max-height: 844px;
       overflow: hidden;
-      background: var(--paper);
-      box-shadow: 0 0 0 1px rgba(27, 23, 20, 0.08);
+      background:
+        radial-gradient(120% 70% at 50% 0%, rgba(255, 255, 255, 0.72), transparent 58%),
+        var(--paper);
     }
 
     .map {
@@ -56,7 +51,6 @@
       inset: 0;
       z-index: 1;
       pointer-events: none;
-      transition: filter 0.5s ease;
     }
 
     .map svg {
@@ -65,55 +59,51 @@
       height: 100%;
     }
 
-    .aisle { fill: #cfc4b3; }
-    .aisle-label {
-      fill: #8d8274;
-      font: 700 0.42px Manrope, sans-serif;
-    }
+    .aisle { fill: var(--aisle); }
 
     .path-rest {
       fill: none;
       stroke: var(--run);
-      stroke-width: 0.18;
+      stroke-width: 0.22;
       stroke-linecap: round;
       stroke-linejoin: round;
       opacity: 0.16;
     }
 
-    .path-walked {
+    .path-done {
       fill: none;
       stroke: var(--run);
-      stroke-width: 0.32;
+      stroke-width: 0.4;
       stroke-linecap: round;
       stroke-linejoin: round;
-      opacity: 0.55;
+      opacity: 0.72;
     }
 
     .path-dash {
       fill: none;
       stroke: var(--run);
-      stroke-width: 0.42;
+      stroke-width: 0.48;
       stroke-linecap: round;
       stroke-linejoin: round;
-      stroke-dasharray: 0.55 0.42;
-      animation: march 1.05s linear infinite;
+      stroke-dasharray: 0.7 0.46;
+      animation: march 0.9s linear infinite;
     }
 
-    .node-done { fill: var(--ok); }
+    .node-done { fill: #b8bcc8; }
     .node-miss { fill: var(--miss); }
     .node-next {
-      fill: var(--white);
+      fill: #fff;
       stroke: var(--run);
       stroke-width: 0.1;
     }
     .node-future {
-      fill: #b7ad9e;
+      fill: #c5cad6;
       opacity: 0.55;
     }
-    .node-here { fill: var(--run); }
+    .node-here { fill: var(--here); }
     .node-halo {
       fill: none;
-      stroke: var(--run);
+      stroke: var(--here);
       stroke-width: 0.08;
       opacity: 0.45;
     }
@@ -141,20 +131,20 @@
 
     .count {
       margin: 0;
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: -0.02em;
       color: var(--mute);
+      font-size: 13px;
+      font-weight: 650;
+      letter-spacing: -0.02em;
       font-variant-numeric: tabular-nums;
     }
 
     .share {
       border: 0;
-      background: rgba(255, 248, 241, 0.78);
+      background: rgba(255, 252, 248, 0.82);
       color: var(--ink);
       border-radius: 999px;
       padding: 8px 12px;
-      font: 700 12px/1 Manrope, sans-serif;
+      font: 650 12px/1 "SF Pro Text", system-ui, sans-serif;
       letter-spacing: -0.02em;
       cursor: pointer;
     }
@@ -165,13 +155,14 @@
       position: absolute;
       left: 50%;
       top: calc(56px + env(safe-area-inset-top));
+      z-index: 8;
       transform: translateX(-50%) translateY(-8px);
       background: var(--dock);
-      color: var(--white);
+      color: #fff;
       border-radius: 999px;
-      padding: 8px 14px;
+      padding: 9px 14px;
       font-size: 12px;
-      font-weight: 700;
+      font-weight: 650;
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.2s ease, transform 0.2s ease;
@@ -189,123 +180,72 @@
       right: 0;
       bottom: 0;
       z-index: 5;
-      padding: 0 10px calc(10px + env(safe-area-inset-bottom));
+      padding: 0 12px calc(12px + env(safe-area-inset-bottom));
       pointer-events: none;
+      background: linear-gradient(
+        180deg,
+        rgba(238, 242, 247, 0) 0%,
+        rgba(238, 242, 247, 0.78) 34%,
+        #eef2f7 100%
+      );
     }
 
     .slab {
       pointer-events: auto;
-      background: var(--dock);
-      color: var(--white);
-      border-radius: 28px;
-      padding: 14px 14px 12px;
-      box-shadow: 0 -18px 50px rgba(22, 19, 16, 0.28);
+      width: min(28rem, 100%);
+      margin: 0 auto;
     }
 
-    .wave-row {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 12px;
-      overflow: auto;
-    }
-
-    .wave {
-      flex: 0 0 auto;
-      border: 0;
-      border-radius: 999px;
-      padding: 7px 11px;
-      background: var(--dock-2);
-      color: #d7cfc4;
-      font: 700 12px/1 Manrope, sans-serif;
-      cursor: pointer;
-    }
-
-    .wave.is-on {
-      background: color-mix(in srgb, var(--run) 22%, var(--dock-2));
-      color: var(--white);
-      box-shadow: inset 0 0 0 1.5px var(--run);
-    }
-
-    .claim-kicker,
-    .zen-kicker {
-      margin: 0;
-      color: #b3a89c;
-      font-size: 12px;
-      font-weight: 700;
-    }
-
-    .claim-title,
-    .zen-title {
-      margin: 4px 0 0;
-      font-family: Fraunces, Georgia, serif;
-      font-size: 32px;
-      letter-spacing: -0.04em;
-      line-height: 1;
-    }
-
-    .claim-meta {
-      margin: 8px 0 16px;
-      color: #cfc4b6;
-      font-size: 13px;
-    }
-
-    .claim-actions,
-    .zen-actions {
-      display: grid;
-      grid-template-columns: 1fr 1.4fr;
-      gap: 8px;
-    }
-
-    .ghost,
-    .go,
-    .miss,
-    .feito,
-    .speek {
-      border: 0;
-      cursor: pointer;
-      font-family: inherit;
-    }
-
-    .ghost {
-      background: transparent;
-      color: var(--white);
-      border-radius: 18px;
-      box-shadow: inset 0 0 0 1.5px var(--line);
-      font: 700 14px/1 Manrope, sans-serif;
-      min-height: 56px;
-    }
-
-    .go {
-      background: var(--run);
-      color: #fff;
-      border-radius: 18px;
-      font: 800 16px/1 Manrope, sans-serif;
-      letter-spacing: -0.03em;
-      min-height: 56px;
-    }
-
-    .ghost:active,
-    .go:active,
-    .miss:active,
-    .feito:active,
-    .speek:active { transform: scale(0.98); }
-
-    .speek {
+    .open-cta {
       display: block;
       width: 100%;
-      text-align: left;
-      background: var(--dock-2);
-      color: var(--white);
+      min-height: 58px;
+      border: 0;
       border-radius: 18px;
-      padding: 11px 12px;
-      margin-bottom: 10px;
+      background: var(--run);
+      color: #fff;
+      font: 700 18px/1 "SF Pro Text", system-ui, sans-serif;
+      letter-spacing: -0.03em;
+      cursor: pointer;
+    }
+
+    .hud { min-width: 0; }
+
+    .qty {
+      margin: 0;
+      font-size: 76px;
+      font-weight: 650;
+      letter-spacing: -0.07em;
+      line-height: 0.84;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .slot {
+      margin: 8px 0 0;
+      font-size: 20px;
+      font-weight: 650;
+      letter-spacing: -0.03em;
+    }
+
+    .depois {
+      margin: 3px 0 0;
+      color: var(--mute);
+      font-size: 14px;
+    }
+
+    .speek {
+      margin: 12px 0 12px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(255, 252, 248, 0.72);
+      box-shadow: inset 0 0 0 1px rgba(22, 24, 29, 0.06);
     }
 
     .speek-label {
       margin: 0;
-      color: #b7aa9c;
-      font-size: 11px;
-      font-weight: 800;
+      color: var(--mute);
+      font-size: 10px;
+      font-weight: 750;
       letter-spacing: 0.08em;
       text-transform: uppercase;
     }
@@ -313,59 +253,110 @@
     .speek-line {
       margin: 4px 0 0;
       font-size: 15px;
-      font-weight: 700;
-      letter-spacing: -0.03em;
+      font-weight: 650;
+      letter-spacing: -0.02em;
     }
-
-    .speek-more {
-      display: none;
-      margin: 8px 0 0;
-      color: #d8cfc3;
-      font-size: 13px;
-    }
-
-    .speek.is-open .speek-more { display: block; }
 
     .thumbs {
       display: grid;
-      grid-template-columns: 1fr 96px;
-      gap: 8px;
-      align-items: stretch;
+      grid-template-columns: 1fr 84px;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .miss,
+    .feito,
+    .again {
+      border: 0;
+      cursor: pointer;
+      font-family: inherit;
     }
 
     .miss {
+      min-height: 64px;
+      border-radius: 18px;
       background: transparent;
-      color: #efe4d6;
-      border-radius: 20px;
-      box-shadow: inset 0 0 0 1.5px var(--line);
-      font: 700 14px/1 Manrope, sans-serif;
-      min-height: 76px;
+      color: var(--ink);
+      box-shadow: inset 0 0 0 1.5px rgba(22, 24, 29, 0.2);
+      font: 650 15px/1 "SF Pro Text", system-ui, sans-serif;
     }
 
     .feito {
-      width: 96px;
-      height: 96px;
-      margin-top: -10px;
+      width: 84px;
+      height: 84px;
       border-radius: 50%;
+      background: var(--feito);
+      color: #fff;
+      font: 700 15px/1 "SF Pro Text", system-ui, sans-serif;
+      letter-spacing: -0.03em;
+    }
+
+    .open-cta:active,
+    .miss:active,
+    .feito:active,
+    .again:active,
+    .share:active { transform: scale(0.97); }
+
+    .zen,
+    .empty {
+      padding: 6px 2px 8px;
+    }
+
+    .zen-kicker,
+    .empty-kicker {
+      margin: 0;
+      color: var(--mute);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .empty-copy {
+      margin: 8px 0 0;
+      font-size: 40px;
+      font-weight: 650;
+      letter-spacing: -0.05em;
+      line-height: 1;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 14px 0 16px;
+    }
+
+    .metric {
+      padding: 10px 8px;
+      border-radius: 14px;
+      background: rgba(255, 252, 248, 0.74);
+    }
+
+    .metric b {
+      display: block;
+      font-size: 22px;
+      font-weight: 650;
+      letter-spacing: -0.04em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .metric span {
+      color: var(--mute);
+      font-size: 11px;
+    }
+
+    .again {
+      width: 100%;
+      min-height: 54px;
+      border-radius: 16px;
       background: var(--run);
       color: #fff;
-      font: 800 16px/1 Manrope, sans-serif;
-      letter-spacing: -0.03em;
-      box-shadow: 0 10px 24px color-mix(in srgb, var(--run) 45%, transparent);
+      font: 700 16px/1 "SF Pro Text", system-ui, sans-serif;
     }
 
-    .zen {
-      text-align: center;
-      padding: 10px 8px 4px;
-    }
-
-    .zen-title { font-size: 40px; }
-    .zen-actions { grid-template-columns: 1fr; margin-top: 16px; }
-
-    .phone.is-zen .map { filter: saturate(0.35) brightness(1.05); }
+    .phone.is-empty .share { visibility: hidden; }
 
     @keyframes march {
-      to { stroke-dashoffset: -0.97; }
+      to { stroke-dashoffset: -1.16; }
     }
 
     @keyframes pulse {
@@ -376,11 +367,7 @@
     @media (prefers-reduced-motion: reduce) {
       .path-dash,
       .node-here.is-live,
-      .map svg,
-      .toast {
-        animation: none !important;
-        transition: none !important;
-      }
+      .toast { animation: none !important; transition: none !important; }
     }
   </style>
 </head>
@@ -390,10 +377,10 @@
     <div class="chrome">
       <div class="top">
         <p class="count" id="count">Onda 14</p>
-        <button type="button" class="share" id="share">Compartilhar</button>
+        <button type="button" class="share" id="share">WhatsApp</button>
       </div>
     </div>
-    <p class="toast" id="toast" role="status">Link copiado</p>
+    <p class="toast" id="toast" role="status"></p>
     <div class="dock">
       <div class="slab" id="slab"></div>
     </div>
@@ -405,38 +392,36 @@
       const Y1 = 15.85;
       const TOP = 0.85;
       const BOT = 16.65;
+      const FULL = { x: 0, y: 0, w: 9.55, h: 18.2 };
       const NS = "http://www.w3.org/2000/svg";
       const WORDS = {
         1: "Um", 2: "Dois", 3: "Três", 4: "Quatro", 5: "Cinco",
         6: "Seis", 7: "Sete", 8: "Oito", 9: "Nove", 10: "Dez",
         11: "Onze", 12: "Doze", 15: "Quinze", 42: "Quarenta e dois"
       };
-
-      const WAVES = [
-        { id: "14", name: "Onda 14", color: "#e23d28", ink: "#3a120c" },
-        { id: "15", name: "Onda 15", color: "#1d6b5c", ink: "#06241e" },
-        { id: "16", name: "Onda 16", color: "#3b4fd4", ink: "#12163f" }
-      ];
-
+      const COLORS = ["#635bff", "#059669", "#ea580c", "#9333ea", "#e11d48", "#0284c8"];
+      const WAVES = COLORS.map(function (color, i) {
+        return { id: String(14 + i), name: "Onda " + (14 + i), color: color };
+      });
       const STOPS = [
-        { code: "A-01", qty: 10, sku: "TOALHA-220", speak: "toalha de banho" },
-        { code: "C-02", qty: 8, sku: "JOGO-LENCOL", speak: "jogo de lençol" },
-        { code: "E-01", qty: 10, sku: "FRONHA-PAR", speak: "par de fronhas" },
-        { code: "E-10", qty: 10, sku: "COBERTOR-CAS", speak: "cobertor casal" },
-        { code: "F-02", qty: 42, sku: "KIT-HIGIENE", speak: "kit higiene" },
-        { code: "H-09", qty: 3, sku: "SABONETE", speak: "sabonete" },
-        { code: "H-03", qty: 12, sku: "SHAMPOO-400", speak: "shampoo" },
-        { code: "B-09", qty: 5, sku: "ESC-DENTES", speak: "escova de dentes" },
-        { code: "G-01", qty: 7, sku: "CREME-HID", speak: "creme hidratante" },
-        { code: "G-08", qty: 4, sku: "ALGODAO", speak: "algodão" },
-        { code: "C-08", qty: 6, sku: "PILLOW-TOP", speak: "pillow-top" },
-        { code: "F-10", qty: 9, sku: "TAPETE-BAN", speak: "tapete de banho" },
-        { code: "D-04", qty: 2, sku: "CORTINA-180", speak: "cortina" },
-        { code: "D-09", qty: 15, sku: "TOALHA-MAO", speak: "toalha de mão" },
+        { code: "A-01", qty: 10, sku: "TOALHA-220", speak: "toalhas de banho" },
+        { code: "C-02", qty: 8, sku: "JOGO-LENCOL", speak: "jogos de lençol" },
+        { code: "E-01", qty: 10, sku: "FRONHA-PAR", speak: "pares de fronha" },
+        { code: "E-10", qty: 10, sku: "COBERTOR-CAS", speak: "cobertores casal" },
+        { code: "F-02", qty: 42, sku: "KIT-HIGIENE", speak: "kits higiene" },
+        { code: "H-09", qty: 3, sku: "SABONETE", speak: "sabonetes" },
+        { code: "H-03", qty: 12, sku: "SHAMPOO-400", speak: "shampoos" },
+        { code: "B-09", qty: 5, sku: "ESC-DENTES", speak: "escovas de dentes" },
+        { code: "G-01", qty: 7, sku: "CREME-HID", speak: "cremes hidratantes" },
+        { code: "G-08", qty: 4, sku: "ALGODAO", speak: "pacotes de algodão" },
+        { code: "C-08", qty: 6, sku: "PILLOW-TOP", speak: "pillow-tops" },
+        { code: "F-10", qty: 9, sku: "TAPETE-BAN", speak: "tapetes de banho" },
+        { code: "D-04", qty: 2, sku: "CORTINA-180", speak: "cortinas" },
+        { code: "D-09", qty: 15, sku: "TOALHA-MAO", speak: "toalhas de mão" },
         { code: "A-08", qty: 1, sku: "ROUPAO-M", speak: "roupão" },
-        { code: "B-02", qty: 11, sku: "SACO-LIXO", speak: "saco de lixo" },
-        { code: "H-01", qty: 8, sku: "PAPEL-HIG", speak: "papel higiênico" },
-        { code: "G-05", qty: 3, sku: "AMACIANTE", speak: "amaciante" }
+        { code: "B-02", qty: 11, sku: "SACO-LIXO", speak: "sacos de lixo" },
+        { code: "H-01", qty: 8, sku: "PAPEL-HIG", speak: "pacotes de papel higiênico" },
+        { code: "G-05", qty: 3, sku: "AMACIANTE", speak: "amaciantes" }
       ];
 
       function slotY(n) {
@@ -477,8 +462,8 @@
 
       function joinHops(hops) {
         const out = [];
-        hops.forEach((seg) => {
-          seg.forEach((p, i) => {
+        hops.forEach(function (seg) {
+          seg.forEach(function (p, i) {
             if (i === 0 && out.length && samePoint(out[out.length - 1], p)) return;
             out.push(p);
           });
@@ -486,15 +471,14 @@
         return out;
       }
 
-      const points = STOPS.map((stop) => xy(stop.code));
-      const hops = points.slice(1).map((pt, i) => hop(points[i], pt));
+      const points = STOPS.map(function (stop) { return xy(stop.code); });
+      const hops = points.slice(1).map(function (pt, i) { return hop(points[i], pt); });
       const fullPath = joinHops(hops);
       const hopSpans = [];
       let cursor = 0;
-      hops.forEach((seg) => {
+      hops.forEach(function (seg) {
         const start = cursor;
-        const extra = cursor === 0 ? seg.length : seg.length - 1;
-        cursor += extra;
+        cursor += cursor === 0 ? seg.length : seg.length - 1;
         hopSpans.push({ from: start, to: cursor });
       });
 
@@ -507,12 +491,14 @@
       }
 
       function pts(list) {
-        return list.map((p) => p.x + " " + p.y).join(" ");
+        return list.map(function (p) { return p.x + " " + p.y; }).join(" ");
       }
 
       function el(name, attrs) {
         const node = document.createElementNS(NS, name);
-        Object.keys(attrs).forEach((key) => node.setAttribute(key, String(attrs[key])));
+        Object.keys(attrs).forEach(function (key) {
+          node.setAttribute(key, String(attrs[key]));
+        });
         return node;
       }
 
@@ -524,8 +510,32 @@
         return qtyWord(stop.qty) + " " + stop.speak + " no " + stop.code + ".";
       }
 
-      function units(n) {
-        return n === 1 ? "1 unidade" : n + " unidades";
+      function bbox(list) {
+        let minX = 99;
+        let minY = 99;
+        let maxX = -99;
+        let maxY = -99;
+        list.forEach(function (p) {
+          minX = Math.min(minX, p.x);
+          minY = Math.min(minY, p.y);
+          maxX = Math.max(maxX, p.x);
+          maxY = Math.max(maxY, p.y);
+        });
+        const padX = 1.15;
+        const padY = 1.35;
+        return {
+          x: minX - padX,
+          y: minY - padY,
+          w: Math.max(3.4, maxX - minX + padX * 2),
+          h: Math.max(4.2, maxY - minY + padY * 2)
+        };
+      }
+
+      function activeLeg(index) {
+        if (index >= STOPS.length - 1) {
+          return slicePath(Math.max(0, STOPS.length - 2), STOPS.length);
+        }
+        return slicePath(index, index + 1);
       }
 
       const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -537,32 +547,26 @@
       const phone = document.getElementById("phone");
 
       let wave = 0;
-      let mode = "claim";
+      let mode = "open";
       let here = 0;
       let marks = STOPS.map(function () { return "pending"; });
-      let speekOpen = false;
-      let view = { x: 0, y: 0, w: 9.55, h: 21.6 };
+      let free = WAVES.map(function () { return true; });
+      let last = { done: 0, miss: 0, pedidos: 8 };
+      let view = Object.assign({}, FULL);
       let toastTimer = 0;
 
+      function firstFree() {
+        return free.findIndex(function (ok) { return ok; });
+      }
+
       function applyRunColor() {
-        const skin = WAVES[wave];
-        document.documentElement.style.setProperty("--run", skin.color);
-        document.documentElement.style.setProperty("--run-ink", skin.ink);
+        document.documentElement.style.setProperty("--run", WAVES[wave].color);
       }
 
       function targetView() {
-        if (mode === "claim" || mode === "zen") {
-          return { x: 0, y: 0, w: 9.55, h: 21.6 };
-        }
-        const p = points[Math.min(here, points.length - 1)];
-        const w = 5.1;
-        const h = 8.4;
-        return {
-          x: Math.max(-0.2, Math.min(9.55 - w, p.x - w / 2)),
-          y: Math.max(-0.3, Math.min(21.6 - h, p.y - h / 2 - 0.6)),
-          w: w,
-          h: h
-        };
+        if (mode === "open" || mode === "empty") return Object.assign({}, FULL);
+        if (mode === "zen") return Object.assign({}, FULL);
+        return bbox(activeLeg(here));
       }
 
       function paintMap() {
@@ -573,7 +577,7 @@
           "aria-hidden": "true"
         });
 
-        Object.keys(AISLE_X).forEach((letter) => {
+        Object.keys(AISLE_X).forEach(function (letter) {
           const x = AISLE_X[letter];
           svg.appendChild(el("rect", {
             class: "aisle",
@@ -583,44 +587,43 @@
             height: 16.5,
             rx: 0.24
           }));
-          const label = el("text", { class: "aisle-label", x: x, y: 17.35, "text-anchor": "middle" });
-          label.textContent = letter;
-          svg.appendChild(label);
         });
 
-        if (fullPath.length > 1) {
+        if (fullPath.length > 1 && (mode === "open" || mode === "zen" || mode === "empty")) {
           svg.appendChild(el("polyline", { class: "path-rest", points: pts(fullPath) }));
         }
 
-        const walkedTo = mode === "claim" ? 0 : Math.min(here, STOPS.length);
+        const walkedTo = mode === "run" ? here : (mode === "zen" || mode === "empty" ? STOPS.length : 0);
         const doneSeg = slicePath(0, walkedTo);
-        if (doneSeg.length > 1) {
-          svg.appendChild(el("polyline", { class: "path-walked", points: pts(doneSeg) }));
+        if (doneSeg.length > 1 && mode !== "open") {
+          svg.appendChild(el("polyline", { class: "path-done", points: pts(doneSeg) }));
         }
 
-        const dashFrom = mode === "claim" ? 0 : Math.max(0, walkedTo - 1);
-        const dashTo = mode === "zen" ? STOPS.length : Math.max(walkedTo + 1, 1);
-        const dashSeg = slicePath(dashFrom, Math.min(dashTo, STOPS.length));
-        if (dashSeg.length > 1 && mode !== "zen") {
-          svg.appendChild(el("polyline", { class: "path-dash", points: pts(dashSeg) }));
+        if (mode === "open") {
+          svg.appendChild(el("polyline", { class: "path-dash", points: pts(fullPath) }));
+        } else if (mode === "run") {
+          const leg = activeLeg(here);
+          if (leg.length > 1) {
+            svg.appendChild(el("polyline", { class: "path-dash", points: pts(leg) }));
+          }
         }
 
-        points.forEach((p, i) => {
-          if (mode === "claim") {
-            svg.appendChild(el("circle", { class: "node-future", cx: p.x, cy: p.y, r: 0.1 }));
+        points.forEach(function (p, i) {
+          if (mode === "open") {
+            svg.appendChild(el("circle", { class: "node-future", cx: p.x, cy: p.y, r: 0.11 }));
             return;
           }
-          if (mode === "zen" || i < here) {
+          if (mode === "zen" || mode === "empty" || i < here) {
             svg.appendChild(el("circle", {
               class: marks[i] === "miss" ? "node-miss" : "node-done",
               cx: p.x,
               cy: p.y,
-              r: 0.11
+              r: 0.1
             }));
             return;
           }
           if (i === here) {
-            svg.appendChild(el("circle", { class: "node-halo", cx: p.x, cy: p.y, r: 0.4 }));
+            svg.appendChild(el("circle", { class: "node-halo", cx: p.x, cy: p.y, r: 0.38 }));
             const hereNode = el("circle", { class: "node-here", cx: p.x, cy: p.y, r: 0.2 });
             svg.appendChild(hereNode);
             if (!reduce) hereNode.classList.add("is-live");
@@ -645,7 +648,7 @@
         const start = Object.assign({}, view);
         const t0 = performance.now();
         function frame(now) {
-          const t = Math.min(1, (now - t0) / 720);
+          const t = Math.min(1, (now - t0) / 640);
           const e = 1 - Math.pow(1 - t, 3);
           view = {
             x: start.x + (next.x - start.x) * e,
@@ -670,84 +673,40 @@
 
       function shareWave() {
         const skin = WAVES[wave];
-        const payload = {
-          title: "Pisoly · " + skin.name,
-          text: skin.name + " · 18 paradas · 8 pedidos",
-          url: location.href.split("#")[0] + "#onda-" + skin.id
-        };
+        const url = location.href.split("#")[0] + "#onda-" + skin.id;
+        const text = "Pisoly · " + skin.name + " · 18 paradas";
+        const wa = "https://wa.me/?text=" + encodeURIComponent(text + " " + url);
         if (navigator.share) {
-          navigator.share(payload).catch(function () {});
-          return;
-        }
-        const line = payload.title + " — " + payload.url;
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(line).then(function () {
-            toast("Link da onda copiado");
-          }).catch(function () {
-            toast(payload.url);
+          navigator.share({ title: skin.name, text: text, url: url }).catch(function () {
+            window.open(wa, "_blank", "noopener");
           });
           return;
         }
-        toast(payload.url);
+        window.open(wa, "_blank", "noopener");
+        toast("Abrindo WhatsApp");
       }
 
-      function speakNow() {
-        const stop = STOPS[here];
-        if (!stop || !window.speechSynthesis) return;
-        window.speechSynthesis.cancel();
-        const utter = new SpeechSynthesisUtterance(speakLine(stop));
-        utter.lang = "pt-BR";
-        utter.rate = 0.95;
-        window.speechSynthesis.speak(utter);
-      }
-
-      function paintClaim() {
-        const chips = WAVES.map(function (skin, i) {
-          return "<button type=\"button\" class=\"wave" + (i === wave ? " is-on" : "") + "\" data-wave=\"" + i + "\">" + skin.name + "</button>";
-        }).join("");
-        slab.innerHTML =
-          "<div class=\"wave-row\" id=\"waves\">" + chips + "</div>" +
-          "<p class=\"claim-kicker\">Pronta no chão</p>" +
-          "<h1 class=\"claim-title\">" + WAVES[wave].name + "</h1>" +
-          "<p class=\"claim-meta\">18 paradas · 8 pedidos · só pra frente</p>" +
-          "<div class=\"claim-actions\">" +
-          "<button type=\"button\" class=\"ghost\" id=\"share-dock\">Compartilhar</button>" +
-          "<button type=\"button\" class=\"go\" id=\"iniciar\">Iniciar</button>" +
-          "</div>";
-        document.getElementById("waves").addEventListener("click", function (event) {
-          const btn = event.target.closest("[data-wave]");
-          if (!btn) return;
-          wave = Number(btn.getAttribute("data-wave"));
-          applyRunColor();
-          paint();
-        });
-        document.getElementById("share-dock").addEventListener("click", shareWave);
+      function paintOpen() {
+        slab.innerHTML = "<button type=\"button\" class=\"open-cta\" id=\"iniciar\">Iniciar</button>";
         document.getElementById("iniciar").addEventListener("click", claim);
       }
 
       function paintRun() {
         const stop = STOPS[here];
         const next = STOPS[here + 1];
-        const line = speakLine(stop);
         slab.innerHTML =
-          "<button type=\"button\" class=\"speek" + (speekOpen ? " is-open" : "") + "\" id=\"speek\" aria-expanded=\"" + (speekOpen ? "true" : "false") + "\">" +
-          "<p class=\"speek-label\">Speek peek</p>" +
-          "<p class=\"speek-line\"></p>" +
-          "<p class=\"speek-more\"></p>" +
-          "</button>" +
+          "<div class=\"hud\">" +
+          "<div><p class=\"qty\"></p><p class=\"slot\"></p><p class=\"depois\"></p></div>" +
+          "</div>" +
+          "<div class=\"speek\"><p class=\"speek-label\">Speek</p><p class=\"speek-line\"></p></div>" +
           "<div class=\"thumbs\">" +
           "<button type=\"button\" class=\"miss\" id=\"miss\">Não achei</button>" +
           "<button type=\"button\" class=\"feito\" id=\"feito\">Feito</button>" +
           "</div>";
-        slab.querySelector(".speek-line").textContent = line;
-        slab.querySelector(".speek-more").textContent =
-          units(stop.qty) + " · " + stop.sku + (next ? " · depois " + next.code : " · última parada");
-        document.getElementById("speek").addEventListener("click", function () {
-          speekOpen = !speekOpen;
-          this.classList.toggle("is-open", speekOpen);
-          this.setAttribute("aria-expanded", speekOpen ? "true" : "false");
-          if (speekOpen) speakNow();
-        });
+        slab.querySelector(".qty").textContent = String(stop.qty);
+        slab.querySelector(".slot").textContent = stop.code;
+        slab.querySelector(".depois").textContent = next ? "depois " + next.code : "última parada";
+        slab.querySelector(".speek-line").textContent = speakLine(stop);
         document.getElementById("feito").addEventListener("click", function () {
           advance("done");
         });
@@ -757,41 +716,54 @@
       }
 
       function paintZen() {
-        const missed = marks.filter(function (m) { return m === "miss"; }).length;
         slab.innerHTML =
           "<div class=\"zen\">" +
-          "<p class=\"zen-kicker\">" + WAVES[wave].name + "</p>" +
-          "<h1 class=\"zen-title\">Todos pegos</h1>" +
-          "<p class=\"claim-meta\">" + STOPS.length + " paradas" + (missed ? " · " + missed + " não achei" : "") + "</p>" +
-          "<div class=\"zen-actions\">" +
-          "<button type=\"button\" class=\"go\" id=\"again\">Começar de novo</button>" +
-          "</div></div>";
-        document.getElementById("again").addEventListener("click", reset);
+          "<p class=\"zen-kicker\">" + WAVES[wave].name + " encerrada</p>" +
+          "<div class=\"metrics\">" +
+          "<div class=\"metric\"><b>" + last.done + "</b><span>feitos</span></div>" +
+          "<div class=\"metric\"><b>" + last.miss + "</b><span>não achei</span></div>" +
+          "<div class=\"metric\"><b>" + last.pedidos + "</b><span>pedidos</span></div>" +
+          "</div>" +
+          "<button type=\"button\" class=\"again\" id=\"again\">Começar de novo</button>" +
+          "</div>";
+        document.getElementById("again").addEventListener("click", nextFreeRun);
+      }
+
+      function paintEmpty() {
+        slab.innerHTML =
+          "<div class=\"empty\">" +
+          "<p class=\"empty-kicker\">Nenhuma onda livre</p>" +
+          "<p class=\"empty-copy\">Todos pegos</p>" +
+          "</div>";
       }
 
       function paintChrome() {
-        phone.classList.toggle("is-zen", mode === "zen");
-        if (mode === "claim") {
+        phone.classList.toggle("is-empty", mode === "empty");
+        if (mode === "open") {
           countEl.textContent = WAVES[wave].name;
           return;
         }
-        if (mode === "zen") {
-          countEl.textContent = STOPS.length + " de " + STOPS.length;
+        if (mode === "run") {
+          countEl.textContent = (here + 1) + " de " + STOPS.length;
           return;
         }
-        countEl.textContent = (here + 1) + " de " + STOPS.length;
+        countEl.textContent = STOPS.length + " de " + STOPS.length;
       }
 
       function paintDock() {
-        if (mode === "claim") {
-          paintClaim();
+        if (mode === "open") {
+          paintOpen();
+          return;
+        }
+        if (mode === "run") {
+          paintRun();
           return;
         }
         if (mode === "zen") {
           paintZen();
           return;
         }
-        paintRun();
+        paintEmpty();
       }
 
       function paint() {
@@ -804,7 +776,26 @@
       function claim() {
         mode = "run";
         here = 0;
-        speekOpen = false;
+        marks = STOPS.map(function () { return "pending"; });
+        paintChrome();
+        paintDock();
+        lerpView(targetView());
+      }
+
+      function finishWave() {
+        last = {
+          done: marks.filter(function (m) { return m === "done"; }).length,
+          miss: marks.filter(function (m) { return m === "miss"; }).length,
+          pedidos: 8
+        };
+        free[wave] = false;
+        const nxt = firstFree();
+        if (nxt === -1) {
+          mode = "empty";
+        } else {
+          mode = "zen";
+        }
+        here = STOPS.length;
         paintChrome();
         paintDock();
         lerpView(targetView());
@@ -814,26 +805,28 @@
         if (mode !== "run") return;
         marks[here] = kind;
         if (here + 1 >= STOPS.length) {
-          mode = "zen";
-          here = STOPS.length;
-          speekOpen = false;
-          paintChrome();
-          paintDock();
-          lerpView(targetView());
+          finishWave();
           return;
         }
         here += 1;
-        speekOpen = false;
         paintChrome();
         paintDock();
         lerpView(targetView());
       }
 
-      function reset() {
-        mode = "claim";
+      function nextFreeRun() {
+        const nxt = firstFree();
+        if (nxt === -1) {
+          mode = "empty";
+          paint();
+          lerpView(targetView());
+          return;
+        }
+        wave = nxt;
         here = 0;
         marks = STOPS.map(function () { return "pending"; });
-        speekOpen = false;
+        mode = "open";
+        applyRunColor();
         paintChrome();
         paintDock();
         lerpView(targetView());
@@ -843,7 +836,7 @@
 
       const hash = location.hash.replace("#onda-", "");
       const fromHash = WAVES.findIndex(function (skin) { return skin.id === hash; });
-      if (fromHash >= 0) wave = fromHash;
+      if (fromHash >= 0 && free[fromHash]) wave = fromHash;
 
       applyRunColor();
       paint();
