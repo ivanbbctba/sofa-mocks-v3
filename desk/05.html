@@ -681,11 +681,14 @@
       }
 
       document.getElementById("share-btn").addEventListener("click", function () {
-        if (navigator.share) {
-          navigator.share(shareData).catch(function () {});
+        if (!navigator.share) {
+          openSheet();
           return;
         }
-        openSheet();
+        navigator.share(shareData).catch(function (err) {
+          if (err && err.name === "AbortError") return;
+          openSheet();
+        });
       });
 
       sheet.addEventListener("click", function (event) {
