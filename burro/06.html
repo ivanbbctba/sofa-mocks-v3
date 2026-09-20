@@ -3,22 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Onda #1042 — Galpão noite</title>
+  <title>Onda #1042</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --void: #05060a;
-      --floor: #0b0f16;
-      --rack: #151b26;
-      --rack-lit: #1d2634;
-      --paper: #f4efe4;
-      --paper-2: #d8d2c4;
-      --mute: #8d93a3;
-      --line: rgba(244, 239, 228, 0.12);
-      --sodium: #ffb020;
-      --ok: #3dcc70;
+      --void: #07080c;
+      --floor: #0c1018;
+      --paper: #f6f1e7;
+      --mute: #9aa1b2;
+      --line: rgba(246, 241, 231, 0.14);
+      --ok: #22c55e;
       --miss: #fb7185;
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -47,9 +43,7 @@
       position: relative;
       overflow: hidden;
       background:
-        radial-gradient(120% 48% at 50% -6%, rgba(255, 176, 32, 0.28), transparent 54%),
-        radial-gradient(70% 40% at 12% 88%, rgba(2, 132, 200, 0.14), transparent 50%),
-        radial-gradient(50% 30% at 88% 18%, rgba(99, 91, 255, 0.16), transparent 46%),
+        radial-gradient(120% 42% at 50% -10%, rgba(255, 176, 32, 0.2), transparent 50%),
         var(--floor);
     }
 
@@ -77,323 +71,273 @@
       height: 100%;
     }
 
-    .grain {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      opacity: 0.18;
-      background-image: radial-gradient(rgba(255, 255, 255, 0.16) 0.6px, transparent 0.7px);
-      background-size: 3px 3px;
-      mix-blend-mode: overlay;
-    }
-
     .vignette {
       position: absolute;
       inset: 0;
       pointer-events: none;
-      background:
-        linear-gradient(180deg, rgba(5, 6, 10, 0.08) 0%, transparent 16%, transparent 58%, rgba(5, 6, 10, 0.62) 100%);
-    }
-
-    .yard.is-zen .vignette {
-      background:
-        linear-gradient(180deg, rgba(5, 6, 10, 0.06) 0%, transparent 28%, transparent 62%, rgba(5, 6, 10, 0.58) 100%);
+      background: linear-gradient(180deg, rgba(7, 8, 12, 0.04) 0%, transparent 22%, transparent 52%, rgba(7, 8, 12, 0.78) 100%);
     }
 
     .hall { fill: rgba(255, 176, 32, 0.045); }
     .rack { fill: url(#rackFill); }
-    .rack-edge { fill: none; stroke: rgba(214, 226, 248, 0.42); stroke-width: 1.4; }
-    .rack-led { fill: rgba(255, 176, 32, 0.55); }
-    .shelf { stroke: rgba(200, 214, 240, 0.16); stroke-width: 1; }
-    .dock { fill: #2a1d0c; stroke: rgba(255, 176, 32, 0.55); stroke-width: 1.6; }
+    .rack-edge { fill: none; stroke: rgba(214, 226, 248, 0.38); stroke-width: 1.3; }
+    .shelf { stroke: rgba(200, 214, 240, 0.14); stroke-width: 1; }
+    .dock { fill: #2a1d0c; stroke: rgba(255, 176, 32, 0.5); stroke-width: 1.5; }
     .aisle-mark {
-      fill: #c6cddb;
-      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      fill: #b7becd;
+      font-family: "IBM Plex Sans", system-ui, sans-serif;
       font-size: 12px;
       font-weight: 600;
-      letter-spacing: 0.06em;
     }
 
     .hop {
       fill: none;
       stroke-linecap: round;
       stroke-linejoin: round;
+      stroke-dasharray: 11 12;
+      animation: ants 1s linear infinite;
       filter: url(#glow);
     }
 
-    .hop.is-dash {
-      stroke-dasharray: 10 11;
-      animation: ants 1.05s linear infinite;
+    .hop.is-other { opacity: 0.2; }
+    .hop.is-taken { opacity: 0.14; }
+    .hop.is-wait { opacity: 0.42; }
+    .hop.is-now { stroke-width: 11; }
+    .hop.is-done { opacity: 0.58; }
+
+    .node-wait {
+      fill: var(--floor);
+      stroke: #7f8798;
+      stroke-width: 2;
     }
-
-    .hop.is-done {
-      stroke-dasharray: none;
-      opacity: 0.55;
-      filter: none;
-    }
-
-    .hop.is-now { stroke-width: 10; }
-
-    .hop.is-wait { opacity: 0.38; }
-
     .node-done { fill: #6b7280; }
     .node-miss {
       fill: none;
       stroke: var(--miss);
       stroke-width: 2.4;
     }
-    .node-wait {
-      fill: var(--floor);
-      stroke: #6b7490;
-      stroke-width: 2;
-    }
     .node-next {
       fill: none;
-      stroke: #3dcc70;
+      stroke: var(--ok);
       stroke-width: 3;
     }
-    .node-now {
-      fill: url(#nowFill);
-    }
+    .node-now { fill: url(#nowFill); }
     .node-ring {
       fill: none;
-      stroke: #3dcc70;
-      stroke-width: 3;
+      stroke: var(--ok);
+      stroke-width: 3.2;
     }
 
-    .progress {
+    .count {
       position: absolute;
       top: calc(14px + var(--safe-top));
       right: 16px;
       z-index: 4;
       margin: 0;
-      font-family: "IBM Plex Mono", ui-monospace, monospace;
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 500;
       color: var(--mute);
-      letter-spacing: 0.02em;
       font-variant-numeric: tabular-nums;
     }
 
-    .link-card,
-    .zen-card,
-    .speak,
-    .actions {
+    .open {
       position: absolute;
+      left: 0;
+      right: 0;
+      bottom: calc(28px + var(--safe-bottom));
       z-index: 5;
-    }
-
-    .link-card,
-    .zen-card {
-      left: 16px;
-      right: 16px;
-      bottom: calc(20px + var(--safe-bottom));
-      padding: 22px 22px 20px;
-      border: 1px solid var(--line);
-      border-radius: 22px;
-      background: rgba(8, 10, 16, 0.78);
-      backdrop-filter: blur(16px);
-      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
-    }
-
-    .kicker {
-      margin: 0;
-      font-family: "IBM Plex Mono", ui-monospace, monospace;
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--sodium);
-    }
-
-    .wave-title {
-      margin: 8px 0 0;
-      font-size: 44px;
-      font-weight: 700;
-      letter-spacing: -0.05em;
-      line-height: 0.95;
-    }
-
-    .wave-meta,
-    .zen-note {
-      margin: 8px 0 0;
-      color: var(--mute);
-      font-size: 15px;
-    }
-
-    .btn-iniciar,
-    .btn-again {
-      display: block;
-      width: 100%;
-      margin-top: 20px;
-      border: 0;
-      border-radius: 16px;
-      padding: 15px 16px;
-      background: var(--paper);
-      color: var(--void);
-      font: inherit;
-      font-size: 17px;
-      font-weight: 600;
-      letter-spacing: -0.02em;
-      cursor: pointer;
-    }
-
-    .btn-iniciar:active,
-    .btn-again:active,
-    .btn-feito:active { transform: scale(0.98); }
-
-    .speak {
-      left: 16px;
-      width: min(236px, calc(100% - 122px));
-      bottom: calc(26px + var(--safe-bottom));
-      margin: 0;
-      padding: 16px 16px 14px;
-      border: 1px solid var(--line);
-      border-radius: 20px;
-      background: rgba(8, 10, 16, 0.82);
-      backdrop-filter: blur(16px);
-      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.32);
-    }
-
-    .speak-label {
-      margin: 0;
-      font-family: "IBM Plex Mono", ui-monospace, monospace;
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--sodium);
-    }
-
-    .speak-line {
-      margin: 8px 0 0;
-      font-size: 18px;
-      font-weight: 600;
-      letter-spacing: -0.03em;
-      line-height: 1.3;
-    }
-
-    .speak-line .loc {
-      white-space: nowrap;
-    }
-
-    .speak-face {
       display: flex;
-      align-items: baseline;
-      gap: 10px;
-      margin-top: 14px;
-      padding-top: 12px;
-      border-top: 1px dashed var(--line);
+      justify-content: center;
     }
 
-    .speak-qty {
-      margin: 0;
-      font-size: 40px;
-      font-weight: 700;
-      letter-spacing: -0.06em;
-      line-height: 0.85;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .speak-loc {
-      margin: 0;
-      font-family: "IBM Plex Mono", ui-monospace, monospace;
-      font-size: 16px;
-      font-weight: 600;
-    }
-
-    .speak-sku,
-    .speak-depois {
-      margin: 6px 0 0;
-      color: var(--paper-2);
-      font-size: 13px;
-    }
-
-    .speak-depois { color: var(--mute); }
-
-    .actions {
-      right: 16px;
-      bottom: calc(26px + var(--safe-bottom));
-      display: grid;
-      justify-items: center;
-      gap: 10px;
-    }
-
-    .btn-miss {
-      border: 0;
-      background: transparent;
-      color: var(--paper-2);
-      font: inherit;
-      font-size: 13px;
-      font-weight: 600;
-      letter-spacing: -0.01em;
-      padding: 6px 4px;
-      cursor: pointer;
-    }
-
-    .btn-feito {
-      width: 78px;
-      height: 78px;
+    .btn-iniciar {
+      width: 104px;
+      height: 104px;
       border: 0;
       border-radius: 50%;
       background: var(--paper);
       color: var(--void);
       font: inherit;
-      font-size: 15px;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      cursor: pointer;
+      box-shadow: 0 14px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    .hud {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      bottom: calc(22px + var(--safe-bottom));
+      z-index: 5;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      gap: 12px;
+    }
+
+    .hud-copy { min-width: 0; }
+
+    .qty {
+      margin: 0;
+      font-size: 76px;
+      font-weight: 800;
+      letter-spacing: -0.07em;
+      line-height: 0.82;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .loc {
+      margin: 8px 0 0;
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+    }
+
+    .depois {
+      margin: 3px 0 0;
+      color: var(--mute);
+      font-size: 14px;
+    }
+
+    .speek {
+      margin: 12px 0 0;
+      max-width: 15.5rem;
+      color: var(--paper);
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1.35;
+    }
+
+    .actions {
+      display: grid;
+      justify-items: center;
+      gap: 8px;
+      padding-bottom: 2px;
+    }
+
+    .btn-miss {
+      border: 0;
+      background: transparent;
+      color: var(--mute);
+      font: inherit;
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
+      padding: 6px 2px;
+    }
+
+    .btn-feito,
+    .btn-again {
+      border: 0;
+      background: var(--paper);
+      color: var(--void);
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-feito {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      font-size: 15px;
       box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
     }
 
-    .zen-card { text-align: center; }
+    .btn-iniciar:active,
+    .btn-feito:active,
+    .btn-again:active { transform: scale(0.97); }
 
-    .zen-title {
-      margin: 10px 0 0;
-      font-size: 40px;
+    .zen,
+    .empty {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      bottom: calc(22px + var(--safe-bottom));
+      z-index: 5;
+    }
+
+    .zen {
+      padding: 22px 20px 18px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: rgba(8, 10, 16, 0.82);
+      backdrop-filter: blur(16px);
+    }
+
+    .empty {
+      text-align: center;
+      pointer-events: none;
+      padding-bottom: 18px;
+    }
+
+    .empty-text {
+      margin: 0;
+      font-size: 36px;
       font-weight: 700;
       letter-spacing: -0.05em;
     }
 
-    .hidden { display: none !important; }
-
-    .toast {
-      position: absolute;
-      left: 50%;
-      top: calc(22% + var(--safe-top));
-      transform: translateX(-50%);
-      z-index: 8;
-      display: none;
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: rgba(244, 239, 228, 0.92);
-      color: var(--void);
-      font-size: 12px;
-      font-weight: 600;
-      white-space: nowrap;
+    .zen-title {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.04em;
     }
 
-    .toast.is-on { display: block; }
+    .metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 16px 0 0;
+    }
+
+    .metric {
+      margin: 0;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(246, 241, 231, 0.06);
+    }
+
+    .metric b {
+      display: block;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .metric span {
+      color: var(--mute);
+      font-size: 12px;
+    }
+
+    .btn-again {
+      width: 100%;
+      margin-top: 16px;
+      border-radius: 16px;
+      padding: 14px 16px;
+      font-size: 16px;
+    }
+
+    .hidden { display: none !important; }
 
     .sr-only {
       position: absolute;
       width: 1px;
       height: 1px;
-      padding: 0;
-      margin: -1px;
       overflow: hidden;
       clip: rect(0, 0, 0, 0);
-      border: 0;
     }
 
     @keyframes ants {
-      to { stroke-dashoffset: -40; }
+      to { stroke-dashoffset: -46; }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .hop.is-dash { animation: none; }
-      .btn-iniciar:active,
-      .btn-again:active,
-      .btn-feito:active { transform: none; }
+      .hop { animation: none; }
     }
   </style>
 </head>
@@ -403,116 +347,131 @@
       <svg id="floor" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice">
         <defs>
           <linearGradient id="rackFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#141820" />
-            <stop offset="10%" stop-color="#2a3448" />
-            <stop offset="50%" stop-color="#232c3d" />
-            <stop offset="90%" stop-color="#2a3448" />
-            <stop offset="100%" stop-color="#141820" />
+            <stop offset="0%" stop-color="#12161f" />
+            <stop offset="12%" stop-color="#2a3448" />
+            <stop offset="88%" stop-color="#2a3448" />
+            <stop offset="100%" stop-color="#12161f" />
           </linearGradient>
           <linearGradient id="nowFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#7ae89a" />
-            <stop offset="100%" stop-color="#1f9a52" />
+            <stop offset="0%" stop-color="#4ade80" />
+            <stop offset="100%" stop-color="#16a34a" />
           </linearGradient>
           <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
-            <feGaussianBlur stdDeviation="2.6" result="b" />
+            <feGaussianBlur stdDeviation="2.2" result="b" />
             <feMerge>
               <feMergeNode in="b" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
         </defs>
-        <rect width="390" height="844" fill="#0b0f16" />
-        <ellipse cx="195" cy="64" rx="168" ry="58" fill="rgba(255,176,32,0.16)" />
-        <ellipse cx="70" cy="390" rx="44" ry="150" fill="rgba(2,132,200,0.08)" />
-        <ellipse cx="320" cy="280" rx="50" ry="140" fill="rgba(99,91,255,0.09)" />
-        <rect class="hall" x="18" y="78" width="354" height="36" rx="10" />
-        <rect class="hall" x="18" y="528" width="354" height="36" rx="10" />
+        <rect width="390" height="844" fill="#0c1018" />
+        <ellipse cx="195" cy="60" rx="170" ry="54" fill="rgba(255,176,32,0.14)" />
+        <rect class="hall" x="18" y="78" width="354" height="34" rx="10" />
+        <rect class="hall" x="18" y="528" width="354" height="34" rx="10" />
         <rect class="dock" x="148" y="582" width="94" height="22" rx="6" />
         <g id="aisles"></g>
         <g id="hops"></g>
         <g id="nodes"></g>
       </svg>
     </div>
-    <div class="grain"></div>
     <div class="vignette"></div>
 
-    <p class="progress hidden" id="progress">0 de 18</p>
+    <p class="count hidden" id="count">0 de 4</p>
 
-    <section class="link-card" id="link-card">
-      <p class="kicker">Link da onda</p>
-      <h1 class="wave-title">Onda #1042</h1>
-      <p class="wave-meta">18 paradas · 8 pedidos</p>
+    <div class="open" id="open">
       <button type="button" class="btn-iniciar" id="btn-iniciar">Iniciar</button>
-    </section>
-
-    <article class="speak hidden" id="speak" aria-live="polite">
-      <p class="speak-label">Falar</p>
-      <p class="speak-line" id="speak-line">Dez moletom cinza M no A-01.</p>
-      <div class="speak-face">
-        <p class="speak-qty" id="speak-qty">10</p>
-        <div>
-          <p class="speak-loc" id="speak-loc">A-01</p>
-          <p class="speak-sku" id="speak-sku">ML-CINZA-M</p>
-        </div>
-      </div>
-      <p class="speak-depois" id="speak-depois">depois C-02</p>
-    </article>
-
-    <div class="actions hidden" id="actions">
-      <button type="button" class="btn-miss" id="btn-miss">Não achei</button>
-      <button type="button" class="btn-feito" id="btn-feito">Feito</button>
     </div>
 
-    <section class="zen-card hidden" id="zen-card">
-      <p class="kicker">Corrida</p>
-      <h1 class="zen-title">Todos pegos</h1>
-      <p class="zen-note" id="zen-note">18 de 18</p>
-      <button type="button" class="btn-again" id="btn-again">Começar de novo</button>
+    <div class="hud hidden" id="hud">
+      <div class="hud-copy">
+        <p class="qty" id="qty">10</p>
+        <p class="loc" id="loc">A-01</p>
+        <p class="depois" id="depois">depois C-02</p>
+        <p class="speek" id="speek">Dez toalhas 220 no A-01.</p>
+      </div>
+      <div class="actions">
+        <button type="button" class="btn-miss" id="btn-miss">Não achei</button>
+        <button type="button" class="btn-feito" id="btn-feito">Feito</button>
+      </div>
+    </div>
+
+    <section class="zen hidden" id="zen">
+      <h1 class="zen-title">Corrida</h1>
+      <div class="metrics">
+        <p class="metric"><b id="zen-time">0:00</b><span>tempo</span></p>
+        <p class="metric"><b id="zen-qty">0 un.</b><span>quantidade</span></p>
+        <p class="metric"><b id="zen-kg">0 kg</b><span>peso</span></p>
+        <p class="metric"><b id="zen-m3">0 m³</b><span>volume</span></p>
+      </div>
+      <button type="button" class="btn-again hidden" id="btn-again">Começar de novo</button>
     </section>
 
-    <div class="toast" id="toast" role="status"></div>
-    <p class="sr-only">Corrida do burro. Só avança. Link da onda, Iniciar reclama e aproxima o mapa.</p>
+    <p class="empty hidden" id="empty"><span class="empty-text">Todos pegos</span></p>
+    <p class="sr-only">Uma onda compartilhada. Iniciar reclama e aproxima a perna ativa. Só avança. Falar é texto.</p>
   </div>
 
   <script>
     (function () {
-      var TOTAL = 18;
-      var PATH_COLORS = ["#635bff", "#059669", "#ea580c", "#9333ea", "#e11d48", "#0284c8"];
+      var COLORS = ["#635bff", "#059669", "#ea580c", "#9333ea", "#e11d48", "#0284c8"];
       var AISLE_X = { A: 36, B: 84, C: 132, D: 180, E: 228, F: 276, G: 324, H: 372 };
       var BACK_Y = 96;
       var FRONT_Y = 546;
       var OVERVIEW = [0, 0, 390, 844];
       var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-      var STOPS = [
-        { qty: 10, loc: "A-01", sku: "ML-CINZA-M", name: "Moletom cinza M", orders: 3 },
-        { qty: 8, loc: "C-02", sku: "CJ-JEANS-42", name: "Calça jeans 42", orders: 2 },
-        { qty: 10, loc: "E-01", sku: "CT-BRANCA-P", name: "Camiseta branca P", orders: 4 },
-        { qty: 10, loc: "E-10", sku: "VN-PRETA-38", name: "Vestido preto 38", orders: 2 },
-        { qty: 42, loc: "F-02", sku: "MK-MEIA-3", name: "Meia kit 3 pares", orders: 6 },
-        { qty: 5, loc: "H-09", sku: "BL-LINHO-M", name: "Blusa linho M", orders: 1 },
-        { qty: 7, loc: "B-03", sku: "CL-CHINO-40", name: "Calça chino 40", orders: 2 },
-        { qty: 5, loc: "B-09", sku: "JA-NYLON-G", name: "Jaqueta nylon G", orders: 1 },
-        { qty: 9, loc: "G-01", sku: "TN-BASIC-M", name: "Tênis básico 40", orders: 3 },
-        { qty: 7, loc: "G-09", sku: "SH-SLIM-P", name: "Shorts slim P", orders: 2 },
-        { qty: 6, loc: "C-08", sku: "RG-ALGOD-M", name: "Regata algodão M", orders: 2 },
-        { qty: 4, loc: "F-10", sku: "CS-LISA-G", name: "Camisa lisa G", orders: 1 },
-        { qty: 8, loc: "D-04", sku: "SA-MIDI-36", name: "Saia midi 36", orders: 3 },
-        { qty: 3, loc: "D-10", sku: "CR-TRICOT-P", name: "Cardigã tricot P", orders: 1 },
-        { qty: 11, loc: "A-06", sku: "CL-MOLE-M", name: "Calça moletom M", orders: 4 },
-        { qty: 6, loc: "H-02", sku: "BT-COURO-37", name: "Bota couro 37", orders: 2 },
-        { qty: 4, loc: "A-10", sku: "BL-POLO-G", name: "Polo piqué G", orders: 1 },
-        { qty: 2, loc: "H-10", sku: "CN-LA-U", name: "Cinto lã único", orders: 1 }
+      var RUNS = [
+        {
+          stops: [
+            { loc: "A-01", qty: 10, kg: 4.8, m3: 0.09, speak: "Dez toalhas 220 no A-01." },
+            { loc: "C-02", qty: 8, kg: 6.1, m3: 0.12, speak: "Oito jogos de lençol no C-02." },
+            { loc: "E-01", qty: 10, kg: 2.4, m3: 0.05, speak: "Dez pares de fronha no E-01." },
+            { loc: "E-10", qty: 6, kg: 7.2, m3: 0.16, speak: "Seis cobertores casal no E-10." }
+          ]
+        },
+        {
+          stops: [
+            { loc: "F-02", qty: 42, kg: 9.4, m3: 0.11, speak: "Quarenta e dois kits higiene no F-02." },
+            { loc: "H-09", qty: 3, kg: 0.9, m3: 0.02, speak: "Três sabonetes no H-09." },
+            { loc: "H-03", qty: 12, kg: 5.1, m3: 0.07, speak: "Doze shampoos 400 no H-03." },
+            { loc: "G-01", qty: 7, kg: 3.3, m3: 0.04, speak: "Sete cremes hidratantes no G-01." }
+          ]
+        },
+        {
+          stops: [
+            { loc: "B-09", qty: 5, kg: 0.6, m3: 0.01, speak: "Cinco escovas de dente no B-09." },
+            { loc: "C-08", qty: 6, kg: 8.8, m3: 0.22, speak: "Seis pillow tops no C-08." },
+            { loc: "F-10", qty: 9, kg: 6.4, m3: 0.14, speak: "Nove tapetes de banho no F-10." },
+            { loc: "D-04", qty: 2, kg: 3.9, m3: 0.1, speak: "Duas cortinas 180 no D-04." }
+          ]
+        },
+        {
+          stops: [
+            { loc: "D-09", qty: 15, kg: 3.1, m3: 0.06, speak: "Quinze toalhas de mão no D-09." },
+            { loc: "A-08", qty: 1, kg: 0.8, m3: 0.03, speak: "Um roupão M no A-08." },
+            { loc: "B-02", qty: 11, kg: 2.2, m3: 0.05, speak: "Onze sacos de lixo no B-02." },
+            { loc: "H-01", qty: 8, kg: 4.0, m3: 0.08, speak: "Oito papéis higiênicos no H-01." }
+          ]
+        },
+        {
+          stops: [
+            { loc: "G-05", qty: 3, kg: 3.6, m3: 0.04, speak: "Três amaciantes no G-05." },
+            { loc: "G-08", qty: 4, kg: 0.5, m3: 0.02, speak: "Quatro pacotes de algodão no G-08." },
+            { loc: "E-05", qty: 14, kg: 5.7, m3: 0.13, speak: "Quatorze lençóis solteiro no E-05." },
+            { loc: "C-04", qty: 9, kg: 2.8, m3: 0.07, speak: "Nove capas de travesseiro no C-04." }
+          ]
+        },
+        {
+          stops: [
+            { loc: "A-05", qty: 16, kg: 6.8, m3: 0.15, speak: "Dezesseis toalhas de piso no A-05." },
+            { loc: "B-06", qty: 4, kg: 4.5, m3: 0.09, speak: "Quatro kits banho no B-06." },
+            { loc: "D-02", qty: 7, kg: 8.1, m3: 0.19, speak: "Sete edredons no D-02." },
+            { loc: "F-06", qty: 5, kg: 1.7, m3: 0.04, speak: "Cinco porta-travesseiros no F-06." }
+          ]
+        }
       ];
 
-      var WORDS = {
-        1: "Um", 2: "Dois", 3: "Três", 4: "Quatro", 5: "Cinco", 6: "Seis",
-        7: "Sete", 8: "Oito", 9: "Nove", 10: "Dez", 11: "Onze", 12: "Doze"
-      };
-
       function parseLoc(code) {
-        var parts = code.split("-");
-        return { aisle: parts[0], bin: parseInt(parts[1], 10) };
+        return { aisle: code.charAt(0), bin: parseInt(code.slice(2), 10) };
       }
 
       function binY(n) {
@@ -555,70 +514,89 @@
         return d;
       }
 
-      function hopPoints() {
+      function hopsFor(stops) {
         var hops = [];
         var i;
-        for (i = 0; i < STOPS.length - 1; i += 1) {
-          hops.push(segment(STOPS[i].loc, STOPS[i + 1].loc));
+        for (i = 0; i < stops.length - 1; i += 1) {
+          hops.push(segment(stops[i].loc, stops[i + 1].loc));
         }
         return hops;
       }
 
-      function frameBox(points, extra) {
+      function activeLeg(tour, at) {
+        if (at < tour.stops.length - 1) return segment(tour.stops[at].loc, tour.stops[at + 1].loc);
+        if (at > 0) return segment(tour.stops[at - 1].loc, tour.stops[at].loc);
+        return [xy(tour.stops[at].loc)];
+      }
+
+      function frameLeg(points) {
         var xs = points.map(function (p) { return p[0]; });
         var ys = points.map(function (p) { return p[1]; });
-        var minX = Math.min.apply(null, xs) - extra;
-        var maxX = Math.max.apply(null, xs) + extra;
-        var minY = Math.min.apply(null, ys) - extra;
-        var maxY = Math.max.apply(null, ys) + extra;
+        var minX = Math.min.apply(null, xs) - 38;
+        var maxX = Math.max.apply(null, xs) + 38;
+        var minY = Math.min.apply(null, ys) - 48;
+        var maxY = Math.max.apply(null, ys) + 56;
         var aspect = 390 / 844;
-        var w = Math.max(168, maxX - minX);
-        var h = Math.max(300, maxY - minY);
+        var w = Math.max(132, maxX - minX);
+        var h = Math.max(220, maxY - minY);
         if (w / h > aspect) h = w / aspect;
         else w = h * aspect;
         var cx = (minX + maxX) / 2;
-        var cy = (minY + maxY) / 2 - 18;
+        var cy = (minY + maxY) / 2 - 8;
         return [cx - w / 2, cy - h / 2, w, h];
-      }
-
-      function qtyWord(n) {
-        return WORDS[n] || String(n);
-      }
-
-      function speakName(name) {
-        return name.charAt(0).toLowerCase() + name.slice(1);
-      }
-
-      function speakText(stop) {
-        return qtyWord(stop.qty) + " " + speakName(stop.name) + " no " + stop.loc + ".";
       }
 
       function ease(t) {
         return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
       }
 
-      var hops = hopPoints();
-      var app = document.getElementById("app");
+      function fmtTime(ms) {
+        var total = Math.max(0, Math.round(ms / 1000));
+        var m = Math.floor(total / 60);
+        var s = total % 60;
+        return m + ":" + String(s).padStart(2, "0");
+      }
+
+      function fmtNum(n, digits) {
+        return n.toFixed(digits).replace(".", ",");
+      }
+
+      var tours = RUNS.map(function (run, i) {
+        return { color: COLORS[i], stops: run.stops, hops: hopsFor(run.stops) };
+      });
+
       var svg = document.getElementById("floor");
       var aisleLayer = document.getElementById("aisles");
       var hopLayer = document.getElementById("hops");
       var nodeLayer = document.getElementById("nodes");
-      var linkCard = document.getElementById("link-card");
-      var zenCard = document.getElementById("zen-card");
-      var speak = document.getElementById("speak");
-      var actions = document.getElementById("actions");
-      var progressEl = document.getElementById("progress");
-      var toastEl = document.getElementById("toast");
+      var openEl = document.getElementById("open");
+      var hudEl = document.getElementById("hud");
+      var zenEl = document.getElementById("zen");
+      var emptyEl = document.getElementById("empty");
+      var againEl = document.getElementById("btn-again");
+      var countEl = document.getElementById("count");
+      var feitoEl = document.getElementById("btn-feito");
       var boxNow = OVERVIEW.slice();
       var boxTid = 0;
+      var startedAt = 0;
 
       var params = new URLSearchParams(window.location.search);
       var phase = params.get("fase") || "link";
-      if (phase !== "link" && phase !== "run" && phase !== "zen") phase = "link";
+      if (phase !== "link" && phase !== "run" && phase !== "zen" && phase !== "empty") phase = "link";
+      var runIndex = parseInt(params.get("r") || "0", 10);
       var index = parseInt(params.get("i") || "0", 10);
+      if (isNaN(runIndex) || runIndex < 0) runIndex = 0;
+      if (runIndex > tours.length - 1) runIndex = tours.length - 1;
       if (isNaN(index) || index < 0) index = 0;
-      if (index > STOPS.length - 1) index = STOPS.length - 1;
+      var claimed = [];
       var missed = {};
+
+      if (phase === "run" || phase === "zen") {
+        var c;
+        for (c = 0; c < runIndex; c += 1) claimed.push(c);
+        if (claimed.indexOf(runIndex) === -1) claimed.push(runIndex);
+      }
+      if (phase === "empty") claimed = tours.map(function (_, i) { return i; });
 
       aisleLayer.innerHTML = Object.keys(AISLE_X).map(function (key) {
         var x = AISLE_X[key];
@@ -629,23 +607,23 @@
           shelves += '<line class="shelf" x1="' + (x - 10) + '" y1="' + y.toFixed(1) + '" x2="' + (x + 10) + '" y2="' + y.toFixed(1) + '"></line>';
         }
         return (
-          '<g>' +
+          "<g>" +
             '<rect class="rack" x="' + (x - 13) + '" y="86" width="26" height="476" rx="13"></rect>' +
             '<rect class="rack-edge" x="' + (x - 13) + '" y="86" width="26" height="476" rx="13"></rect>' +
-            '<circle class="rack-led" cx="' + x + '" cy="92" r="2.4"></circle>' +
             shelves +
             '<text class="aisle-mark" x="' + x + '" y="578" text-anchor="middle">' + key + "</text>" +
           "</g>"
         );
       }).join("");
 
-      function toast(msg) {
-        toastEl.textContent = msg;
-        toastEl.classList.add("is-on");
-        window.clearTimeout(toast.tid);
-        toast.tid = window.setTimeout(function () {
-          toastEl.classList.remove("is-on");
-        }, 1200);
+      function freeIndexes() {
+        return tours.map(function (_, i) { return i; }).filter(function (i) {
+          return claimed.indexOf(i) === -1;
+        });
+      }
+
+      function tour() {
+        return tours[runIndex];
       }
 
       function syncUrl() {
@@ -654,8 +632,16 @@
           url.search = "";
         } else {
           url.searchParams.set("fase", phase);
-          if (phase === "run") url.searchParams.set("i", String(index));
-          else url.searchParams.delete("i");
+          if (phase === "run") {
+            url.searchParams.set("r", String(runIndex));
+            url.searchParams.set("i", String(index));
+          } else if (phase === "zen") {
+            url.searchParams.set("r", String(runIndex));
+            url.searchParams.delete("i");
+          } else {
+            url.searchParams.delete("r");
+            url.searchParams.delete("i");
+          }
         }
         window.history.replaceState({}, "", url);
       }
@@ -669,142 +655,153 @@
         }
         var from = boxNow.slice();
         var t0 = performance.now();
-        var ms = 820;
         window.cancelAnimationFrame(boxTid);
         function tick(now) {
-          var t = Math.min(1, (now - t0) / ms);
+          var t = Math.min(1, (now - t0) / 780);
           var e = ease(t);
-          var cur = [
+          boxNow = [
             from[0] + (next[0] - from[0]) * e,
             from[1] + (next[1] - from[1]) * e,
             from[2] + (next[2] - from[2]) * e,
             from[3] + (next[3] - from[3]) * e
           ];
-          boxNow = cur;
-          svg.setAttribute("viewBox", cur.map(function (n) { return n.toFixed(2); }).join(" "));
+          svg.setAttribute("viewBox", boxNow.map(function (n) { return n.toFixed(2); }).join(" "));
           if (t < 1) boxTid = window.requestAnimationFrame(tick);
         }
         boxTid = window.requestAnimationFrame(tick);
       }
 
-      function focusBox() {
-        var stop = STOPS[index];
-        var next = STOPS[index + 1];
-        var pts = [xy(stop.loc)];
-        if (next) {
-          pts = pts.concat(segment(stop.loc, next.loc));
-        } else if (index > 0) {
-          pts = pts.concat(segment(STOPS[index - 1].loc, stop.loc));
-        }
-        return frameBox(pts, 54);
-      }
-
       function paintHops() {
         var html = "";
-        var i;
-        for (i = 0; i < hops.length; i += 1) {
-          var color = PATH_COLORS[i % PATH_COLORS.length];
-          var cls = "hop is-dash";
-          var width = 8;
-          if (phase === "zen") {
-            cls = "hop is-done";
-            width = 8;
-          } else if (phase === "run") {
-            if (i < index) {
-              cls = "hop is-done";
-              width = 7;
-            } else if (i === index) {
-              cls = "hop is-dash is-now";
-              width = 9;
-            } else {
-              cls = "hop is-dash is-wait";
+        tours.forEach(function (item, t) {
+          var taken = claimed.indexOf(t) !== -1;
+          item.hops.forEach(function (hop, i) {
+            var cls = "hop";
+            var width = 7;
+            if (phase === "run" && t === runIndex) {
+              if (i < index) {
+                cls += " is-done";
+                width = 8;
+              } else if (i === index) {
+                cls += " is-now";
+                width = 11;
+              } else {
+                cls += " is-wait";
+                width = 7;
+              }
+            } else if (phase === "zen" && t === runIndex) {
+              cls += " is-done";
+              width = 8;
+            } else if (taken || phase === "empty") {
+              cls += " is-taken";
               width = 6;
+            } else if (phase === "run") {
+              cls += " is-other";
+              width = 6;
+            } else {
+              width = 8;
             }
-          }
-          html +=
-            '<path class="' + cls + '" d="' + toPath(hops[i]) +
-            '" stroke="' + color + '" stroke-width="' + width + '"></path>';
-        }
+            html +=
+              '<path class="' + cls + '" d="' + toPath(hop) +
+              '" stroke="' + item.color + '" stroke-width="' + width + '"></path>';
+          });
+        });
         hopLayer.innerHTML = html;
       }
 
       function paintNodes() {
         var html = "";
-        var i;
-        for (i = 0; i < STOPS.length; i += 1) {
-          var p = xy(STOPS[i].loc);
-          var x = p[0].toFixed(1);
-          var y = p[1].toFixed(1);
-          if (phase === "link") {
-            html += '<circle class="node-wait" cx="' + x + '" cy="' + y + '" r="5"></circle>';
-            continue;
-          }
-          if (phase === "zen") {
-            if (missed[i]) {
-              html += '<circle class="node-miss" cx="' + x + '" cy="' + y + '" r="6"></circle>';
-            } else {
-              html += '<circle class="node-done" cx="' + x + '" cy="' + y + '" r="5.5"></circle>';
+        tours.forEach(function (item, t) {
+          item.stops.forEach(function (stop, i) {
+            var p = xy(stop.loc);
+            var x = p[0].toFixed(1);
+            var y = p[1].toFixed(1);
+            if (phase === "run" && t === runIndex) {
+              if (i === index) {
+                html += '<circle class="node-ring" cx="' + x + '" cy="' + y + '" r="14"></circle>';
+                html += '<circle class="node-now" cx="' + x + '" cy="' + y + '" r="8"></circle>';
+                return;
+              }
+              if (i === index + 1) {
+                html += '<circle class="node-next" cx="' + x + '" cy="' + y + '" r="8"></circle>';
+                return;
+              }
+              if (i < index) {
+                html += missed[i]
+                  ? '<circle class="node-miss" cx="' + x + '" cy="' + y + '" r="6"></circle>'
+                  : '<circle class="node-done" cx="' + x + '" cy="' + y + '" r="5"></circle>';
+                return;
+              }
             }
-            continue;
-          }
-          if (i === index) {
-            html += '<circle class="node-ring" cx="' + x + '" cy="' + y + '" r="13"></circle>';
-            html += '<circle class="node-now" cx="' + x + '" cy="' + y + '" r="8"></circle>';
-            continue;
-          }
-          if (i === index + 1) {
-            html += '<circle class="node-next" cx="' + x + '" cy="' + y + '" r="8"></circle>';
-            continue;
-          }
-          if (i < index) {
-            if (missed[i]) {
-              html += '<circle class="node-miss" cx="' + x + '" cy="' + y + '" r="6"></circle>';
-            } else {
-              html += '<circle class="node-done" cx="' + x + '" cy="' + y + '" r="5"></circle>';
+            if (phase === "zen" && t === runIndex) {
+              html += missed[i]
+                ? '<circle class="node-miss" cx="' + x + '" cy="' + y + '" r="6"></circle>'
+                : '<circle class="node-done" cx="' + x + '" cy="' + y + '" r="5.5"></circle>';
+              return;
             }
-            continue;
-          }
-          html += '<circle class="node-wait" cx="' + x + '" cy="' + y + '" r="5"></circle>';
-        }
+            if ((phase === "link" || phase === "empty") && claimed.indexOf(t) !== -1) {
+              html += '<circle class="node-done" cx="' + x + '" cy="' + y + '" r="4.5"></circle>';
+              return;
+            }
+            if (phase === "link" || (phase === "run" && t !== runIndex) || phase === "empty") {
+              html += '<circle class="node-wait" cx="' + x + '" cy="' + y + '" r="4.5"></circle>';
+            }
+          });
+        });
         nodeLayer.innerHTML = html;
       }
 
-      function paintSpeak() {
-        var stop = STOPS[index];
-        var next = STOPS[index + 1];
-        document.getElementById("speak-line").innerHTML =
-          qtyWord(stop.qty) + " " + speakName(stop.name) + " no <span class=\"loc\">" + stop.loc + ".</span>";
-        document.getElementById("speak-qty").textContent = String(stop.qty);
-        document.getElementById("speak-loc").textContent = stop.loc;
-        document.getElementById("speak-sku").textContent = stop.sku;
-        document.getElementById("speak-depois").textContent = next ? "depois " + next.loc : "última parada";
-        progressEl.textContent = index + " de " + TOTAL;
+      function paintHud() {
+        var item = tour();
+        if (index > item.stops.length - 1) index = item.stops.length - 1;
+        var stop = item.stops[index];
+        var next = item.stops[index + 1];
+        document.getElementById("qty").textContent = String(stop.qty);
+        document.getElementById("loc").textContent = stop.loc;
+        document.getElementById("depois").textContent = next ? "depois " + next.loc : "última parada";
+        document.getElementById("speek").textContent = stop.speak;
+        countEl.textContent = index + " de " + item.stops.length;
+        feitoEl.disabled = false;
+      }
+
+      function paintZen() {
+        var item = tour();
+        var qty = 0;
+        var kg = 0;
+        var m3 = 0;
+        item.stops.forEach(function (stop, i) {
+          if (missed[i]) return;
+          qty += stop.qty;
+          kg += stop.kg;
+          m3 += stop.m3;
+        });
+        document.getElementById("zen-time").textContent = fmtTime(Date.now() - startedAt);
+        document.getElementById("zen-qty").textContent = qty + " un.";
+        document.getElementById("zen-kg").textContent = fmtNum(kg, 1) + " kg";
+        document.getElementById("zen-m3").textContent = fmtNum(m3, 2) + " m³";
+        againEl.classList.toggle("hidden", freeIndexes().length === 0);
       }
 
       function paintChrome() {
         var isLink = phase === "link";
         var isRun = phase === "run";
         var isZen = phase === "zen";
-        app.classList.toggle("is-zen", isZen);
-        linkCard.classList.toggle("hidden", !isLink);
-        speak.classList.toggle("hidden", !isRun);
-        actions.classList.toggle("hidden", !isRun);
-        progressEl.classList.toggle("hidden", !isRun);
-        zenCard.classList.toggle("hidden", !isZen);
-        if (isZen) {
-          var missN = Object.keys(missed).length;
-          document.getElementById("zen-note").textContent =
-            missN ? TOTAL + " de " + TOTAL + " · " + missN + " não achei" : TOTAL + " de " + TOTAL;
-        }
+        var isEmpty = phase === "empty";
+        openEl.classList.toggle("hidden", !isLink);
+        hudEl.classList.toggle("hidden", !isRun);
+        countEl.classList.toggle("hidden", !isRun);
+        zenEl.classList.toggle("hidden", !isZen);
+        emptyEl.classList.toggle("hidden", !isEmpty);
+        if (isRun) paintHud();
+        if (isZen) paintZen();
       }
 
       function paint(animateBox) {
         paintChrome();
         paintHops();
         paintNodes();
-        if (phase === "run") paintSpeak();
         var box = OVERVIEW;
-        if (phase === "run") box = focusBox();
+        if (phase === "run") box = frameLeg(activeLeg(tour(), index));
         setViewBox(box, animateBox);
       }
 
@@ -813,6 +810,7 @@
           case "link":
           case "run":
           case "zen":
+          case "empty":
             phase = next;
             break;
           default: {
@@ -820,16 +818,38 @@
             throw new Error("fase desconhecida: " + unknown);
           }
         }
+        if (opts && opts.run != null) runIndex = opts.run;
         if (opts && opts.index != null) index = opts.index;
         syncUrl();
         paint(opts && opts.zoom);
       }
 
+      function finishRun() {
+        if (claimed.indexOf(runIndex) === -1) claimed.push(runIndex);
+        if (!freeIndexes().length) {
+          setPhase("empty", { zoom: true });
+          return;
+        }
+        setPhase("zen", { zoom: true });
+      }
+
+      function claimNext() {
+        var free = freeIndexes();
+        if (!free.length) {
+          setPhase("empty", { zoom: true });
+          return;
+        }
+        missed = {};
+        startedAt = Date.now();
+        if (claimed.indexOf(free[0]) === -1) claimed.push(free[0]);
+        setPhase("run", { run: free[0], index: 0, zoom: true });
+      }
+
       function advance(didMiss) {
         if (phase !== "run") return;
         if (didMiss) missed[index] = true;
-        if (index >= STOPS.length - 1) {
-          setPhase("zen", { zoom: true });
+        if (index >= tour().stops.length - 1) {
+          finishRun();
           return;
         }
         index += 1;
@@ -837,25 +857,23 @@
         paint(true);
       }
 
-      document.getElementById("btn-iniciar").addEventListener("click", function () {
-        toast("Onda sua");
-        setPhase("run", { index: 0, zoom: true });
-      });
-
-      document.getElementById("btn-feito").addEventListener("click", function () {
-        advance(false);
-      });
-
-      document.getElementById("btn-miss").addEventListener("click", function () {
-        toast("Seguinte");
-        advance(true);
-      });
-
-      document.getElementById("btn-again").addEventListener("click", function () {
+      document.getElementById("btn-iniciar").addEventListener("click", claimNext);
+      feitoEl.addEventListener("click", function () { advance(false); });
+      document.getElementById("btn-miss").addEventListener("click", function () { advance(true); });
+      againEl.addEventListener("click", function () {
         missed = {};
         index = 0;
+        if (!freeIndexes().length) {
+          setPhase("empty", { zoom: true });
+          return;
+        }
         setPhase("link", { zoom: true });
       });
+
+      if (phase === "run") {
+        if (index > tour().stops.length - 1) index = tour().stops.length - 1;
+        startedAt = Date.now();
+      }
 
       paint(false);
     })();
