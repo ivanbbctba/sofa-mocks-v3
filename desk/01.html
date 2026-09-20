@@ -187,66 +187,125 @@
       color: var(--mute);
     }
 
-    .need {
-      margin: 22px 0 0;
-      text-align: center;
-      max-width: 280px;
+    .factory-cta {
+      appearance: none;
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      width: 100%;
+      max-width: 340px;
+      margin-top: 22px;
+      padding: 10px 4px 6px;
+      border: none;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      cursor: pointer;
+      border-radius: 22px;
     }
 
-    .need strong {
-      display: block;
-      font-size: 18px;
-      font-weight: 600;
-      letter-spacing: -0.02em;
+    .factory-cta:active {
+      transform: scale(0.985);
+    }
+
+    .glance {
+      width: 68px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .glance[hidden] {
+      display: none;
+    }
+
+    .glance-ring {
+      position: relative;
+      width: 52px;
+      height: 52px;
+    }
+
+    .glance-ring svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+
+    .glance-track {
+      fill: none;
+      stroke: rgba(99, 91, 255, 0.14);
+      stroke-width: 3.2;
+    }
+
+    .glance-fill {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 3.2;
+      stroke-linecap: round;
+    }
+
+    .glance-glyph {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: var(--accent-deep);
+    }
+
+    .glance-glyph svg {
+      position: static;
+      width: 20px;
+      height: 20px;
+      transform: none;
+    }
+
+    .glance-remain {
+      font-size: 12px;
+      font-weight: 620;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.03em;
       color: var(--ink);
+      line-height: 1;
     }
 
-    .need span {
-      display: block;
-      margin-top: 4px;
-      font-size: 13px;
+    .glance-kind {
+      font-size: 10px;
+      font-weight: 500;
       color: var(--mute);
+      letter-spacing: 0.01em;
+      line-height: 1;
     }
 
     .factory-actions {
       display: flex;
-      gap: 10px;
+      justify-content: center;
       width: 100%;
-      max-width: 320px;
-      margin-top: 22px;
+      margin-top: 10px;
     }
 
     .btn {
       appearance: none;
-      flex: 1;
-      min-height: 48px;
+      min-height: 40px;
       border: none;
       border-radius: 14px;
       font: inherit;
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 600;
       letter-spacing: -0.01em;
       cursor: pointer;
-      padding: 0 14px;
+      padding: 0 18px;
     }
 
     .btn:active {
       transform: scale(0.98);
     }
 
-    .btn-primary {
-      background: var(--accent);
-      color: #fff;
-    }
-
-    .btn-primary:hover {
-      background: var(--accent-deep);
-    }
-
     .btn-ghost {
       background: transparent;
       color: var(--ink-2);
-      box-shadow: inset 0 0 0 1px var(--line);
     }
 
     .waves {
@@ -355,8 +414,13 @@
       opacity: 0;
     }
 
-    body.is-paused .orb-fill {
+    body.is-paused .orb-fill,
+    body.is-paused .glance-fill {
       stroke: #a8a3ff;
+    }
+
+    body.is-paused .glance-glyph {
+      color: #8b86d4;
     }
 
     @keyframes orb-expand {
@@ -414,13 +478,76 @@
         </div>
       </div>
 
-      <p class="need" id="need">
-        <strong>Faltam 3 pedidos</strong>
-        <span>para disparar a onda automática</span>
-      </p>
+      <button type="button" class="factory-cta" id="anticipate" aria-label="Antecipar onda">
+        <span class="glance" data-kind="orders">
+          <span class="glance-ring">
+            <svg viewBox="0 0 52 52" aria-hidden="true">
+              <circle class="glance-track" cx="26" cy="26" r="22"></circle>
+              <circle class="glance-fill" data-meter="orders" cx="26" cy="26" r="22"></circle>
+            </svg>
+            <span class="glance-glyph">
+              <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <rect x="3.4" y="3.6" width="13.2" height="3.4" rx="1.1" stroke="currentColor" stroke-width="1.6"/>
+                <rect x="3.4" y="8.3" width="13.2" height="3.4" rx="1.1" stroke="currentColor" stroke-width="1.6"/>
+                <rect x="3.4" y="13" width="13.2" height="3.4" rx="1.1" stroke="currentColor" stroke-width="1.6"/>
+              </svg>
+            </span>
+          </span>
+          <span class="glance-remain" data-remain="orders">3</span>
+          <span class="glance-kind">pedidos</span>
+        </span>
+        <span class="glance" data-kind="units">
+          <span class="glance-ring">
+            <svg viewBox="0 0 52 52" aria-hidden="true">
+              <circle class="glance-track" cx="26" cy="26" r="22"></circle>
+              <circle class="glance-fill" data-meter="units" cx="26" cy="26" r="22"></circle>
+            </svg>
+            <span class="glance-glyph">
+              <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <path d="M10 3.2 16.4 6.6v6.8L10 16.8 3.6 13.4V6.6L10 3.2Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                <path d="M3.6 6.6 10 10l6.4-3.4M10 10v6.8" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+              </svg>
+            </span>
+          </span>
+          <span class="glance-remain" data-remain="units">12</span>
+          <span class="glance-kind">unid.</span>
+        </span>
+        <span class="glance" data-kind="clock">
+          <span class="glance-ring">
+            <svg viewBox="0 0 52 52" aria-hidden="true">
+              <circle class="glance-track" cx="26" cy="26" r="22"></circle>
+              <circle class="glance-fill" data-meter="clock" cx="26" cy="26" r="22"></circle>
+            </svg>
+            <span class="glance-glyph">
+              <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <circle cx="10" cy="10.2" r="6.4" stroke="currentColor" stroke-width="1.6"/>
+                <path d="M10 7.2v3.2l2.3 1.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+          </span>
+          <span class="glance-remain" data-remain="clock">16:00</span>
+          <span class="glance-kind">hora</span>
+        </span>
+        <span class="glance" data-kind="elapsed">
+          <span class="glance-ring">
+            <svg viewBox="0 0 52 52" aria-hidden="true">
+              <circle class="glance-track" cx="26" cy="26" r="22"></circle>
+              <circle class="glance-fill" data-meter="elapsed" cx="26" cy="26" r="22"></circle>
+            </svg>
+            <span class="glance-glyph">
+              <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <path d="M7.2 3.4h5.6M10 3.4v1.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                <circle cx="10" cy="11.2" r="5.4" stroke="currentColor" stroke-width="1.6"/>
+                <path d="M10 11.2V8.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              </svg>
+            </span>
+          </span>
+          <span class="glance-remain" data-remain="elapsed">04:32</span>
+          <span class="glance-kind">tempo</span>
+        </span>
+      </button>
 
       <div class="factory-actions">
-        <button type="button" class="btn btn-primary" id="anticipate">Antecipar</button>
         <button type="button" class="btn btn-ghost" id="pause">Pausar</button>
       </div>
     </section>
@@ -472,12 +599,20 @@
 
   <script>
     (function () {
-      var CIRC = 2 * Math.PI * 100;
+      var ORB_CIRC = 2 * Math.PI * 100;
+      var GLANCE_CIRC = 2 * Math.PI * 22;
       var WINDOW = 15 * 60;
       var remaining = 4 * 60 + 32;
       var nextWave = 1045;
       var paused = false;
       var toastTimer = 0;
+
+      var TRIGGERS = [
+        { id: "orders", enabled: true, fill: 0.75, remain: "3" },
+        { id: "units", enabled: true, fill: 0.76, remain: "12" },
+        { id: "clock", enabled: true, fill: 0.68, remain: "16:00" },
+        { id: "elapsed", enabled: true, fill: 0.7, remain: "04:32" }
+      ];
 
       var countdownEl = document.getElementById("countdown");
       var labelEl = document.getElementById("countdownLabel");
@@ -487,7 +622,6 @@
       var anticipateBtn = document.getElementById("anticipate");
       var waveList = document.getElementById("waveList");
       var toastEl = document.getElementById("toast");
-      var needEl = document.getElementById("need");
 
       function pad(n) {
         return n < 10 ? "0" + n : String(n);
@@ -499,15 +633,45 @@
         return pad(m) + ":" + pad(s);
       }
 
-      function setRing() {
-        var spent = Math.max(0, Math.min(1, 1 - remaining / WINDOW));
-        fillEl.style.strokeDasharray = String(CIRC);
-        fillEl.style.strokeDashoffset = String(CIRC * (1 - spent));
+      function setCircle(el, fill, circ) {
+        var spent = Math.max(0, Math.min(1, fill));
+        el.style.strokeDasharray = String(circ);
+        el.style.strokeDashoffset = String(circ * (1 - spent));
+      }
+
+      function triggerById(id) {
+        var i;
+        for (i = 0; i < TRIGGERS.length; i += 1) {
+          if (TRIGGERS[i].id === id) return TRIGGERS[i];
+        }
+        return null;
+      }
+
+      function syncElapsed() {
+        var elapsed = triggerById("elapsed");
+        if (!elapsed) return;
+        elapsed.remain = formatTime(remaining);
+        elapsed.fill = 1 - remaining / WINDOW;
+      }
+
+      function renderGlances() {
+        TRIGGERS.forEach(function (trigger) {
+          var node = document.querySelector('[data-kind="' + trigger.id + '"]');
+          if (!node) return;
+          node.hidden = !trigger.enabled;
+          if (!trigger.enabled) return;
+          var remainEl = node.querySelector('[data-remain="' + trigger.id + '"]');
+          var meterEl = node.querySelector('[data-meter="' + trigger.id + '"]');
+          if (remainEl) remainEl.textContent = trigger.remain;
+          if (meterEl) setCircle(meterEl, trigger.fill, GLANCE_CIRC);
+        });
       }
 
       function renderClock() {
+        syncElapsed();
         countdownEl.textContent = formatTime(remaining);
-        setRing();
+        setCircle(fillEl, 1 - remaining / WINDOW, ORB_CIRC);
+        renderGlances();
       }
 
       function toast(msg) {
@@ -535,15 +699,30 @@
         return li;
       }
 
+      function resetTriggers() {
+        var orders = triggerById("orders");
+        var units = triggerById("units");
+        var clock = triggerById("clock");
+        if (orders) {
+          orders.remain = "12";
+          orders.fill = 0;
+        }
+        if (units) {
+          units.remain = "50";
+          units.fill = 0;
+        }
+        if (clock) {
+          clock.remain = "18:00";
+          clock.fill = 0.05;
+        }
+      }
+
       function setPaused(next) {
         paused = next;
         document.body.classList.toggle("is-paused", paused);
         pauseBtn.textContent = paused ? "Retomar" : "Pausar";
         liveLabel.textContent = paused ? "Fábrica pausada" : "Fábrica ligada";
         labelEl.textContent = paused ? "automático pausado" : "até a próxima onda";
-        needEl.innerHTML = paused
-          ? "<strong>Fábrica pausada</strong><span>Faltam 3 pedidos · antecipar ainda vale</span>"
-          : "<strong>Faltam 3 pedidos</strong><span>para disparar a onda automática</span>";
       }
 
       function tick() {
@@ -578,14 +757,17 @@
         toast("Compartilhe " + payload.url);
       }
 
-      anticipateBtn.addEventListener("click", function () {
+      function anticipate() {
         remaining = WINDOW;
+        resetTriggers();
         renderClock();
         var name = "Onda #" + nextWave;
         nextWave += 1;
         waveList.insertBefore(waveItem(name, "12 pedidos · 18 paradas"), waveList.firstChild);
         toast(name + " antecipada");
-      });
+      }
+
+      anticipateBtn.addEventListener("click", anticipate);
 
       pauseBtn.addEventListener("click", function () {
         setPaused(!paused);
