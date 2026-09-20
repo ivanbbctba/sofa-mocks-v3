@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#635bff" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>Mesa B — Faixa</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #12141a;
+      --ink-2: #3a3f4d;
+      --mute: #6b7080;
+      --bg: #eef1f8;
+      --card: #ffffff;
+      --accent: #635bff;
+      --accent-deep: #4f48d4;
+      --accent-soft: #eeedff;
+      --path-todo: rgba(99, 91, 255, 0.32);
+      --green: #2ea36a;
+      --green-ring: #3bb36a;
+      --safe-b: env(safe-area-inset-bottom, 0px);
+      --safe-t: env(safe-area-inset-top, 0px);
+    }
+
+    *,
+    *::before,
+    *::after { box-sizing: border-box; }
+
+    html { -webkit-text-size-adjust: 100%; }
+
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+    }
+
+    .phone {
+      max-width: 420px;
+      min-height: 100dvh;
+      margin: 0 auto;
+      padding: calc(18px + var(--safe-t)) 20px calc(20px + var(--safe-b));
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .brand {
+      margin: 0;
+    }
+
+    .tag {
+      margin: 0 0 4px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--mute);
+      letter-spacing: 0.02em;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -0.035em;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 11px 7px 9px;
+      border-radius: 999px;
+      background: var(--card);
+      box-shadow: 0 1px 0 rgba(18, 20, 26, 0.04), 0 8px 24px rgba(99, 91, 255, 0.06);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--ink-2);
+      white-space: nowrap;
+    }
+
+    .chip .meter {
+      width: 36px;
+      height: 5px;
+      border-radius: 999px;
+      background: #e6e8f2;
+      overflow: hidden;
+    }
+
+    .chip .meter i {
+      display: block;
+      height: 100%;
+      width: 62%;
+      border-radius: inherit;
+      background: var(--accent);
+    }
+
+    .chip .pulse {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 0 rgba(99, 91, 255, 0.45);
+      animation: factory-pulse 1.8s ease-out infinite;
+    }
+
+    .chip .copy { font-variant-numeric: tabular-nums; }
+
+    body.is-paused .chip .pulse {
+      background: var(--mute);
+      animation: none;
+      box-shadow: none;
+    }
+
+    body.is-paused .chip .meter i {
+      width: 0;
+      background: var(--mute);
+    }
+
+    @keyframes factory-pulse {
+      0% { box-shadow: 0 0 0 0 rgba(99, 91, 255, 0.45); }
+      70% { box-shadow: 0 0 0 8px rgba(99, 91, 255, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(99, 91, 255, 0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .chip .pulse { animation: none; }
+    }
+
+    .strip {
+      margin: auto 0;
+      background: var(--card);
+      border-radius: 28px;
+      padding: 22px 10px 20px;
+      box-shadow: 0 1px 0 rgba(18, 20, 26, 0.04), 0 18px 40px rgba(18, 20, 26, 0.05);
+    }
+
+    .timeline { position: relative; }
+
+    .waves {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    .rail {
+      position: absolute;
+      left: 16.6%;
+      right: 16.6%;
+      top: 38px;
+      height: 7px;
+      pointer-events: none;
+    }
+
+    .rail .done,
+    .rail .todo {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      border-radius: 999px;
+    }
+
+    .rail .done {
+      left: 0;
+      width: 50%;
+      background: var(--accent);
+    }
+
+    .rail .todo {
+      left: 50%;
+      right: 0;
+      background: repeating-linear-gradient(
+        90deg,
+        var(--path-todo) 0 7px,
+        transparent 7px 14px
+      );
+    }
+
+    .wave {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+
+    .wave a {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      color: inherit;
+      padding: 0 4px 4px;
+      min-height: 112px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .when {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: lowercase;
+      color: var(--mute);
+      height: 16px;
+    }
+
+    .wave.is-agora .when { color: var(--green); }
+
+    .node {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #d8dcf0;
+      border: 3px solid #c5cae0;
+      box-sizing: border-box;
+    }
+
+    .wave.is-agora .node {
+      width: 26px;
+      height: 26px;
+      background: var(--green);
+      border: 0;
+      box-shadow: 0 0 0 6px rgba(46, 163, 106, 0.16);
+    }
+
+    .wave.is-next .node {
+      width: 22px;
+      height: 22px;
+      background: var(--accent);
+      border: 3px solid var(--green-ring);
+      box-shadow: 0 0 0 4px rgba(59, 179, 106, 0.12);
+    }
+
+    .id {
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .qty {
+      font-size: 12px;
+      color: var(--mute);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .wave.is-agora .id { color: var(--ink); }
+    .wave.is-agora .qty { color: var(--ink-2); }
+
+    .setup {
+      display: block;
+      margin-top: 14px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--mute);
+    }
+
+    .setup a {
+      color: var(--accent-deep);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .dock {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .btn {
+      appearance: none;
+      border: 0;
+      background: none;
+      font: inherit;
+      cursor: pointer;
+      padding: 12px 4px;
+      color: var(--ink-2);
+      font-size: 15px;
+      font-weight: 500;
+    }
+
+    .btn-share { color: var(--accent); }
+    .btn:active { transform: scale(0.98); }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(28px + var(--safe-b));
+      transform: translateX(-50%) translateY(12px);
+      background: var(--ink);
+      color: #fff;
+      font-size: 13px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+      z-index: 20;
+    }
+
+    .toast.is-on {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <div class="phone">
+    <header>
+      <div class="brand">
+        <p class="tag">Desk B · faixa</p>
+        <h1>Mesa</h1>
+      </div>
+      <div class="chip" id="factoryChip" aria-label="Próxima onda automática">
+        <span class="pulse" aria-hidden="true"></span>
+        <span class="meter" aria-hidden="true"><i></i></span>
+        <span class="copy" id="chipCopy">faltam 8 · ~18 min</span>
+      </div>
+    </header>
+
+    <section class="strip" aria-label="Ondas do dia">
+      <div class="timeline">
+        <div class="rail" aria-hidden="true"><span class="done"></span><span class="todo"></span></div>
+        <ol class="waves">
+          <li class="wave is-agora">
+            <a href="../rich/02.html">
+              <span class="when">agora</span>
+              <span class="node" aria-hidden="true"></span>
+              <span class="id">#1042</span>
+              <span class="qty">8/17</span>
+            </a>
+          </li>
+          <li class="wave is-next">
+            <a href="../rich/02.html">
+              <span class="when">a seguir</span>
+              <span class="node" aria-hidden="true"></span>
+              <span class="id">#1043</span>
+              <span class="qty">14 ped.</span>
+            </a>
+          </li>
+          <li class="wave">
+            <a href="../rich/02.html">
+              <span class="when">depois</span>
+              <span class="node" aria-hidden="true"></span>
+              <span class="id">#1044</span>
+              <span class="qty">9 ped.</span>
+            </a>
+          </li>
+        </ol>
+      </div>
+      <p class="setup"><a href="../rich/02.html">Onda #1042 · gerada no setup</a></p>
+    </section>
+
+    <div class="dock">
+      <button type="button" class="btn btn-share" id="shareBtn">Compartilhar</button>
+      <button type="button" class="btn" id="pauseBtn">Pausar automático</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (function () {
+      var KEY = "pisoly-desk-02-paused";
+      var body = document.body;
+      var chipCopy = document.getElementById("chipCopy");
+      var chip = document.getElementById("factoryChip");
+      var pauseBtn = document.getElementById("pauseBtn");
+      var shareBtn = document.getElementById("shareBtn");
+      var toastEl = document.getElementById("toast");
+      var toastTimer = 0;
+
+      function richUrl() {
+        return new URL("../rich/02.html", location.href).href;
+      }
+
+      function toast(msg) {
+        toastEl.textContent = msg;
+        toastEl.classList.add("is-on");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () {
+          toastEl.classList.remove("is-on");
+        }, 1800);
+      }
+
+      function renderPaused(paused) {
+        body.classList.toggle("is-paused", paused);
+        chipCopy.textContent = paused ? "fábrica pausada" : "faltam 8 · ~18 min";
+        chip.setAttribute(
+          "aria-label",
+          paused ? "Fábrica pausada" : "Próxima onda automática, faltam 8 pedidos, cerca de 18 minutos"
+        );
+        pauseBtn.textContent = paused ? "Retomar automático" : "Pausar automático";
+      }
+
+      function setPaused(paused) {
+        renderPaused(paused);
+        try { sessionStorage.setItem(KEY, paused ? "1" : "0"); } catch (e) {}
+      }
+
+      var startPaused = false;
+      try { startPaused = sessionStorage.getItem(KEY) === "1"; } catch (e) {}
+      renderPaused(startPaused);
+
+      pauseBtn.addEventListener("click", function () {
+        var next = !body.classList.contains("is-paused");
+        setPaused(next);
+        toast(next ? "Automático pausado" : "Automático retomado");
+      });
+
+      function fallbackShare() {
+        var url = richUrl();
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(url).then(function () {
+            toast("Link copiado");
+          }).catch(function () {
+            toast(url);
+          });
+          return;
+        }
+        toast(url);
+      }
+
+      shareBtn.addEventListener("click", function () {
+        var data = {
+          title: "Onda #1042",
+          text: "Onda #1042 · 8 de 17 · A-01",
+          url: richUrl()
+        };
+        if (navigator.share) {
+          navigator.share(data).catch(function (err) {
+            if (err && err.name !== "AbortError") fallbackShare();
+          });
+          return;
+        }
+        fallbackShare();
+      });
+    })();
+  </script>
+</body>
+</html>
