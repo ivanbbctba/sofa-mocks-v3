@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>Corrida · dock de um polegar</title>
+  <style>
+    :root {
+      --run: #635bff;
+      --here: #22a06b;
+      --paper: #eef2f7;
+      --ink: #1a1b1a;
+      --mute: #6d706c;
+      --aisle: #cfd6e3;
+      --white: #fffcf8;
+      --feito: #16181d;
+      --dock: #16181d;
+      --miss: #c9a227;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: #d8dee8;
+      color: var(--ink);
+      font: 17px/1.3 "SF Pro Text", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      min-height: 100dvh;
+      display: flex;
+      justify-content: center;
+    }
+
+    .phone {
+      position: relative;
+      width: min(100%, 390px);
+      height: 100dvh;
+      max-height: 844px;
+      overflow: hidden;
+      background:
+        radial-gradient(120% 70% at 50% 0%, rgba(255, 255, 255, 0.72), transparent 58%),
+        var(--paper);
+    }
+
+    .map {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .map svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .aisle { fill: var(--aisle); }
+
+    .path-rest {
+      fill: none;
+      stroke: var(--run);
+      stroke-width: 0.22;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: 0.16;
+    }
+
+    .path-done {
+      fill: none;
+      stroke: var(--run);
+      stroke-width: 0.4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: 0.72;
+    }
+
+    .path-dash {
+      fill: none;
+      stroke: var(--run);
+      stroke-width: 0.42;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 0.78 0.52;
+      animation: march 0.9s linear infinite;
+    }
+
+    .path-dash.is-full {
+      stroke-width: 0.26;
+      stroke-dasharray: 0.55 0.42;
+      opacity: 0.92;
+    }
+
+    .node-done { fill: #b8bcc8; }
+    .node-miss { fill: var(--miss); }
+    .node-next {
+      fill: #fff;
+      stroke: var(--run);
+      stroke-width: 0.1;
+    }
+    .node-future {
+      fill: #c5cad6;
+      opacity: 0.55;
+    }
+    .node-here { fill: var(--here); }
+    .node-halo {
+      fill: none;
+      stroke: var(--here);
+      stroke-width: 0.08;
+      opacity: 0.45;
+    }
+    .node-here.is-live {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: pulse 2.2s ease-in-out infinite;
+    }
+
+    .chrome {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .chrome button { pointer-events: auto; }
+
+    .top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: calc(12px + env(safe-area-inset-top)) 16px 0;
+    }
+
+    .count {
+      margin: 0;
+      color: var(--mute);
+      font-size: 13px;
+      font-weight: 650;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .share {
+      border: 0;
+      background: rgba(255, 252, 248, 0.82);
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font: 650 12px/1 "SF Pro Text", system-ui, sans-serif;
+      letter-spacing: -0.02em;
+      cursor: pointer;
+    }
+
+    .share:active { transform: scale(0.97); }
+
+    .toast {
+      position: absolute;
+      left: 50%;
+      top: calc(56px + env(safe-area-inset-top));
+      z-index: 8;
+      transform: translateX(-50%) translateY(-8px);
+      background: var(--dock);
+      color: #fff;
+      border-radius: 999px;
+      padding: 9px 14px;
+      font-size: 12px;
+      font-weight: 650;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .toast.is-on {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .dock {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 5;
+      padding: 0 12px calc(12px + env(safe-area-inset-bottom));
+      pointer-events: none;
+      background: linear-gradient(
+        180deg,
+        rgba(238, 242, 247, 0) 0%,
+        rgba(238, 242, 247, 0.78) 34%,
+        #eef2f7 100%
+      );
+    }
+
+    .slab {
+      pointer-events: auto;
+      width: min(28rem, 100%);
+      margin: 0 auto;
+    }
+
+    .open-cta {
+      display: block;
+      width: 100%;
+      min-height: 58px;
+      border: 0;
+      border-radius: 18px;
+      background: var(--run);
+      color: #fff;
+      font: 700 18px/1 "SF Pro Text", system-ui, sans-serif;
+      letter-spacing: -0.03em;
+      cursor: pointer;
+    }
+
+    .hud { min-width: 0; }
+
+    .qty {
+      margin: 0;
+      font-size: 76px;
+      font-weight: 650;
+      letter-spacing: -0.07em;
+      line-height: 0.84;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .slot {
+      margin: 8px 0 0;
+      font-size: 20px;
+      font-weight: 650;
+      letter-spacing: -0.03em;
+    }
+
+    .depois {
+      margin: 3px 0 0;
+      color: var(--mute);
+      font-size: 14px;
+    }
+
+    .speek {
+      margin: 12px 0 12px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(255, 252, 248, 0.72);
+      box-shadow: inset 0 0 0 1px rgba(22, 24, 29, 0.06);
+    }
+
+    .speek-label {
+      margin: 0;
+      color: var(--mute);
+      font-size: 10px;
+      font-weight: 750;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .speek-line {
+      margin: 4px 0 0;
+      font-size: 15px;
+      font-weight: 650;
+      letter-spacing: -0.02em;
+    }
+
+    .thumbs {
+      display: grid;
+      grid-template-columns: 1fr 84px;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .miss,
+    .feito,
+    .again {
+      border: 0;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .miss {
+      min-height: 64px;
+      border-radius: 18px;
+      background: transparent;
+      color: var(--ink);
+      box-shadow: inset 0 0 0 1.5px rgba(22, 24, 29, 0.2);
+      font: 650 15px/1 "SF Pro Text", system-ui, sans-serif;
+    }
+
+    .feito {
+      width: 84px;
+      height: 84px;
+      border-radius: 50%;
+      background: var(--feito);
+      color: #fff;
+      font: 700 15px/1 "SF Pro Text", system-ui, sans-serif;
+      letter-spacing: -0.03em;
+    }
+
+    .open-cta:active,
+    .miss:active,
+    .feito:active,
+    .again:active,
+    .share:active { transform: scale(0.97); }
+
+    .zen,
+    .empty {
+      padding: 6px 2px 8px;
+    }
+
+    .zen-kicker,
+    .empty-kicker {
+      margin: 0;
+      color: var(--mute);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .empty-copy {
+      margin: 8px 0 0;
+      font-size: 40px;
+      font-weight: 650;
+      letter-spacing: -0.05em;
+      line-height: 1;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 14px 0 16px;
+    }
+
+    .metric {
+      padding: 10px 8px;
+      border-radius: 14px;
+      background: rgba(255, 252, 248, 0.74);
+    }
+
+    .metric b {
+      display: block;
+      font-size: 22px;
+      font-weight: 650;
+      letter-spacing: -0.04em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .metric span {
+      color: var(--mute);
+      font-size: 11px;
+    }
+
+    .again {
+      width: 100%;
+      min-height: 54px;
+      border-radius: 16px;
+      background: var(--run);
+      color: #fff;
+      font: 700 16px/1 "SF Pro Text", system-ui, sans-serif;
+    }
+
+    .phone.is-empty .share { visibility: hidden; }
+
+    @keyframes march {
+      to { stroke-dashoffset: -1.16; }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.55; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .path-dash,
+      .node-here.is-live,
+      .toast { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="phone" id="phone">
+    <div class="map" id="map" role="img" aria-label="Caminho desta corrida"></div>
+    <div class="chrome">
+      <div class="top">
+        <p class="count" id="count">Onda 14</p>
+        <button type="button" class="share" id="share">WhatsApp</button>
+      </div>
+    </div>
+    <p class="toast" id="toast" role="status"></p>
+    <div class="dock">
+      <div class="slab" id="slab"></div>
+    </div>
+  </main>
+  <script>
+    (function () {
+      const AISLE_X = { A: 0.78, B: 1.92, C: 3.06, D: 4.2, E: 5.34, F: 6.48, G: 7.62, H: 8.76 };
+      const Y0 = 1.55;
+      const Y1 = 15.85;
+      const TOP = 0.85;
+      const BOT = 16.65;
+      const FULL = { x: 0, y: 0, w: 9.55, h: 18.2 };
+      const NS = "http://www.w3.org/2000/svg";
+      const WORDS = {
+        1: "Um", 2: "Dois", 3: "Três", 4: "Quatro", 5: "Cinco",
+        6: "Seis", 7: "Sete", 8: "Oito", 9: "Nove", 10: "Dez",
+        11: "Onze", 12: "Doze", 15: "Quinze", 42: "Quarenta e dois"
+      };
+      const COLORS = ["#635bff", "#059669", "#ea580c", "#9333ea", "#e11d48", "#0284c8"];
+      const WAVES = COLORS.map(function (color, i) {
+        return { id: String(14 + i), name: "Onda " + (14 + i), color: color };
+      });
+      const STOPS = [
+        { code: "A-01", qty: 10, sku: "TOALHA-220", speak: "toalhas de banho" },
+        { code: "C-02", qty: 8, sku: "JOGO-LENCOL", speak: "jogos de lençol" },
+        { code: "E-01", qty: 10, sku: "FRONHA-PAR", speak: "pares de fronha" },
+        { code: "E-10", qty: 10, sku: "COBERTOR-CAS", speak: "cobertores casal" },
+        { code: "F-02", qty: 42, sku: "KIT-HIGIENE", speak: "kits higiene" },
+        { code: "H-09", qty: 3, sku: "SABONETE", speak: "sabonetes" },
+        { code: "H-03", qty: 12, sku: "SHAMPOO-400", speak: "shampoos" },
+        { code: "B-09", qty: 5, sku: "ESC-DENTES", speak: "escovas de dentes" },
+        { code: "G-01", qty: 7, sku: "CREME-HID", speak: "cremes hidratantes" },
+        { code: "G-08", qty: 4, sku: "ALGODAO", speak: "pacotes de algodão" },
+        { code: "C-08", qty: 6, sku: "PILLOW-TOP", speak: "pillow-tops" },
+        { code: "F-10", qty: 9, sku: "TAPETE-BAN", speak: "tapetes de banho" },
+        { code: "D-04", qty: 2, sku: "CORTINA-180", speak: "cortinas" },
+        { code: "D-09", qty: 15, sku: "TOALHA-MAO", speak: "toalhas de mão" },
+        { code: "A-08", qty: 1, sku: "ROUPAO-M", speak: "roupão" },
+        { code: "B-02", qty: 11, sku: "SACO-LIXO", speak: "sacos de lixo" },
+        { code: "H-01", qty: 8, sku: "PAPEL-HIG", speak: "pacotes de papel higiênico" },
+        { code: "G-05", qty: 3, sku: "AMACIANTE", speak: "amaciantes" }
+      ];
+
+      function slotY(n) {
+        return Y0 + ((n - 1) * (Y1 - Y0)) / 9;
+      }
+
+      function parseCode(code) {
+        return { aisle: code[0], n: Number(code.slice(2)) };
+      }
+
+      function xy(code) {
+        const parsed = parseCode(code);
+        return { x: AISLE_X[parsed.aisle], y: slotY(parsed.n), aisle: parsed.aisle, n: parsed.n };
+      }
+
+      function hop(a, b) {
+        if (a.aisle === b.aisle) return [a, { x: a.x, y: b.y }];
+        const mid = (Y0 + Y1) / 2;
+        const sameTop = a.y <= mid && b.y <= mid;
+        const sameBot = a.y >= mid && b.y >= mid;
+        let end;
+        if (sameTop) {
+          end = Math.min(a.y, b.y) - 0.7;
+        } else if (sameBot) {
+          end = Math.max(a.y, b.y) + 0.7;
+        } else {
+          const viaTop = Math.abs(a.y - TOP) + Math.abs(b.y - TOP);
+          const viaBot = Math.abs(a.y - BOT) + Math.abs(b.y - BOT);
+          end = viaTop <= viaBot ? TOP : BOT;
+        }
+        end = Math.max(TOP, Math.min(BOT, end));
+        return [a, { x: a.x, y: end }, { x: b.x, y: end }, { x: b.x, y: b.y }];
+      }
+
+      function samePoint(p, q) {
+        return Math.abs(p.x - q.x) < 0.001 && Math.abs(p.y - q.y) < 0.001;
+      }
+
+      function joinHops(hops) {
+        const out = [];
+        hops.forEach(function (seg) {
+          seg.forEach(function (p, i) {
+            if (i === 0 && out.length && samePoint(out[out.length - 1], p)) return;
+            out.push(p);
+          });
+        });
+        return out;
+      }
+
+      const points = STOPS.map(function (stop) { return xy(stop.code); });
+      const hops = points.slice(1).map(function (pt, i) { return hop(points[i], pt); });
+      const fullPath = joinHops(hops);
+      const hopSpans = [];
+      let cursor = 0;
+      hops.forEach(function (seg) {
+        const start = cursor;
+        cursor += cursor === 0 ? seg.length : seg.length - 1;
+        hopSpans.push({ from: start, to: cursor });
+      });
+
+      function slicePath(fromIdx, toIdx) {
+        if (!hopSpans.length || toIdx <= 0) return fullPath.slice(0, 1);
+        const last = hopSpans.length - 1;
+        const startHop = Math.max(0, Math.min(fromIdx, last));
+        const endHop = Math.max(0, Math.min(toIdx - 1, last));
+        return fullPath.slice(hopSpans[startHop].from, hopSpans[endHop].to + 1);
+      }
+
+      function pts(list) {
+        return list.map(function (p) { return p.x + " " + p.y; }).join(" ");
+      }
+
+      function el(name, attrs) {
+        const node = document.createElementNS(NS, name);
+        Object.keys(attrs).forEach(function (key) {
+          node.setAttribute(key, String(attrs[key]));
+        });
+        return node;
+      }
+
+      function qtyWord(n) {
+        return WORDS[n] || String(n);
+      }
+
+      function speakLine(stop) {
+        return qtyWord(stop.qty) + " " + stop.speak + " no " + stop.code + ".";
+      }
+
+      function bbox(list) {
+        let minX = 99;
+        let minY = 99;
+        let maxX = -99;
+        let maxY = -99;
+        list.forEach(function (p) {
+          minX = Math.min(minX, p.x);
+          minY = Math.min(minY, p.y);
+          maxX = Math.max(maxX, p.x);
+          maxY = Math.max(maxY, p.y);
+        });
+        const padX = 1.15;
+        const padY = 1.35;
+        return {
+          x: minX - padX,
+          y: minY - padY,
+          w: Math.max(3.4, maxX - minX + padX * 2),
+          h: Math.max(4.2, maxY - minY + padY * 2)
+        };
+      }
+
+      function activeLeg(index) {
+        if (index >= STOPS.length - 1) {
+          return slicePath(Math.max(0, STOPS.length - 2), STOPS.length);
+        }
+        return slicePath(index, index + 1);
+      }
+
+      const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const map = document.getElementById("map");
+      const slab = document.getElementById("slab");
+      const countEl = document.getElementById("count");
+      const shareEl = document.getElementById("share");
+      const toastEl = document.getElementById("toast");
+      const phone = document.getElementById("phone");
+
+      let wave = 0;
+      let mode = "open";
+      let here = 0;
+      let marks = STOPS.map(function () { return "pending"; });
+      let free = WAVES.map(function () { return true; });
+      let last = { done: 0, miss: 0, pedidos: 8 };
+      let view = Object.assign({}, FULL);
+      let toastTimer = 0;
+
+      function firstFree() {
+        return free.findIndex(function (ok) { return ok; });
+      }
+
+      function applyRunColor() {
+        document.documentElement.style.setProperty("--run", WAVES[wave].color);
+      }
+
+      function targetView() {
+        if (mode !== "run") return Object.assign({}, FULL);
+        const hereP = points[Math.min(here, points.length - 1)];
+        const nearby = [hereP];
+        activeLeg(here).forEach(function (p) {
+          if (Math.hypot(p.x - hereP.x, p.y - hereP.y) <= 3.1) nearby.push(p);
+        });
+        const box = bbox(nearby);
+        box.h += 2.6;
+        return box;
+      }
+
+      function paintMap() {
+        map.replaceChildren();
+        const svg = el("svg", {
+          viewBox: view.x + " " + view.y + " " + view.w + " " + view.h,
+          preserveAspectRatio: "xMidYMid meet",
+          "aria-hidden": "true"
+        });
+
+        Object.keys(AISLE_X).forEach(function (letter) {
+          const x = AISLE_X[letter];
+          svg.appendChild(el("rect", {
+            class: "aisle",
+            x: x - 0.24,
+            y: 0.45,
+            width: 0.48,
+            height: 16.5,
+            rx: 0.24
+          }));
+        });
+
+        if (fullPath.length > 1 && (mode === "open" || mode === "zen" || mode === "empty")) {
+          svg.appendChild(el("polyline", { class: "path-rest", points: pts(fullPath) }));
+        }
+
+        const walkedTo = mode === "run" ? here : (mode === "zen" || mode === "empty" ? STOPS.length : 0);
+        const doneSeg = slicePath(0, walkedTo);
+        if (doneSeg.length > 1 && mode !== "open") {
+          svg.appendChild(el("polyline", { class: "path-done", points: pts(doneSeg) }));
+        }
+
+        if (mode === "open") {
+          svg.appendChild(el("polyline", { class: "path-dash is-full", points: pts(fullPath) }));
+        } else if (mode === "run") {
+          const leg = activeLeg(here);
+          if (leg.length > 1) {
+            svg.appendChild(el("polyline", { class: "path-dash", points: pts(leg) }));
+          }
+        }
+
+        points.forEach(function (p, i) {
+          if (mode === "open") {
+            svg.appendChild(el("circle", { class: "node-future", cx: p.x, cy: p.y, r: 0.11 }));
+            return;
+          }
+          if (mode === "zen" || mode === "empty" || i < here) {
+            svg.appendChild(el("circle", {
+              class: marks[i] === "miss" ? "node-miss" : "node-done",
+              cx: p.x,
+              cy: p.y,
+              r: 0.1
+            }));
+            return;
+          }
+          if (i === here) {
+            svg.appendChild(el("circle", { class: "node-halo", cx: p.x, cy: p.y, r: 0.38 }));
+            const hereNode = el("circle", { class: "node-here", cx: p.x, cy: p.y, r: 0.2 });
+            svg.appendChild(hereNode);
+            if (!reduce) hereNode.classList.add("is-live");
+            return;
+          }
+          if (i === here + 1) {
+            svg.appendChild(el("circle", { class: "node-next", cx: p.x, cy: p.y, r: 0.16 }));
+            return;
+          }
+          svg.appendChild(el("circle", { class: "node-future", cx: p.x, cy: p.y, r: 0.08 }));
+        });
+
+        map.appendChild(svg);
+      }
+
+      function lerpView(next) {
+        if (reduce) {
+          view = next;
+          paintMap();
+          return;
+        }
+        const start = Object.assign({}, view);
+        const t0 = performance.now();
+        function frame(now) {
+          const t = Math.min(1, (now - t0) / 640);
+          const e = 1 - Math.pow(1 - t, 3);
+          view = {
+            x: start.x + (next.x - start.x) * e,
+            y: start.y + (next.y - start.y) * e,
+            w: start.w + (next.w - start.w) * e,
+            h: start.h + (next.h - start.h) * e
+          };
+          paintMap();
+          if (t < 1) requestAnimationFrame(frame);
+        }
+        requestAnimationFrame(frame);
+      }
+
+      function toast(text) {
+        toastEl.textContent = text;
+        toastEl.classList.add("is-on");
+        window.clearTimeout(toastTimer);
+        toastTimer = window.setTimeout(function () {
+          toastEl.classList.remove("is-on");
+        }, 1600);
+      }
+
+      function shareWave() {
+        const skin = WAVES[wave];
+        const url = location.href.split("#")[0] + "#onda-" + skin.id;
+        const text = "Pisoly · " + skin.name + " · 18 paradas";
+        const wa = "https://wa.me/?text=" + encodeURIComponent(text + " " + url);
+        if (navigator.share) {
+          navigator.share({ title: skin.name, text: text, url: url }).catch(function () {
+            window.open(wa, "_blank", "noopener");
+          });
+          return;
+        }
+        window.open(wa, "_blank", "noopener");
+        toast("Abrindo WhatsApp");
+      }
+
+      function paintOpen() {
+        slab.innerHTML = "<button type=\"button\" class=\"open-cta\" id=\"iniciar\">Iniciar</button>";
+        document.getElementById("iniciar").addEventListener("click", claim);
+      }
+
+      function paintRun() {
+        const stop = STOPS[here];
+        const next = STOPS[here + 1];
+        slab.innerHTML =
+          "<div class=\"hud\">" +
+          "<div><p class=\"qty\"></p><p class=\"slot\"></p><p class=\"depois\"></p></div>" +
+          "</div>" +
+          "<div class=\"speek\"><p class=\"speek-label\">Speek</p><p class=\"speek-line\"></p></div>" +
+          "<div class=\"thumbs\">" +
+          "<button type=\"button\" class=\"miss\" id=\"miss\">Não achei</button>" +
+          "<button type=\"button\" class=\"feito\" id=\"feito\">Feito</button>" +
+          "</div>";
+        slab.querySelector(".qty").textContent = String(stop.qty);
+        slab.querySelector(".slot").textContent = stop.code;
+        slab.querySelector(".depois").textContent = next ? "depois " + next.code : "última parada";
+        slab.querySelector(".speek-line").textContent = speakLine(stop);
+        document.getElementById("feito").addEventListener("click", function () {
+          advance("done");
+        });
+        document.getElementById("miss").addEventListener("click", function () {
+          advance("miss");
+        });
+      }
+
+      function paintZen() {
+        slab.innerHTML =
+          "<div class=\"zen\">" +
+          "<p class=\"zen-kicker\">" + WAVES[wave].name + " encerrada</p>" +
+          "<div class=\"metrics\">" +
+          "<div class=\"metric\"><b>" + last.done + "</b><span>feitos</span></div>" +
+          "<div class=\"metric\"><b>" + last.miss + "</b><span>não achei</span></div>" +
+          "<div class=\"metric\"><b>" + last.pedidos + "</b><span>pedidos</span></div>" +
+          "</div>" +
+          "<button type=\"button\" class=\"again\" id=\"again\">Começar de novo</button>" +
+          "</div>";
+        document.getElementById("again").addEventListener("click", nextFreeRun);
+      }
+
+      function paintEmpty() {
+        slab.innerHTML =
+          "<div class=\"empty\">" +
+          "<p class=\"empty-kicker\">Nenhuma onda livre</p>" +
+          "<p class=\"empty-copy\">Todos pegos</p>" +
+          "</div>";
+      }
+
+      function paintChrome() {
+        phone.classList.toggle("is-empty", mode === "empty");
+        if (mode === "open") {
+          countEl.textContent = WAVES[wave].name;
+          return;
+        }
+        if (mode === "run") {
+          countEl.textContent = (here + 1) + " de " + STOPS.length;
+          return;
+        }
+        countEl.textContent = STOPS.length + " de " + STOPS.length;
+      }
+
+      function paintDock() {
+        if (mode === "open") {
+          paintOpen();
+          return;
+        }
+        if (mode === "run") {
+          paintRun();
+          return;
+        }
+        if (mode === "zen") {
+          paintZen();
+          return;
+        }
+        paintEmpty();
+      }
+
+      function paint() {
+        applyRunColor();
+        paintChrome();
+        paintDock();
+        paintMap();
+      }
+
+      function claim() {
+        mode = "run";
+        here = 0;
+        marks = STOPS.map(function () { return "pending"; });
+        paintChrome();
+        paintDock();
+        lerpView(targetView());
+      }
+
+      function finishWave() {
+        last = {
+          done: marks.filter(function (m) { return m === "done"; }).length,
+          miss: marks.filter(function (m) { return m === "miss"; }).length,
+          pedidos: 8
+        };
+        free[wave] = false;
+        const nxt = firstFree();
+        if (nxt === -1) {
+          mode = "empty";
+        } else {
+          mode = "zen";
+        }
+        here = STOPS.length;
+        paintChrome();
+        paintDock();
+        lerpView(targetView());
+      }
+
+      function advance(kind) {
+        if (mode !== "run") return;
+        marks[here] = kind;
+        if (here + 1 >= STOPS.length) {
+          finishWave();
+          return;
+        }
+        here += 1;
+        paintChrome();
+        paintDock();
+        lerpView(targetView());
+      }
+
+      function nextFreeRun() {
+        const nxt = firstFree();
+        if (nxt === -1) {
+          mode = "empty";
+          paint();
+          lerpView(targetView());
+          return;
+        }
+        wave = nxt;
+        here = 0;
+        marks = STOPS.map(function () { return "pending"; });
+        mode = "open";
+        applyRunColor();
+        paintChrome();
+        paintDock();
+        lerpView(targetView());
+      }
+
+      shareEl.addEventListener("click", shareWave);
+
+      const hash = location.hash.replace("#onda-", "");
+      const fromHash = WAVES.findIndex(function (skin) { return skin.id === hash; });
+      if (fromHash >= 0 && free[fromHash]) wave = fromHash;
+
+      applyRunColor();
+      paint();
+    })();
+  </script>
+</body>
+</html>
