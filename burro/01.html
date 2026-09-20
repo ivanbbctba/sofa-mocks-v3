@@ -668,7 +668,7 @@
           if (node._march) cancelAnimationFrame(node._march);
           let offset = 0;
           function tick() {
-            offset -= period / 12;
+            offset -= period / 7;
             if (offset <= -period) offset += period;
             node.setAttribute("stroke-dashoffset", String(offset));
             node._march = requestAnimationFrame(tick);
