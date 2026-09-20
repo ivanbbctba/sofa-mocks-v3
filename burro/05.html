@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>Corrida · dock de um polegar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Fraunces:opsz,wght@9..144,560;9..144,680&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --run: #e23d28;
+      --run-ink: #3a120c;
+      --run-soft: #ffd8cf;
+      --paper: #efe7db;
+      --fog: #d8cfc0;
+      --ink: #1b1714;
+      --mute: #6d6458;
+      --dock: #161310;
+      --dock-2: #221c18;
+      --line: rgba(255, 244, 230, 0.12);
+      --ok: #2f9a55;
+      --miss: #c9a227;
+      --white: #fff8f1;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: #c9bfb0;
+      color: var(--ink);
+      font: 16px/1.35 Manrope, "Segoe UI", system-ui, sans-serif;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      min-height: 100dvh;
+      display: flex;
+      justify-content: center;
+    }
+
+    .phone {
+      position: relative;
+      width: min(100%, 390px);
+      height: 100dvh;
+      max-height: 844px;
+      overflow: hidden;
+      background: var(--paper);
+      box-shadow: 0 0 0 1px rgba(27, 23, 20, 0.08);
+    }
+
+    .map {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      transition: filter 0.5s ease;
+    }
+
+    .map svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .aisle { fill: #cfc4b3; }
+    .aisle-label {
+      fill: #8d8274;
+      font: 700 0.42px Manrope, sans-serif;
+    }
+
+    .path-rest {
+      fill: none;
+      stroke: var(--run);
+      stroke-width: 0.18;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: 0.16;
+    }
+
+    .path-walked {
+      fill: none;
+      stroke: var(--run);
+      stroke-width: 0.32;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: 0.55;
+    }
+
+    .path-dash {
+      fill: none;
+      stroke: var(--run);
+      stroke-width: 0.42;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 0.55 0.42;
+      animation: march 1.05s linear infinite;
+    }
+
+    .node-done { fill: var(--ok); }
+    .node-miss { fill: var(--miss); }
+    .node-next {
+      fill: var(--white);
+      stroke: var(--run);
+      stroke-width: 0.1;
+    }
+    .node-future {
+      fill: #b7ad9e;
+      opacity: 0.55;
+    }
+    .node-here { fill: var(--run); }
+    .node-halo {
+      fill: none;
+      stroke: var(--run);
+      stroke-width: 0.08;
+      opacity: 0.45;
+    }
+    .node-here.is-live {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: pulse 2.2s ease-in-out infinite;
+    }
+
+    .chrome {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .chrome button { pointer-events: auto; }
+
+    .top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: calc(12px + env(safe-area-inset-top)) 16px 0;
+    }
+
+    .count {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--mute);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .share {
+      border: 0;
+      background: rgba(255, 248, 241, 0.78);
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font: 700 12px/1 Manrope, sans-serif;
+      letter-spacing: -0.02em;
+      cursor: pointer;
+    }
+
+    .share:active { transform: scale(0.97); }
+
+    .toast {
+      position: absolute;
+      left: 50%;
+      top: calc(56px + env(safe-area-inset-top));
+      transform: translateX(-50%) translateY(-8px);
+      background: var(--dock);
+      color: var(--white);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .toast.is-on {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .dock {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 5;
+      padding: 0 10px calc(10px + env(safe-area-inset-bottom));
+      pointer-events: none;
+    }
+
+    .slab {
+      pointer-events: auto;
+      background: var(--dock);
+      color: var(--white);
+      border-radius: 28px;
+      padding: 14px 14px 12px;
+      box-shadow: 0 -18px 50px rgba(22, 19, 16, 0.28);
+    }
+
+    .wave-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      overflow: auto;
+    }
+
+    .wave {
+      flex: 0 0 auto;
+      border: 0;
+      border-radius: 999px;
+      padding: 7px 11px;
+      background: var(--dock-2);
+      color: #d7cfc4;
+      font: 700 12px/1 Manrope, sans-serif;
+      cursor: pointer;
+    }
+
+    .wave.is-on {
+      background: color-mix(in srgb, var(--run) 22%, var(--dock-2));
+      color: var(--white);
+      box-shadow: inset 0 0 0 1.5px var(--run);
+    }
+
+    .claim-kicker,
+    .zen-kicker {
+      margin: 0;
+      color: #b3a89c;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .claim-title,
+    .zen-title {
+      margin: 4px 0 0;
+      font-family: Fraunces, Georgia, serif;
+      font-size: 32px;
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+
+    .claim-meta {
+      margin: 8px 0 16px;
+      color: #cfc4b6;
+      font-size: 13px;
+    }
+
+    .claim-actions,
+    .zen-actions {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr;
+      gap: 8px;
+    }
+
+    .ghost,
+    .go,
+    .miss,
+    .feito,
+    .speek {
+      border: 0;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .ghost {
+      background: transparent;
+      color: var(--white);
+      border-radius: 18px;
+      box-shadow: inset 0 0 0 1.5px var(--line);
+      font: 700 14px/1 Manrope, sans-serif;
+      min-height: 56px;
+    }
+
+    .go {
+      background: var(--run);
+      color: #fff;
+      border-radius: 18px;
+      font: 800 16px/1 Manrope, sans-serif;
+      letter-spacing: -0.03em;
+      min-height: 56px;
+    }
+
+    .ghost:active,
+    .go:active,
+    .miss:active,
+    .feito:active,
+    .speek:active { transform: scale(0.98); }
+
+    .speek {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: var(--dock-2);
+      color: var(--white);
+      border-radius: 18px;
+      padding: 11px 12px;
+      margin-bottom: 10px;
+    }
+
+    .speek-label {
+      margin: 0;
+      color: #b7aa9c;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .speek-line {
+      margin: 4px 0 0;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    .speek-more {
+      display: none;
+      margin: 8px 0 0;
+      color: #d8cfc3;
+      font-size: 13px;
+    }
+
+    .speek.is-open .speek-more { display: block; }
+
+    .thumbs {
+      display: grid;
+      grid-template-columns: 1fr 96px;
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .miss {
+      background: transparent;
+      color: #efe4d6;
+      border-radius: 20px;
+      box-shadow: inset 0 0 0 1.5px var(--line);
+      font: 700 14px/1 Manrope, sans-serif;
+      min-height: 76px;
+    }
+
+    .feito {
+      width: 96px;
+      height: 96px;
+      margin-top: -10px;
+      border-radius: 50%;
+      background: var(--run);
+      color: #fff;
+      font: 800 16px/1 Manrope, sans-serif;
+      letter-spacing: -0.03em;
+      box-shadow: 0 10px 24px color-mix(in srgb, var(--run) 45%, transparent);
+    }
+
+    .zen {
+      text-align: center;
+      padding: 10px 8px 4px;
+    }
+
+    .zen-title { font-size: 40px; }
+    .zen-actions { grid-template-columns: 1fr; margin-top: 16px; }
+
+    .phone.is-zen .map { filter: saturate(0.35) brightness(1.05); }
+
+    @keyframes march {
+      to { stroke-dashoffset: -0.97; }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.55; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .path-dash,
+      .node-here.is-live,
+      .map svg,
+      .toast {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="phone" id="phone">
+    <div class="map" id="map" role="img" aria-label="Caminho desta corrida"></div>
+    <div class="chrome">
+      <div class="top">
+        <p class="count" id="count">Onda 14</p>
+        <button type="button" class="share" id="share">Compartilhar</button>
+      </div>
+    </div>
+    <p class="toast" id="toast" role="status">Link copiado</p>
+    <div class="dock">
+      <div class="slab" id="slab"></div>
+    </div>
+  </main>
+  <script>
+    (function () {
+      const AISLE_X = { A: 0.78, B: 1.92, C: 3.06, D: 4.2, E: 5.34, F: 6.48, G: 7.62, H: 8.76 };
+      const Y0 = 1.55;
+      const Y1 = 15.85;
+      const TOP = 0.85;
+      const BOT = 16.65;
+      const NS = "http://www.w3.org/2000/svg";
+      const WORDS = {
+        1: "Um", 2: "Dois", 3: "Três", 4: "Quatro", 5: "Cinco",
+        6: "Seis", 7: "Sete", 8: "Oito", 9: "Nove", 10: "Dez",
+        11: "Onze", 12: "Doze", 15: "Quinze", 42: "Quarenta e dois"
+      };
+
+      const WAVES = [
+        { id: "14", name: "Onda 14", color: "#e23d28", ink: "#3a120c" },
+        { id: "15", name: "Onda 15", color: "#1d6b5c", ink: "#06241e" },
+        { id: "16", name: "Onda 16", color: "#3b4fd4", ink: "#12163f" }
+      ];
+
+      const STOPS = [
+        { code: "A-01", qty: 10, sku: "TOALHA-220", speak: "toalha de banho" },
+        { code: "C-02", qty: 8, sku: "JOGO-LENCOL", speak: "jogo de lençol" },
+        { code: "E-01", qty: 10, sku: "FRONHA-PAR", speak: "par de fronhas" },
+        { code: "E-10", qty: 10, sku: "COBERTOR-CAS", speak: "cobertor casal" },
+        { code: "F-02", qty: 42, sku: "KIT-HIGIENE", speak: "kit higiene" },
+        { code: "H-09", qty: 3, sku: "SABONETE", speak: "sabonete" },
+        { code: "H-03", qty: 12, sku: "SHAMPOO-400", speak: "shampoo" },
+        { code: "B-09", qty: 5, sku: "ESC-DENTES", speak: "escova de dentes" },
+        { code: "G-01", qty: 7, sku: "CREME-HID", speak: "creme hidratante" },
+        { code: "G-08", qty: 4, sku: "ALGODAO", speak: "algodão" },
+        { code: "C-08", qty: 6, sku: "PILLOW-TOP", speak: "pillow-top" },
+        { code: "F-10", qty: 9, sku: "TAPETE-BAN", speak: "tapete de banho" },
+        { code: "D-04", qty: 2, sku: "CORTINA-180", speak: "cortina" },
+        { code: "D-09", qty: 15, sku: "TOALHA-MAO", speak: "toalha de mão" },
+        { code: "A-08", qty: 1, sku: "ROUPAO-M", speak: "roupão" },
+        { code: "B-02", qty: 11, sku: "SACO-LIXO", speak: "saco de lixo" },
+        { code: "H-01", qty: 8, sku: "PAPEL-HIG", speak: "papel higiênico" },
+        { code: "G-05", qty: 3, sku: "AMACIANTE", speak: "amaciante" }
+      ];
+
+      function slotY(n) {
+        return Y0 + ((n - 1) * (Y1 - Y0)) / 9;
+      }
+
+      function parseCode(code) {
+        return { aisle: code[0], n: Number(code.slice(2)) };
+      }
+
+      function xy(code) {
+        const parsed = parseCode(code);
+        return { x: AISLE_X[parsed.aisle], y: slotY(parsed.n), aisle: parsed.aisle, n: parsed.n };
+      }
+
+      function hop(a, b) {
+        if (a.aisle === b.aisle) return [a, { x: a.x, y: b.y }];
+        const mid = (Y0 + Y1) / 2;
+        const sameTop = a.y <= mid && b.y <= mid;
+        const sameBot = a.y >= mid && b.y >= mid;
+        let end;
+        if (sameTop) {
+          end = Math.min(a.y, b.y) - 0.7;
+        } else if (sameBot) {
+          end = Math.max(a.y, b.y) + 0.7;
+        } else {
+          const viaTop = Math.abs(a.y - TOP) + Math.abs(b.y - TOP);
+          const viaBot = Math.abs(a.y - BOT) + Math.abs(b.y - BOT);
+          end = viaTop <= viaBot ? TOP : BOT;
+        }
+        end = Math.max(TOP, Math.min(BOT, end));
+        return [a, { x: a.x, y: end }, { x: b.x, y: end }, { x: b.x, y: b.y }];
+      }
+
+      function samePoint(p, q) {
+        return Math.abs(p.x - q.x) < 0.001 && Math.abs(p.y - q.y) < 0.001;
+      }
+
+      function joinHops(hops) {
+        const out = [];
+        hops.forEach((seg) => {
+          seg.forEach((p, i) => {
+            if (i === 0 && out.length && samePoint(out[out.length - 1], p)) return;
+            out.push(p);
+          });
+        });
+        return out;
+      }
+
+      const points = STOPS.map((stop) => xy(stop.code));
+      const hops = points.slice(1).map((pt, i) => hop(points[i], pt));
+      const fullPath = joinHops(hops);
+      const hopSpans = [];
+      let cursor = 0;
+      hops.forEach((seg) => {
+        const start = cursor;
+        const extra = cursor === 0 ? seg.length : seg.length - 1;
+        cursor += extra;
+        hopSpans.push({ from: start, to: cursor });
+      });
+
+      function slicePath(fromIdx, toIdx) {
+        if (!hopSpans.length || toIdx <= 0) return fullPath.slice(0, 1);
+        const last = hopSpans.length - 1;
+        const startHop = Math.max(0, Math.min(fromIdx, last));
+        const endHop = Math.max(0, Math.min(toIdx - 1, last));
+        return fullPath.slice(hopSpans[startHop].from, hopSpans[endHop].to + 1);
+      }
+
+      function pts(list) {
+        return list.map((p) => p.x + " " + p.y).join(" ");
+      }
+
+      function el(name, attrs) {
+        const node = document.createElementNS(NS, name);
+        Object.keys(attrs).forEach((key) => node.setAttribute(key, String(attrs[key])));
+        return node;
+      }
+
+      function qtyWord(n) {
+        return WORDS[n] || String(n);
+      }
+
+      function speakLine(stop) {
+        return qtyWord(stop.qty) + " " + stop.speak + " no " + stop.code + ".";
+      }
+
+      function units(n) {
+        return n === 1 ? "1 unidade" : n + " unidades";
+      }
+
+      const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const map = document.getElementById("map");
+      const slab = document.getElementById("slab");
+      const countEl = document.getElementById("count");
+      const shareEl = document.getElementById("share");
+      const toastEl = document.getElementById("toast");
+      const phone = document.getElementById("phone");
+
+      let wave = 0;
+      let mode = "claim";
+      let here = 0;
+      let marks = STOPS.map(function () { return "pending"; });
+      let speekOpen = false;
+      let view = { x: 0, y: 0, w: 9.55, h: 21.6 };
+      let toastTimer = 0;
+
+      function applyRunColor() {
+        const skin = WAVES[wave];
+        document.documentElement.style.setProperty("--run", skin.color);
+        document.documentElement.style.setProperty("--run-ink", skin.ink);
+      }
+
+      function targetView() {
+        if (mode === "claim" || mode === "zen") {
+          return { x: 0, y: 0, w: 9.55, h: 21.6 };
+        }
+        const p = points[Math.min(here, points.length - 1)];
+        const w = 5.1;
+        const h = 8.4;
+        return {
+          x: Math.max(-0.2, Math.min(9.55 - w, p.x - w / 2)),
+          y: Math.max(-0.3, Math.min(21.6 - h, p.y - h / 2 - 0.6)),
+          w: w,
+          h: h
+        };
+      }
+
+      function paintMap() {
+        map.replaceChildren();
+        const svg = el("svg", {
+          viewBox: view.x + " " + view.y + " " + view.w + " " + view.h,
+          preserveAspectRatio: "xMidYMid meet",
+          "aria-hidden": "true"
+        });
+
+        Object.keys(AISLE_X).forEach((letter) => {
+          const x = AISLE_X[letter];
+          svg.appendChild(el("rect", {
+            class: "aisle",
+            x: x - 0.24,
+            y: 0.45,
+            width: 0.48,
+            height: 16.5,
+            rx: 0.24
+          }));
+          const label = el("text", { class: "aisle-label", x: x, y: 17.35, "text-anchor": "middle" });
+          label.textContent = letter;
+          svg.appendChild(label);
+        });
+
+        if (fullPath.length > 1) {
+          svg.appendChild(el("polyline", { class: "path-rest", points: pts(fullPath) }));
+        }
+
+        const walkedTo = mode === "claim" ? 0 : Math.min(here, STOPS.length);
+        const doneSeg = slicePath(0, walkedTo);
+        if (doneSeg.length > 1) {
+          svg.appendChild(el("polyline", { class: "path-walked", points: pts(doneSeg) }));
+        }
+
+        const dashFrom = mode === "claim" ? 0 : Math.max(0, walkedTo - 1);
+        const dashTo = mode === "zen" ? STOPS.length : Math.max(walkedTo + 1, 1);
+        const dashSeg = slicePath(dashFrom, Math.min(dashTo, STOPS.length));
+        if (dashSeg.length > 1 && mode !== "zen") {
+          svg.appendChild(el("polyline", { class: "path-dash", points: pts(dashSeg) }));
+        }
+
+        points.forEach((p, i) => {
+          if (mode === "claim") {
+            svg.appendChild(el("circle", { class: "node-future", cx: p.x, cy: p.y, r: 0.1 }));
+            return;
+          }
+          if (mode === "zen" || i < here) {
+            svg.appendChild(el("circle", {
+              class: marks[i] === "miss" ? "node-miss" : "node-done",
+              cx: p.x,
+              cy: p.y,
+              r: 0.11
+            }));
+            return;
+          }
+          if (i === here) {
+            svg.appendChild(el("circle", { class: "node-halo", cx: p.x, cy: p.y, r: 0.4 }));
+            const hereNode = el("circle", { class: "node-here", cx: p.x, cy: p.y, r: 0.2 });
+            svg.appendChild(hereNode);
+            if (!reduce) hereNode.classList.add("is-live");
+            return;
+          }
+          if (i === here + 1) {
+            svg.appendChild(el("circle", { class: "node-next", cx: p.x, cy: p.y, r: 0.16 }));
+            return;
+          }
+          svg.appendChild(el("circle", { class: "node-future", cx: p.x, cy: p.y, r: 0.08 }));
+        });
+
+        map.appendChild(svg);
+      }
+
+      function lerpView(next) {
+        if (reduce) {
+          view = next;
+          paintMap();
+          return;
+        }
+        const start = Object.assign({}, view);
+        const t0 = performance.now();
+        function frame(now) {
+          const t = Math.min(1, (now - t0) / 720);
+          const e = 1 - Math.pow(1 - t, 3);
+          view = {
+            x: start.x + (next.x - start.x) * e,
+            y: start.y + (next.y - start.y) * e,
+            w: start.w + (next.w - start.w) * e,
+            h: start.h + (next.h - start.h) * e
+          };
+          paintMap();
+          if (t < 1) requestAnimationFrame(frame);
+        }
+        requestAnimationFrame(frame);
+      }
+
+      function toast(text) {
+        toastEl.textContent = text;
+        toastEl.classList.add("is-on");
+        window.clearTimeout(toastTimer);
+        toastTimer = window.setTimeout(function () {
+          toastEl.classList.remove("is-on");
+        }, 1600);
+      }
+
+      function shareWave() {
+        const skin = WAVES[wave];
+        const payload = {
+          title: "Pisoly · " + skin.name,
+          text: skin.name + " · 18 paradas · 8 pedidos",
+          url: location.href.split("#")[0] + "#onda-" + skin.id
+        };
+        if (navigator.share) {
+          navigator.share(payload).catch(function () {});
+          return;
+        }
+        const line = payload.title + " — " + payload.url;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(line).then(function () {
+            toast("Link da onda copiado");
+          }).catch(function () {
+            toast(payload.url);
+          });
+          return;
+        }
+        toast(payload.url);
+      }
+
+      function speakNow() {
+        const stop = STOPS[here];
+        if (!stop || !window.speechSynthesis) return;
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(speakLine(stop));
+        utter.lang = "pt-BR";
+        utter.rate = 0.95;
+        window.speechSynthesis.speak(utter);
+      }
+
+      function paintClaim() {
+        const chips = WAVES.map(function (skin, i) {
+          return "<button type=\"button\" class=\"wave" + (i === wave ? " is-on" : "") + "\" data-wave=\"" + i + "\">" + skin.name + "</button>";
+        }).join("");
+        slab.innerHTML =
+          "<div class=\"wave-row\" id=\"waves\">" + chips + "</div>" +
+          "<p class=\"claim-kicker\">Pronta no chão</p>" +
+          "<h1 class=\"claim-title\">" + WAVES[wave].name + "</h1>" +
+          "<p class=\"claim-meta\">18 paradas · 8 pedidos · só pra frente</p>" +
+          "<div class=\"claim-actions\">" +
+          "<button type=\"button\" class=\"ghost\" id=\"share-dock\">Compartilhar</button>" +
+          "<button type=\"button\" class=\"go\" id=\"iniciar\">Iniciar</button>" +
+          "</div>";
+        document.getElementById("waves").addEventListener("click", function (event) {
+          const btn = event.target.closest("[data-wave]");
+          if (!btn) return;
+          wave = Number(btn.getAttribute("data-wave"));
+          applyRunColor();
+          paint();
+        });
+        document.getElementById("share-dock").addEventListener("click", shareWave);
+        document.getElementById("iniciar").addEventListener("click", claim);
+      }
+
+      function paintRun() {
+        const stop = STOPS[here];
+        const next = STOPS[here + 1];
+        const line = speakLine(stop);
+        slab.innerHTML =
+          "<button type=\"button\" class=\"speek" + (speekOpen ? " is-open" : "") + "\" id=\"speek\" aria-expanded=\"" + (speekOpen ? "true" : "false") + "\">" +
+          "<p class=\"speek-label\">Speek peek</p>" +
+          "<p class=\"speek-line\"></p>" +
+          "<p class=\"speek-more\"></p>" +
+          "</button>" +
+          "<div class=\"thumbs\">" +
+          "<button type=\"button\" class=\"miss\" id=\"miss\">Não achei</button>" +
+          "<button type=\"button\" class=\"feito\" id=\"feito\">Feito</button>" +
+          "</div>";
+        slab.querySelector(".speek-line").textContent = line;
+        slab.querySelector(".speek-more").textContent =
+          units(stop.qty) + " · " + stop.sku + (next ? " · depois " + next.code : " · última parada");
+        document.getElementById("speek").addEventListener("click", function () {
+          speekOpen = !speekOpen;
+          this.classList.toggle("is-open", speekOpen);
+          this.setAttribute("aria-expanded", speekOpen ? "true" : "false");
+          if (speekOpen) speakNow();
+        });
+        document.getElementById("feito").addEventListener("click", function () {
+          advance("done");
+        });
+        document.getElementById("miss").addEventListener("click", function () {
+          advance("miss");
+        });
+      }
+
+      function paintZen() {
+        const missed = marks.filter(function (m) { return m === "miss"; }).length;
+        slab.innerHTML =
+          "<div class=\"zen\">" +
+          "<p class=\"zen-kicker\">" + WAVES[wave].name + "</p>" +
+          "<h1 class=\"zen-title\">Todos pegos</h1>" +
+          "<p class=\"claim-meta\">" + STOPS.length + " paradas" + (missed ? " · " + missed + " não achei" : "") + "</p>" +
+          "<div class=\"zen-actions\">" +
+          "<button type=\"button\" class=\"go\" id=\"again\">Começar de novo</button>" +
+          "</div></div>";
+        document.getElementById("again").addEventListener("click", reset);
+      }
+
+      function paintChrome() {
+        phone.classList.toggle("is-zen", mode === "zen");
+        if (mode === "claim") {
+          countEl.textContent = WAVES[wave].name;
+          return;
+        }
+        if (mode === "zen") {
+          countEl.textContent = STOPS.length + " de " + STOPS.length;
+          return;
+        }
+        countEl.textContent = (here + 1) + " de " + STOPS.length;
+      }
+
+      function paintDock() {
+        if (mode === "claim") {
+          paintClaim();
+          return;
+        }
+        if (mode === "zen") {
+          paintZen();
+          return;
+        }
+        paintRun();
+      }
+
+      function paint() {
+        applyRunColor();
+        paintChrome();
+        paintDock();
+        paintMap();
+      }
+
+      function claim() {
+        mode = "run";
+        here = 0;
+        speekOpen = false;
+        paintChrome();
+        paintDock();
+        lerpView(targetView());
+      }
+
+      function advance(kind) {
+        if (mode !== "run") return;
+        marks[here] = kind;
+        if (here + 1 >= STOPS.length) {
+          mode = "zen";
+          here = STOPS.length;
+          speekOpen = false;
+          paintChrome();
+          paintDock();
+          lerpView(targetView());
+          return;
+        }
+        here += 1;
+        speekOpen = false;
+        paintChrome();
+        paintDock();
+        lerpView(targetView());
+      }
+
+      function reset() {
+        mode = "claim";
+        here = 0;
+        marks = STOPS.map(function () { return "pending"; });
+        speekOpen = false;
+        paintChrome();
+        paintDock();
+        lerpView(targetView());
+      }
+
+      shareEl.addEventListener("click", shareWave);
+
+      const hash = location.hash.replace("#onda-", "");
+      const fromHash = WAVES.findIndex(function (skin) { return skin.id === hash; });
+      if (fromHash >= 0) wave = fromHash;
+
+      applyRunColor();
+      paint();
+    })();
+  </script>
+</body>
+</html>
