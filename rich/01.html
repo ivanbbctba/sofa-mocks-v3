@@ -63,38 +63,31 @@
     }
 
     .aisle {
-      fill: #dce3ee;
-    }
-
-    .aisle-line {
-      fill: none;
-      stroke: var(--aisle-ink);
-      stroke-width: 0.42;
-      stroke-linecap: round;
+      fill: #cfd6e3;
     }
 
     .path-rest {
       fill: none;
       stroke: var(--path);
-      stroke-width: 0.26;
+      stroke-width: 0.22;
       stroke-linecap: round;
       stroke-linejoin: round;
-      opacity: 0.2;
+      opacity: 0.14;
     }
 
     .path-done {
       fill: none;
       stroke: var(--path);
-      stroke-width: 0.42;
+      stroke-width: 0.34;
       stroke-linecap: round;
       stroke-linejoin: round;
-      opacity: 0.55;
+      opacity: 0.62;
     }
 
     .path-play {
       fill: none;
       stroke: var(--path);
-      stroke-width: 0.62;
+      stroke-width: 0.48;
       stroke-linecap: round;
       stroke-linejoin: round;
       opacity: 1;
@@ -109,11 +102,11 @@
     .path-ahead {
       fill: none;
       stroke: var(--path);
-      stroke-width: 0.38;
+      stroke-width: 0.3;
       stroke-linecap: round;
       stroke-linejoin: round;
-      opacity: 0.42;
-      stroke-dasharray: 0.55 0.42;
+      opacity: 0.4;
+      stroke-dasharray: 0.42 0.32;
     }
 
     .node-done {
@@ -123,12 +116,12 @@
     .node-next {
       fill: #fff;
       stroke: var(--path);
-      stroke-width: 0.16;
+      stroke-width: 0.1;
     }
 
     .node-future {
       fill: #c5cad6;
-      opacity: 0.55;
+      opacity: 0.5;
     }
 
     .node-here {
@@ -144,8 +137,8 @@
     .node-halo {
       fill: none;
       stroke: var(--ok);
-      stroke-width: 0.12;
-      opacity: 0.45;
+      stroke-width: 0.08;
+      opacity: 0.4;
     }
 
     .chrome {
@@ -192,12 +185,14 @@
       left: 0;
       right: 0;
       bottom: 0;
+      z-index: 6;
       padding: 0 20px calc(18px + env(safe-area-inset-bottom));
       background: linear-gradient(
         180deg,
         rgba(238, 242, 247, 0) 0%,
-        rgba(238, 242, 247, 0.88) 38%,
-        rgba(238, 242, 247, 0.98) 100%
+        rgba(238, 242, 247, 0.78) 28%,
+        rgba(238, 242, 247, 0.96) 58%,
+        #eef2f7 100%
       );
       pointer-events: none;
     }
@@ -239,8 +234,8 @@
     .actions {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding-bottom: 4px;
+      gap: 14px;
+      padding-bottom: 6px;
     }
 
     .voltar,
@@ -456,7 +451,7 @@
           <p class="depois" id="depois">depois H-09</p>
         </div>
         <div class="actions">
-          <button type="button" class="voltar" id="voltar" disabled>Voltar</button>
+          <button type="button" class="voltar" id="voltar">Voltar</button>
           <button type="button" class="feito" id="feito">Feito</button>
         </div>
       </div>
@@ -473,11 +468,11 @@
   </main>
   <script>
     (function () {
-      const AISLE_X = { A: 1.15, B: 3.25, C: 5.35, D: 7.45, E: 9.55, F: 11.65, G: 13.75, H: 15.85 };
-      const Y0 = 1.25;
-      const Y1 = 13.55;
-      const TOP = 0.72;
-      const BOT = 14.28;
+      const AISLE_X = { A: 0.78, B: 1.92, C: 3.06, D: 4.2, E: 5.34, F: 6.48, G: 7.62, H: 8.76 };
+      const Y0 = 1.55;
+      const Y1 = 15.85;
+      const TOP = 0.85;
+      const BOT = 16.65;
       const NS = "http://www.w3.org/2000/svg";
 
       const STOPS = [
@@ -516,9 +511,20 @@
 
       function hop(a, b) {
         if (a.aisle === b.aisle) return [a, { x: a.x, y: b.y }];
-        const viaTop = Math.abs(a.y - TOP) + Math.abs(b.y - TOP);
-        const viaBot = Math.abs(a.y - BOT) + Math.abs(b.y - BOT);
-        const end = viaTop <= viaBot ? TOP : BOT;
+        const mid = (Y0 + Y1) / 2;
+        const sameTop = a.y <= mid && b.y <= mid;
+        const sameBot = a.y >= mid && b.y >= mid;
+        let end;
+        if (sameTop) {
+          end = Math.min(a.y, b.y) - 0.7;
+        } else if (sameBot) {
+          end = Math.max(a.y, b.y) + 0.7;
+        } else {
+          const viaTop = Math.abs(a.y - TOP) + Math.abs(b.y - TOP);
+          const viaBot = Math.abs(a.y - BOT) + Math.abs(b.y - BOT);
+          end = viaTop <= viaBot ? TOP : BOT;
+        }
+        end = Math.max(TOP, Math.min(BOT, end));
         return [a, { x: a.x, y: end }, { x: b.x, y: end }, { x: b.x, y: b.y }];
       }
 
@@ -586,7 +592,7 @@
       function paintMap(fromIdx, toIdx) {
         map.replaceChildren();
         const svg = el("svg", {
-          viewBox: "0 0 17.2 15.2",
+          viewBox: "0 0 9.55 21.6",
           preserveAspectRatio: "xMidYMid meet",
           "aria-hidden": "true"
         });
@@ -595,18 +601,11 @@
           const x = AISLE_X[letter];
           svg.appendChild(el("rect", {
             class: "aisle",
-            x: x - 0.28,
-            y: 0.55,
-            width: 0.56,
-            height: 13.85,
-            rx: 0.28
-          }));
-          svg.appendChild(el("line", {
-            class: "aisle-line",
-            x1: x,
-            y1: 0.7,
-            x2: x,
-            y2: 14.2
+            x: x - 0.24,
+            y: 0.45,
+            width: 0.48,
+            height: 16.5,
+            rx: 0.24
           }));
         });
 
@@ -635,21 +634,21 @@
 
         points.forEach((p, i) => {
           if (i === toIdx) {
-            svg.appendChild(el("circle", { class: "node-halo", cx: p.x, cy: p.y, r: 0.62 }));
-            const hereNode = el("circle", { class: "node-here", cx: p.x, cy: p.y, r: 0.34 });
+            svg.appendChild(el("circle", { class: "node-halo", cx: p.x, cy: p.y, r: 0.38 }));
+            const hereNode = el("circle", { class: "node-here", cx: p.x, cy: p.y, r: 0.2 });
             svg.appendChild(hereNode);
             if (!reduce) hereNode.classList.add("is-live");
             return;
           }
           if (i === toIdx + 1) {
-            svg.appendChild(el("circle", { class: "node-next", cx: p.x, cy: p.y, r: 0.28 }));
+            svg.appendChild(el("circle", { class: "node-next", cx: p.x, cy: p.y, r: 0.17 }));
             return;
           }
           svg.appendChild(el("circle", {
             class: i < toIdx ? "node-done" : "node-future",
             cx: p.x,
             cy: p.y,
-            r: i < toIdx ? 0.16 : 0.13
+            r: i < toIdx ? 0.1 : 0.08
           }));
         });
 
@@ -745,6 +744,11 @@
       paintHud();
       paintList();
       paintMap(Math.max(0, here - 1), here);
+      if (location.hash === "#lista") {
+        drawer.style.transition = "none";
+        openDrawer();
+        requestAnimationFrame(function () { drawer.style.transition = ""; });
+      }
     })();
   </script>
 </body>
