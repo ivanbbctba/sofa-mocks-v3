@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Onda rica F — Speak expansível</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --accent: #635bff;
+      --accent-deep: #4f48d4;
+      --accent-soft: #eeedff;
+      --ink: #1a1b1a;
+      --ink-2: #3c3e3c;
+      --mute: #6d706c;
+      --mute-2: #b4b9c6;
+      --line: #e3e1da;
+      --paper: #f7f6f2;
+      --paper-2: #efeee8;
+      --white: #fffcf8;
+      --ok: #3d6f60;
+      --ok-soft: #dce8e3;
+      --feito: #14151a;
+      --run-paper: #e8edf5;
+      --aisle: rgba(176, 184, 200, 0.42);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-top: env(safe-area-inset-top, 0px);
+    }
+
+    *,
+    *::before,
+    *::after { box-sizing: border-box; }
+
+    html { -webkit-text-size-adjust: 100%; }
+
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: #d8dee8;
+    }
+
+    .run-app {
+      width: 100%;
+      max-width: 390px;
+      height: 100dvh;
+      max-height: 844px;
+      margin: 0 auto;
+      position: relative;
+      overflow: hidden;
+      background: var(--run-paper);
+    }
+
+    @media (min-height: 900px) {
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .run-app {
+        height: 844px;
+        border-radius: 28px;
+        box-shadow: 0 18px 50px rgba(17, 19, 24, 0.16);
+      }
+    }
+
+    .run-map { position: absolute; inset: 0; }
+
+    .route-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .aisle-pill { fill: url(#aisleFade); }
+
+    .path-rest {
+      fill: none;
+      stroke: #635bff;
+      stroke-width: 7;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: 0.14;
+    }
+
+    .route-solid {
+      fill: none;
+      stroke: #635bff;
+      stroke-width: 11;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .route-dash {
+      fill: none;
+      stroke: #635bff;
+      stroke-width: 9;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 8 12;
+      opacity: 0.36;
+    }
+
+    .node { fill: #c5cad6; }
+    .node.on-path { fill: #635bff; }
+    .node.upcoming {
+      fill: var(--run-paper);
+      stroke: #9aa3f5;
+      stroke-width: 2.5;
+    }
+    .node.current {
+      fill: url(#nodeGreen);
+      stroke: none;
+    }
+    .node-ring {
+      fill: none;
+      stroke: #3dcc70;
+      stroke-width: 3.5;
+    }
+    .node.next {
+      fill: #635bff;
+    }
+
+    .map-fade {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 42%;
+      background: linear-gradient(
+        180deg,
+        rgba(232, 237, 245, 0) 0%,
+        rgba(232, 237, 245, 0.36) 36%,
+        rgba(232, 237, 245, 0.82) 72%,
+        #e8edf5 100%
+      );
+      pointer-events: none;
+      transition: height 0.28s ease;
+    }
+
+    .run-app.is-open .map-fade { height: 58%; }
+
+    .btn-back,
+    .btn-mesa {
+      position: absolute;
+      top: calc(8px + var(--safe-top));
+      z-index: 4;
+      border: none;
+      background: transparent;
+      color: var(--ink-2);
+      cursor: pointer;
+      font: inherit;
+    }
+
+    .btn-back {
+      left: 10px;
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      display: grid;
+      place-items: center;
+    }
+
+    .btn-back[disabled] { opacity: 0.28; cursor: default; }
+
+    .btn-mesa {
+      left: 50px;
+      height: 40px;
+      padding: 0 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--mute);
+      text-decoration: none;
+      display: grid;
+      place-items: center;
+    }
+
+    .run-progress {
+      position: absolute;
+      top: calc(12px + var(--safe-top));
+      right: 16px;
+      margin: 0;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--mute-2);
+      letter-spacing: 0.01em;
+      z-index: 3;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .speak {
+      position: absolute;
+      left: 16px;
+      right: auto;
+      width: min(228px, calc(100% - 118px));
+      bottom: calc(26px + var(--safe-bottom));
+      z-index: 4;
+      margin: 0;
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: var(--white);
+      box-shadow: 0 10px 28px rgba(17, 19, 24, 0.08);
+      color: inherit;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+      overflow: hidden;
+    }
+
+    .speak.is-open {
+      width: min(252px, calc(100% - 108px));
+    }
+
+    .speak:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 3px;
+    }
+
+    .speak-face {
+      padding: 14px 16px 16px;
+    }
+
+    .speak-qty {
+      margin: 0;
+      font-size: 52px;
+      font-weight: 800;
+      letter-spacing: -0.05em;
+      line-height: 0.9;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .speak-loc {
+      margin: 8px 0 0;
+      padding: 0;
+      border: 0;
+      border-bottom: 1px dashed var(--line);
+      background: none;
+      color: var(--ink);
+      font: inherit;
+      font-size: 18px;
+      font-weight: 500;
+      text-align: left;
+    }
+
+    .speak.is-open .speak-loc { border-bottom-style: solid; }
+
+    .speak-sku {
+      margin: 8px 0 0;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink-2);
+      overflow-wrap: anywhere;
+    }
+
+    .speak-more {
+      display: none;
+      padding: 0 16px 16px;
+      border-top: 1px solid var(--line);
+    }
+
+    .speak.is-open .speak-more { display: block; }
+
+    .speak-detail {
+      margin: 12px 0 0;
+      display: grid;
+      gap: 4px;
+    }
+
+    .speak-name {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 1.25;
+    }
+
+    .speak-meta,
+    .speak-full,
+    .speak-hint {
+      margin: 0;
+      font-size: 12px;
+      color: var(--mute);
+      line-height: 1.45;
+    }
+
+    .speak-full { color: var(--ink-2); margin-top: 2px; }
+    .speak-hint { margin-top: 8px; }
+
+    .peeks {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 8px;
+    }
+
+    .peeks-label {
+      margin: 12px 0 8px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--mute);
+    }
+
+    .peeks li {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      grid-template-areas: "loc qty" "sku sku";
+      gap: 2px 10px;
+      align-items: baseline;
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: var(--paper);
+      font-size: 13px;
+    }
+
+    .peek-loc { grid-area: loc; font-weight: 600; }
+    .peek-sku {
+      grid-area: sku;
+      color: var(--ink-2);
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+    .peek-qty {
+      grid-area: qty;
+      color: var(--mute);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .btn-feito {
+      position: absolute;
+      right: 18px;
+      bottom: calc(28px + var(--safe-bottom));
+      z-index: 5;
+      width: 76px;
+      height: 76px;
+      border: none;
+      border-radius: 50%;
+      background: var(--feito);
+      color: #fff;
+      font: inherit;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      box-shadow: 0 10px 24px rgba(17, 19, 24, 0.22);
+    }
+
+    .btn-feito:active { transform: scale(0.96); }
+    .btn-feito[disabled] { opacity: 0.45; cursor: default; }
+
+    .toast {
+      position: absolute;
+      left: 50%;
+      top: 18%;
+      transform: translateX(-50%);
+      z-index: 8;
+      display: none;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(20, 21, 26, 0.86);
+      color: #fff;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .toast.is-on { display: block; }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="run-app" id="app">
+    <div class="run-map" aria-hidden="true">
+      <svg id="route-svg" class="route-svg" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <linearGradient id="nodeGreen" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#6ad88a" />
+            <stop offset="100%" stop-color="#2f9a55" />
+          </linearGradient>
+          <linearGradient id="aisleFade" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#b0b8c8" stop-opacity="0" />
+            <stop offset="10%" stop-color="#b0b8c8" stop-opacity="0.38" />
+            <stop offset="46%" stop-color="#b0b8c8" stop-opacity="0.48" />
+            <stop offset="82%" stop-color="#b0b8c8" stop-opacity="0.38" />
+            <stop offset="100%" stop-color="#b0b8c8" stop-opacity="0" />
+          </linearGradient>
+        </defs>
+        <g id="aisle-pills"></g>
+        <path id="path-rest" class="path-rest" d="" />
+        <path id="route-dash" class="route-dash" d="" />
+        <path id="route-solid" class="route-solid" d="" />
+        <g id="route-nodes"></g>
+      </svg>
+      <div class="map-fade"></div>
+    </div>
+
+    <button type="button" class="btn-back" id="btn-back" aria-label="Parada anterior">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M15 5 L8 12 L15 19" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </button>
+    <a class="btn-mesa" href="../desk/06.html">Mesa</a>
+    <p class="run-progress" id="run-progress">0 de 18</p>
+
+    <button type="button" class="speak" id="speak" aria-expanded="false">
+      <div class="speak-face">
+        <p class="speak-qty" id="speak-qty">10</p>
+        <p class="speak-loc" id="speak-loc">A-01</p>
+        <p class="speak-sku" id="speak-sku">ML-CINZA-M</p>
+      </div>
+      <div class="speak-more" id="speak-more">
+        <div class="speak-detail">
+          <p class="speak-name" id="speak-name">Moletom cinza M</p>
+          <p class="speak-meta" id="speak-meta">10 unidades · 3 pedidos</p>
+          <p class="speak-meta" id="speak-progress">0 de 18</p>
+          <p class="speak-full" id="speak-full">Corredor A · posição 01 · chão</p>
+          <p class="speak-hint">Toque no cartão para recolher</p>
+        </div>
+        <p class="peeks-label">A seguir</p>
+        <ol class="peeks" id="peeks"></ol>
+      </div>
+    </button>
+
+    <button type="button" class="btn-feito" id="btn-feito">Feito</button>
+    <div class="toast" id="run-toast" role="status"></div>
+    <p class="sr-only">Onda rica do dono. Cartão Speak expansível. Mapa Strict com caminho completo fraco.</p>
+  </div>
+
+  <script>
+    (function () {
+      var TOTAL = 18;
+      var DESK = "../desk/06.html";
+      var AISLE_X = { A: 40, B: 88, C: 136, D: 184, E: 232, F: 280, G: 328, H: 372 };
+      var BACK_Y = 78;
+      var FRONT_Y = 620;
+
+      function binY(n) {
+        return BACK_Y + (n - 1) * ((FRONT_Y - BACK_Y) / 9);
+      }
+
+      function parseLoc(code) {
+        var parts = code.split("-");
+        return { aisle: parts[0], bin: parseInt(parts[1], 10) };
+      }
+
+      function xy(code) {
+        var loc = parseLoc(code);
+        return [AISLE_X[loc.aisle], binY(loc.bin)];
+      }
+
+      var STOPS = [
+        { qty: 10, loc: "A-01", sku: "ML-CINZA-M", name: "Moletom cinza M", orders: 3, locFull: "Corredor A · posição 01 · chão" },
+        { qty: 8, loc: "C-02", sku: "CJ-JEANS-42", name: "Calça jeans 42", orders: 2, locFull: "Corredor C · posição 02 · meio" },
+        { qty: 10, loc: "E-01", sku: "CT-BRANCA-P", name: "Camiseta branca P", orders: 4, locFull: "Corredor E · posição 01 · chão" },
+        { qty: 10, loc: "E-10", sku: "VN-PRETA-38", name: "Vestido preto 38", orders: 2, locFull: "Corredor E · posição 10 · fundo" },
+        { qty: 42, loc: "F-02", sku: "MK-MEIA-3", name: "Meia kit 3 pares", orders: 6, locFull: "Corredor F · posição 02 · chão" },
+        { qty: 5, loc: "H-09", sku: "BL-LINHO-M", name: "Blusa linho M", orders: 1, locFull: "Corredor H · posição 09 · alto" },
+        { qty: 7, loc: "B-03", sku: "CL-CHINO-40", name: "Calça chino 40", orders: 2, locFull: "Corredor B · posição 03 · meio" },
+        { qty: 5, loc: "B-09", sku: "JA-NYLON-G", name: "Jaqueta nylon G", orders: 1, locFull: "Corredor B · posição 09 · alto" },
+        { qty: 9, loc: "G-01", sku: "TN-BASIC-M", name: "Tênis básico 40", orders: 3, locFull: "Corredor G · posição 01 · chão" },
+        { qty: 7, loc: "G-09", sku: "SH-SLIM-P", name: "Shorts slim P", orders: 2, locFull: "Corredor G · posição 09 · alto" },
+        { qty: 6, loc: "C-08", sku: "RG-ALGOD-M", name: "Regata algodão M", orders: 2, locFull: "Corredor C · posição 08 · meio" },
+        { qty: 4, loc: "F-10", sku: "CS-LISA-G", name: "Camisa lisa G", orders: 1, locFull: "Corredor F · posição 10 · fundo" },
+        { qty: 8, loc: "D-04", sku: "SA-MIDI-36", name: "Saia midi 36", orders: 3, locFull: "Corredor D · posição 04 · meio" },
+        { qty: 3, loc: "D-10", sku: "CR-TRICOT-P", name: "Cardigã tricot P", orders: 1, locFull: "Corredor D · posição 10 · fundo" },
+        { qty: 11, loc: "A-06", sku: "CL-MOLE-M", name: "Calça moletom M", orders: 4, locFull: "Corredor A · posição 06 · meio" },
+        { qty: 6, loc: "H-02", sku: "BT-COURO-37", name: "Bota couro 37", orders: 2, locFull: "Corredor H · posição 02 · chão" },
+        { qty: 4, loc: "A-10", sku: "BL-POLO-G", name: "Polo piqué G", orders: 1, locFull: "Corredor A · posição 10 · fundo" },
+        { qty: 2, loc: "H-10", sku: "CN-LA-U", name: "Cinto lã único", orders: 1, locFull: "Corredor H · posição 10 · fundo" }
+      ];
+
+      function corridorY(fromCode, toCode) {
+        var a = parseLoc(fromCode);
+        var b = parseLoc(toCode);
+        var y1 = binY(a.bin);
+        var y2 = binY(b.bin);
+        var viaBack = Math.abs(y1 - BACK_Y) + Math.abs(y2 - BACK_Y);
+        var viaFront = Math.abs(y1 - FRONT_Y) + Math.abs(y2 - FRONT_Y);
+        return viaBack <= viaFront ? BACK_Y : FRONT_Y;
+      }
+
+      function segment(fromCode, toCode) {
+        var p1 = xy(fromCode);
+        var p2 = xy(toCode);
+        if (fromCode.charAt(0) === toCode.charAt(0)) return [p1, p2];
+        var via = corridorY(fromCode, toCode);
+        var pts = [p1];
+        if (Math.abs(p1[1] - via) > 1) pts.push([p1[0], via]);
+        pts.push([p2[0], via]);
+        if (Math.abs(p2[1] - via) > 1) pts.push(p2);
+        return pts;
+      }
+
+      function samePoint(a, b) {
+        return Math.abs(a[0] - b[0]) < 0.5 && Math.abs(a[1] - b[1]) < 0.5;
+      }
+
+      function buildRoute() {
+        var pts = [];
+        var i;
+        for (i = 0; i < STOPS.length - 1; i += 1) {
+          var seg = segment(STOPS[i].loc, STOPS[i + 1].loc);
+          if (pts.length && samePoint(pts[pts.length - 1], seg[0])) {
+            pts = pts.concat(seg.slice(1));
+          } else {
+            pts = pts.concat(seg);
+          }
+        }
+        return pts;
+      }
+
+      function indexOnRoute(route, code) {
+        var target = xy(code);
+        var best = 0;
+        var bestD = Infinity;
+        var i;
+        for (i = 0; i < route.length; i += 1) {
+          var dx = route[i][0] - target[0];
+          var dy = route[i][1] - target[1];
+          var d = dx * dx + dy * dy;
+          if (d < bestD) {
+            bestD = d;
+            best = i;
+          }
+        }
+        return best;
+      }
+
+      function toPath(points) {
+        if (!points.length) return "";
+        var d = "M " + points[0][0].toFixed(1) + " " + points[0][1].toFixed(1);
+        var i;
+        for (i = 1; i < points.length; i += 1) {
+          d += " L " + points[i][0].toFixed(1) + " " + points[i][1].toFixed(1);
+        }
+        return d;
+      }
+
+      function frameBox(points, extra) {
+        var xs = points.map(function (p) { return p[0]; });
+        var ys = points.map(function (p) { return p[1]; });
+        var minX = Math.min.apply(null, xs) - extra;
+        var maxX = Math.max.apply(null, xs) + extra;
+        var minY = Math.min.apply(null, ys) - extra;
+        var maxY = Math.max.apply(null, ys) + extra;
+        var aspect = 390 / 844;
+        var w = Math.max(210, maxX - minX);
+        var h = Math.max(360, maxY - minY);
+        if (w / h > aspect) h = w / aspect;
+        else w = h * aspect;
+        var cx = (minX + maxX) / 2;
+        var cy = (minY + maxY) / 2 - 22;
+        return [cx - w / 2, cy - h / 2, w, h].map(function (n) { return n.toFixed(1); }).join(" ");
+      }
+
+      function qtyCopy(n) {
+        return n === 1 ? "1 unidade" : n + " unidades";
+      }
+
+      var app = document.getElementById("app");
+      var params = new URLSearchParams(window.location.search);
+      var index = parseInt(params.get("i") || "0", 10);
+      if (isNaN(index) || index < 0) index = 0;
+      if (index > STOPS.length - 1) index = STOPS.length - 1;
+      var expanded = false;
+      var wantOpen = params.get("open") === "1";
+
+      var route = buildRoute();
+      var svg = document.getElementById("route-svg");
+      var rest = document.getElementById("path-rest");
+      var solid = document.getElementById("route-solid");
+      var dash = document.getElementById("route-dash");
+      var nodes = document.getElementById("route-nodes");
+      var aislePills = document.getElementById("aisle-pills");
+      aislePills.innerHTML = Object.keys(AISLE_X).map(function (key) {
+        var x = AISLE_X[key];
+        return '<rect class="aisle-pill" x="' + (x - 11).toFixed(1) + '" y="0" width="22" height="844" rx="11"></rect>';
+      }).join("");
+      var qtyEl = document.getElementById("speak-qty");
+      var locEl = document.getElementById("speak-loc");
+      var skuEl = document.getElementById("speak-sku");
+      var nameEl = document.getElementById("speak-name");
+      var metaEl = document.getElementById("speak-meta");
+      var stopProgressEl = document.getElementById("speak-progress");
+      var fullEl = document.getElementById("speak-full");
+      var peeksEl = document.getElementById("peeks");
+      var progressEl = document.getElementById("run-progress");
+      var feito = document.getElementById("btn-feito");
+      var backBtn = document.getElementById("btn-back");
+      var speak = document.getElementById("speak");
+      var toastEl = document.getElementById("run-toast");
+      var firstDraw = true;
+
+      rest.setAttribute("d", toPath(route));
+
+      function toast(msg) {
+        if (!toastEl) return;
+        toastEl.textContent = msg;
+        toastEl.classList.add("is-on");
+        window.clearTimeout(toast.tid);
+        toast.tid = window.setTimeout(function () {
+          toastEl.classList.remove("is-on");
+        }, 1400);
+      }
+
+      function animateSolid(pathEl) {
+        var len = 0;
+        try { len = pathEl.getTotalLength(); } catch (err) { return; }
+        if (!len) return;
+        window.clearTimeout(animateSolid.tid);
+        pathEl.style.transition = "none";
+        pathEl.style.strokeDasharray = String(len);
+        pathEl.style.strokeDashoffset = firstDraw ? String(len) : String(Math.min(len, 90));
+        pathEl.getBoundingClientRect();
+        window.requestAnimationFrame(function () {
+          pathEl.style.transition = "stroke-dashoffset 0.72s ease";
+          pathEl.style.strokeDashoffset = "0";
+          animateSolid.tid = window.setTimeout(function () {
+            pathEl.style.transition = "none";
+            pathEl.style.strokeDasharray = "none";
+            pathEl.style.strokeDashoffset = "0";
+          }, 780);
+        });
+      }
+
+      function peekItems() {
+        var out = [];
+        var i;
+        for (i = 1; i <= 2; i += 1) {
+          if (index + i < STOPS.length) out.push(STOPS[index + i]);
+        }
+        return out;
+      }
+
+      function renderPeeks() {
+        var items = peekItems();
+        if (!items.length) {
+          peeksEl.innerHTML = "<li><span class=\"peek-loc\">Fim</span><span class=\"peek-sku\">última parada</span><span class=\"peek-qty\">—</span></li>";
+          return;
+        }
+        peeksEl.innerHTML = items.map(function (stop) {
+          return (
+            "<li>" +
+              "<span class=\"peek-loc\">" + stop.loc + "</span>" +
+              "<span class=\"peek-qty\">" + stop.qty + " un.</span>" +
+              "<span class=\"peek-sku\">" + stop.sku + "</span>" +
+            "</li>"
+          );
+        }).join("");
+      }
+
+      function setExpanded(next) {
+        expanded = next;
+        speak.classList.toggle("is-open", expanded);
+        app.classList.toggle("is-open", expanded);
+        speak.setAttribute("aria-expanded", expanded ? "true" : "false");
+      }
+
+      function render() {
+        var stop = STOPS[index];
+        var here = indexOnRoute(route, stop.loc);
+        var nextStop = STOPS[index + 1];
+        var nextPt = nextStop ? indexOnRoute(route, nextStop.loc) : here;
+        var solidEnd = Math.max(here, nextPt);
+        var solidPts = route.slice(0, solidEnd + 1);
+        var dashPts = route.slice(solidEnd);
+        if (solidPts.length === 1) solidPts = [solidPts[0], solidPts[0]];
+        solid.setAttribute("d", toPath(solidPts));
+        dash.setAttribute("d", toPath(dashPts.length ? dashPts : solidPts));
+        var focusStart = Math.max(0, here - 5);
+        var focusEnd = Math.min(route.length, nextPt + 7);
+        var framePts = route.slice(focusStart, focusEnd);
+        if (!framePts.length) framePts = [xy(stop.loc)];
+        svg.setAttribute("viewBox", frameBox(framePts, 80));
+        animateSolid(solid);
+        firstDraw = false;
+
+        var html = "";
+        var i;
+        for (i = 0; i < STOPS.length; i += 1) {
+          var p = xy(STOPS[i].loc);
+          if (i === index) continue;
+          if (nextStop && i === index + 1) {
+            html += '<circle class="node next" cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="6.5"></circle>';
+            html += '<circle class="node-ring" cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="12"></circle>';
+            continue;
+          }
+          var cls = i < index ? "node on-path" : "node upcoming";
+          html += '<circle class="' + cls + '" cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="5"></circle>';
+        }
+        var cur = xy(stop.loc);
+        html += '<circle class="node current" cx="' + cur[0].toFixed(1) + '" cy="' + cur[1].toFixed(1) + '" r="8"></circle>';
+        html += '<circle class="node-ring" cx="' + cur[0].toFixed(1) + '" cy="' + cur[1].toFixed(1) + '" r="13"></circle>';
+        nodes.innerHTML = html;
+
+        qtyEl.textContent = String(stop.qty);
+        locEl.textContent = stop.loc;
+        skuEl.textContent = stop.sku;
+        nameEl.textContent = stop.name;
+        metaEl.textContent = qtyCopy(stop.qty) + " · " + stop.orders + (stop.orders === 1 ? " pedido" : " pedidos");
+        stopProgressEl.textContent = index + " de " + TOTAL;
+        fullEl.textContent = stop.locFull;
+        progressEl.textContent = index + " de " + TOTAL;
+        backBtn.disabled = false;
+        backBtn.setAttribute("aria-label", index <= 0 ? "Voltar à mesa" : "Parada anterior");
+        renderPeeks();
+        setExpanded(wantOpen);
+        wantOpen = false;
+      }
+
+      function go(nextIndex) {
+        if (nextIndex < 0) {
+          window.location.href = DESK;
+          return;
+        }
+        if (nextIndex >= STOPS.length) return;
+        index = nextIndex;
+        var url = new URL(window.location.href);
+        url.searchParams.set("i", String(index));
+        window.history.replaceState({}, "", url);
+        render();
+      }
+
+      speak.addEventListener("click", function () {
+        setExpanded(!expanded);
+      });
+
+      feito.addEventListener("click", function () {
+        if (index >= STOPS.length - 1) {
+          toast("Onda concluída");
+          window.setTimeout(function () {
+            window.location.href = DESK;
+          }, 700);
+          return;
+        }
+        go(index + 1);
+      });
+
+      backBtn.addEventListener("click", function () {
+        go(index - 1);
+      });
+
+      render();
+    })();
+  </script>
+</body>
+</html>
