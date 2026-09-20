@@ -19,6 +19,7 @@
       --accent-soft: rgba(99, 91, 255, 0.12);
       --go: #0f766e;
       --warn: #b45309;
+      --fail: #c41e3a;
       --radius: 18px;
       --safe-t: env(safe-area-inset-top, 0px);
       --safe-b: env(safe-area-inset-bottom, 0px);
@@ -368,6 +369,7 @@
     }
 
     .wave-link {
+      appearance: none;
       flex: 1;
       min-width: 0;
       display: flex;
@@ -375,8 +377,13 @@
       justify-content: space-between;
       gap: 12px;
       padding: 15px 0;
+      border: none;
+      background: transparent;
+      font: inherit;
+      text-align: left;
       text-decoration: none;
       color: inherit;
+      cursor: pointer;
     }
 
     body.is-active .wave-link {
@@ -407,6 +414,19 @@
     .wave.is-live .stat {
       color: var(--accent);
       font-weight: 600;
+    }
+
+    .wave.is-fail {
+      box-shadow: inset 3px 0 0 var(--fail);
+    }
+
+    .wave.is-fail .stat {
+      color: var(--fail);
+    }
+
+    .pill.is-fail {
+      background: #fde8ea;
+      color: var(--fail);
     }
 
     .pill {
@@ -467,10 +487,7 @@
       color: inherit;
     }
 
-    .panel.agora {
-      background: linear-gradient(180deg, var(--accent-soft) 0%, var(--surface) 56%);
-    }
-
+    .panel.agora,
     .panel.proxima {
       appearance: none;
       width: 100%;
@@ -479,8 +496,42 @@
       cursor: pointer;
     }
 
+    .panel.agora {
+      background: linear-gradient(180deg, var(--accent-soft) 0%, var(--surface) 56%);
+    }
+
+    .panel.agora:active,
     .panel.proxima:active {
       transform: scale(0.985);
+    }
+
+    .panel.agora.is-fail {
+      background: linear-gradient(180deg, #fde8ea 0%, var(--surface) 56%);
+      border-color: rgba(196, 30, 58, 0.28);
+      box-shadow: 0 0 0 2px rgba(196, 30, 58, 0.16);
+    }
+
+    .panel.agora.is-fail .go-dot {
+      background: var(--fail);
+      box-shadow: 0 0 0 4px rgba(196, 30, 58, 0.16);
+    }
+
+    .fail-pill {
+      display: none;
+      margin-left: 6px;
+      padding: 1px 7px;
+      border-radius: 6px;
+      background: #fde8ea;
+      color: var(--fail);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      text-transform: none;
+    }
+
+    .panel.agora.is-fail .fail-pill,
+    .fail-pill.is-on {
+      display: inline-block;
     }
 
     .kicker {
@@ -718,6 +769,40 @@
       background: var(--paper);
     }
 
+    .run-fails {
+      list-style: none;
+      margin: 4px 0 0;
+      padding: 10px 0 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .run-fails li {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .run-fails li:last-child {
+      border-bottom: none;
+    }
+
+    .run-fails strong {
+      display: block;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .run-fails span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .sheet-meters .dial.is-go .fill { stroke: var(--go); }
+    .sheet-meters .dial.is-go .glyph { color: var(--go); }
+    .sheet-meters .dial.is-fail .fill { stroke: var(--fail); }
+    .sheet-meters .dial.is-fail .glyph { color: var(--fail); }
+    .sheet-meters .dial.is-wait .fill { stroke: var(--faint); }
+    .sheet-meters .dial.is-wait .glyph { color: var(--faint); }
+
     .toast {
       position: fixed;
       left: 50%;
@@ -852,13 +937,16 @@
 
     <section id="activeView" hidden aria-label="Agora e próxima">
       <div class="split">
-        <a class="panel agora" href="../rich/01.html">
-          <p class="kicker"><span class="go-dot" aria-hidden="true"></span> Agora</p>
+        <button type="button" class="panel agora" id="agoraPanel" aria-haspopup="dialog" aria-controls="runSheet">
+          <p class="kicker">
+            <span class="go-dot" aria-hidden="true"></span> Agora
+            <span class="fail-pill" id="agoraFailPill">não achei</span>
+          </p>
           <h2>Onda #1042</h2>
-          <p class="hint">em andamento</p>
+          <p class="hint" id="agoraHint">em andamento</p>
           <p class="big">10 <span>de 18</span></p>
-          <p class="meta">parada <strong>C-08</strong><br />depois F-10</p>
-        </a>
+          <p class="meta" id="agoraMeta">parada <strong>C-08</strong><br />depois F-10</p>
+        </button>
         <button type="button" class="panel proxima" id="proximaPanel" aria-haspopup="dialog" aria-controls="factorySheet">
           <p class="kicker"><span class="pulse-dot" aria-hidden="true"></span> Próxima</p>
           <h2 id="proximaTitle">Auto-onda</h2>
@@ -882,6 +970,7 @@
     <span>Mock</span>
     <button type="button" id="modeIdle" aria-pressed="true">Idle</button>
     <button type="button" id="modeActive" aria-pressed="false">Ativa</button>
+    <button type="button" id="modeFail" aria-pressed="false">Falha</button>
   </div>
 
   <div class="scrim" id="scrim" hidden></div>
@@ -894,6 +983,13 @@
       <button type="button" class="btn btn-primary" id="anticipateSheet">Antecipar Pedidos do dia</button>
       <button type="button" class="btn btn-ghost" id="pauseSheet">Pausar automático</button>
     </div>
+  </div>
+  <div class="sheet" id="runSheet" role="dialog" aria-modal="true" aria-labelledby="runTitle" hidden>
+    <div class="grab" aria-hidden="true"></div>
+    <h2 id="runTitle">Onda</h2>
+    <p id="runCopy">Paradas desta onda.</p>
+    <ul class="sheet-meters" id="runMeters"></ul>
+    <ul class="run-fails" id="runFails" hidden></ul>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -940,12 +1036,29 @@
         { id: "elapsed", enabled: true, name: "Tempo", detail: "Desde a última onda", remain: "12", unit: "min", sheetRemain: "12 min", fill: 0.6 }
       ];
 
+      var STATUS_ICONS = {
+        feito:
+          '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">' +
+          '<path d="M4.6 10.4 8.2 14l7.2-8.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>' +
+          "</svg>",
+        "nao-achei":
+          '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">' +
+          '<path d="M6 6l8 8M14 6l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>' +
+          "</svg>",
+        pendente:
+          '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">' +
+          '<circle cx="10" cy="10" r="5.4" stroke="currentColor" stroke-width="1.6"/>' +
+          "</svg>"
+      };
+
       var mode = "idle";
       var paused = false;
+      var failDemo = false;
       var remaining = 73;
       var nextWave = 1045;
       var toastTimer = 0;
       var sheetOpen = false;
+      var openSheetId = "";
 
       var idleWaves = [
         { id: "1042", title: "Onda #1042", sub: "pronta", stat: "14 ped.", live: false },
@@ -958,6 +1071,51 @@
         { id: "1043", title: "Onda #1043", sub: "pronta", stat: "14 ped.", live: false },
         { id: "1044", title: "Onda #1044", sub: "pronta", stat: "9 ped.", live: false }
       ];
+
+      var FINISHED_RUNS = {
+        "1042": {
+          title: "Onda #1042",
+          live: false,
+          done: 18,
+          total: 18,
+          counts: { feito: 17, fail: 1, pendente: 0 },
+          fails: [{ item: "Fronha percal 50×70", place: "C-08", detail: "Não achei na gôndola" }]
+        },
+        "1043": {
+          title: "Onda #1043",
+          live: false,
+          done: 14,
+          total: 14,
+          counts: { feito: 14, fail: 0, pendente: 0 },
+          fails: []
+        },
+        "1044": {
+          title: "Onda #1044",
+          live: false,
+          done: 9,
+          total: 9,
+          counts: { feito: 8, fail: 1, pendente: 0 },
+          fails: [{ item: "Lençol casal 180", place: "A-04", detail: "Não achei na gôndola" }]
+        }
+      };
+
+      var LIVE_OK = {
+        title: "Onda #1042",
+        live: true,
+        done: 10,
+        total: 18,
+        counts: { feito: 10, fail: 0, pendente: 8 },
+        fails: []
+      };
+
+      var LIVE_FAIL = {
+        title: "Onda #1042",
+        live: true,
+        done: 10,
+        total: 18,
+        counts: { feito: 9, fail: 1, pendente: 8 },
+        fails: [{ item: "Fronha percal 50×70", place: "C-08", detail: "Não achei na gôndola" }]
+      };
 
       var liveLabel = document.getElementById("liveLabel");
       var countdownEl = document.getElementById("countdown");
@@ -980,6 +1138,15 @@
       var pauseSheet = document.getElementById("pauseSheet");
       var modeIdleBtn = document.getElementById("modeIdle");
       var modeActiveBtn = document.getElementById("modeActive");
+      var modeFailBtn = document.getElementById("modeFail");
+      var agoraPanel = document.getElementById("agoraPanel");
+      var agoraHint = document.getElementById("agoraHint");
+      var agoraFailPill = document.getElementById("agoraFailPill");
+      var runSheet = document.getElementById("runSheet");
+      var runTitle = document.getElementById("runTitle");
+      var runCopy = document.getElementById("runCopy");
+      var runMeters = document.getElementById("runMeters");
+      var runFails = document.getElementById("runFails");
 
       function pad(n) {
         return n < 10 ? "0" + n : String(n);
@@ -1096,30 +1263,57 @@
         return mode === "active" ? activeWaves : idleWaves;
       }
 
+      function runFor(id) {
+        if (mode === "active" && id === "1042") {
+          return failDemo ? LIVE_FAIL : LIVE_OK;
+        }
+        if (FINISHED_RUNS[id]) return FINISHED_RUNS[id];
+        return {
+          title: "Onda #" + id,
+          live: false,
+          done: 12,
+          total: 12,
+          counts: { feito: 12, fail: 0, pendente: 0 },
+          fails: []
+        };
+      }
+
+      function renderAgora() {
+        agoraPanel.classList.toggle("is-fail", failDemo);
+        agoraFailPill.classList.toggle("is-on", failDemo);
+        agoraHint.textContent = failDemo ? "1 não achei · em andamento" : "em andamento";
+        var live = activeWaves[0];
+        if (live && live.id === "1042") {
+          live.pill = failDemo ? "não achei" : "setup";
+          live.fail = failDemo;
+        }
+      }
+
       function renderWaves() {
         var html = "";
         waves().forEach(function (wave) {
           var share = "";
           if (wave.live) {
             share =
-              '<button type="button" class="share" data-wave="' + wave.title + '" aria-label="Compartilhar ' + wave.title + '">' +
+              '<button type="button" class="share" data-wave="' + wave.title + '" aria-label="Compartilhar no WhatsApp ' + wave.title + '">' +
                 '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">' +
                   '<path d="M8 10.2V2.6M8 2.6 5.2 5.3M8 2.6l2.8 2.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>' +
                   '<path d="M3.2 8.4v4.2A1.2 1.2 0 0 0 4.4 13.8h7.2a1.2 1.2 0 0 0 1.2-1.2V8.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>' +
                 "</svg>" +
               "</button>";
           }
+          var pill = wave.pill
+            ? '<span class="pill' + (wave.fail ? " is-fail" : "") + '">' + wave.pill + "</span>"
+            : "";
           html +=
-            '<li class="wave' + (wave.live ? " is-live" : "") + '">' +
-              '<a class="wave-link" href="' + RICH + '">' +
+            '<li class="wave' + (wave.live ? " is-live" : "") + (wave.fail ? " is-fail" : "") + '">' +
+              '<button type="button" class="wave-link" data-run="' + wave.id + '">' +
                 "<span>" +
-                  '<span class="title">' + wave.title +
-                    (wave.pill ? '<span class="pill">' + wave.pill + "</span>" : "") +
-                  "</span>" +
+                  '<span class="title">' + wave.title + pill + "</span>" +
                   '<span class="sub">' + wave.sub + "</span>" +
                 "</span>" +
                 '<span class="stat">' + wave.stat + "</span>" +
-              "</a>" +
+              "</button>" +
               share +
             "</li>";
         });
@@ -1152,16 +1346,19 @@
         renderSheet();
       }
 
-      function setMode(next) {
-        mode = next === "active" ? "active" : "idle";
+      function setMode(next, withFail) {
+        failDemo = Boolean(withFail);
+        mode = next === "active" || failDemo ? "active" : "idle";
         document.body.classList.toggle("is-active", mode === "active");
         idleView.hidden = mode !== "idle";
         activeView.hidden = mode !== "active";
-        modeIdleBtn.setAttribute("aria-pressed", mode === "idle" ? "true" : "false");
-        modeActiveBtn.setAttribute("aria-pressed", mode === "active" ? "true" : "false");
+        modeIdleBtn.setAttribute("aria-pressed", mode === "idle" && !failDemo ? "true" : "false");
+        modeActiveBtn.setAttribute("aria-pressed", mode === "active" && !failDemo ? "true" : "false");
+        modeFailBtn.setAttribute("aria-pressed", failDemo ? "true" : "false");
         if (mode === "idle") {
           renderIdlePlates();
         } else {
+          renderAgora();
           renderActiveGlances();
         }
         renderWaves();
@@ -1177,24 +1374,112 @@
         }, 2200);
       }
 
-      function openSheet() {
-        sheet.hidden = false;
+      function statusDial(kind, fill) {
+        var offset = (100 * (1 - fill)).toFixed(2);
+        var tone = kind === "feito" ? "is-go" : kind === "nao-achei" ? "is-fail" : "is-wait";
+        return (
+          '<span class="dial ' + tone + '">' +
+            '<svg class="ring" viewBox="0 0 34 34" aria-hidden="true">' +
+              '<circle class="track" cx="17" cy="17" r="14"></circle>' +
+              '<circle class="fill" cx="17" cy="17" r="14" pathLength="100" style="stroke-dashoffset:' + offset + '"></circle>' +
+            "</svg>" +
+            '<span class="glyph">' + STATUS_ICONS[kind] + "</span>" +
+          "</span>"
+        );
+      }
+
+      function renderRunSheet(run) {
+        runTitle.textContent = run.title;
+        if (run.live) {
+          runCopy.textContent = run.counts.fail
+            ? run.counts.fail + "/" + run.total + " falhadas · " + run.done + " de " + run.total + " feitas até agora."
+            : run.done + " de " + run.total + " · em andamento.";
+        } else {
+          runCopy.textContent = run.counts.fail
+            ? "Onda pronta. " + run.counts.fail + " parada sem item."
+            : "Onda pronta. Todas as paradas conferidas.";
+        }
+        var total = Math.max(1, run.total);
+        var rows = [
+          { kind: "feito", label: run.counts.feito + " feito", detail: "Separadas e conferidas", fill: run.counts.feito / total },
+          { kind: "nao-achei", label: run.counts.fail + " não achei", detail: "Item sem estoque na gôndola", fill: run.counts.fail / total },
+          { kind: "pendente", label: run.counts.pendente + " pendente", detail: run.live ? "Ainda na rota" : "Nada em aberto", fill: run.counts.pendente / total }
+        ];
+        var html = "";
+        rows.forEach(function (row) {
+          html +=
+            "<li>" +
+              '<span class="glance">' + statusDial(row.kind, row.fill) + "</span>" +
+              "<div><strong>" + row.label + "</strong><span>" + row.detail + "</span></div>" +
+            "</li>";
+        });
+        runMeters.innerHTML = html;
+        if (run.fails.length) {
+          runFails.hidden = false;
+          runFails.innerHTML = run.fails.map(function (item) {
+            return "<li><strong>" + item.item + "</strong><span>" + item.place + " · " + item.detail + "</span></li>";
+          }).join("");
+        } else {
+          runFails.hidden = true;
+          runFails.innerHTML = "";
+        }
+      }
+
+      function showScrim() {
         scrim.hidden = false;
+        requestAnimationFrame(function () {
+          scrim.classList.add("is-on");
+        });
+      }
+
+      function openSheet() {
+        closeRunOnly();
+        sheet.hidden = false;
+        showScrim();
         renderSheet();
         requestAnimationFrame(function () {
           sheet.classList.add("is-on");
-          scrim.classList.add("is-on");
           sheetOpen = true;
+          openSheetId = "factory";
         });
+      }
+
+      function openRunSheet(id) {
+        closeFactoryOnly();
+        renderRunSheet(runFor(id));
+        runSheet.hidden = false;
+        showScrim();
+        requestAnimationFrame(function () {
+          runSheet.classList.add("is-on");
+          sheetOpen = true;
+          openSheetId = "run";
+        });
+      }
+
+      function closeFactoryOnly() {
+        sheet.classList.remove("is-on");
+        setTimeout(function () {
+          if (openSheetId !== "factory") sheet.hidden = true;
+        }, 280);
+      }
+
+      function closeRunOnly() {
+        runSheet.classList.remove("is-on");
+        setTimeout(function () {
+          if (openSheetId !== "run") runSheet.hidden = true;
+        }, 280);
       }
 
       function closeSheet() {
         sheet.classList.remove("is-on");
+        runSheet.classList.remove("is-on");
         scrim.classList.remove("is-on");
         sheetOpen = false;
+        openSheetId = "";
         setTimeout(function () {
           if (!sheetOpen) {
             sheet.hidden = true;
+            runSheet.hidden = true;
             scrim.hidden = true;
           }
         }, 280);
@@ -1253,11 +1538,9 @@
       }
 
       async function shareWave(name) {
-        var payload = {
-          title: "Pisoly · " + name,
-          text: "Separar " + name,
-          url: new URL(RICH, window.location.href).href
-        };
+        var url = new URL(RICH, window.location.href).href;
+        var text = "Pisoly · " + name + " — " + url;
+        var payload = { title: "Pisoly · " + name, text: text, url: url };
         if (navigator.share) {
           try {
             await navigator.share(payload);
@@ -1266,17 +1549,15 @@
             if (err && err.name === "AbortError") return;
           }
         }
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          await navigator.clipboard.writeText(payload.url);
-          toast("Link copiado");
-          return;
-        }
-        toast("Compartilhe " + payload.url);
+        window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank", "noopener");
       }
 
       document.getElementById("orbOpen").addEventListener("click", openSheet);
       idlePlates.addEventListener("click", openSheet);
       document.getElementById("proximaPanel").addEventListener("click", openSheet);
+      agoraPanel.addEventListener("click", function () {
+        openRunSheet("1042");
+      });
       document.getElementById("anticipateIdle").addEventListener("click", anticipate);
       document.getElementById("anticipateSheet").addEventListener("click", anticipate);
       scrim.addEventListener("click", closeSheet);
@@ -1297,11 +1578,16 @@
       });
 
       waveList.addEventListener("click", function (event) {
-        var btn = event.target.closest(".share");
-        if (!btn) return;
-        event.preventDefault();
-        event.stopPropagation();
-        shareWave(btn.getAttribute("data-wave"));
+        var shareBtn = event.target.closest(".share");
+        if (shareBtn) {
+          event.preventDefault();
+          event.stopPropagation();
+          shareWave(shareBtn.getAttribute("data-wave"));
+          return;
+        }
+        var row = event.target.closest("[data-run]");
+        if (!row) return;
+        openRunSheet(row.getAttribute("data-run"));
       });
 
       modeIdleBtn.addEventListener("click", function () {
@@ -1310,6 +1596,10 @@
 
       modeActiveBtn.addEventListener("click", function () {
         setMode("active");
+      });
+
+      modeFailBtn.addEventListener("click", function () {
+        setMode("active", true);
       });
 
       document.addEventListener("keydown", function (event) {
@@ -1326,9 +1616,13 @@
         renderIdlePlates();
       }
 
-      if (location.hash === "#ativa") setMode("active");
+      if (location.hash === "#falha") setMode("active", true);
+      else if (location.hash === "#ativa") setMode("active");
       else setMode("idle");
       if (location.hash === "#factory") openSheet();
+      if (location.hash.indexOf("#run=") === 0) {
+        openRunSheet(location.hash.slice(5) || "1042");
+      }
 
       setInterval(tick, 1000);
     })();
