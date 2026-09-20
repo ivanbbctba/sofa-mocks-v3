@@ -33,11 +33,15 @@
 
     html {
       -webkit-text-size-adjust: 100%;
+      height: 100%;
+      overflow: hidden;
     }
 
     body {
       margin: 0;
-      min-height: 100dvh;
+      height: 100dvh;
+      overflow: hidden;
+      overscroll-behavior: none;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
       font-size: 15px;
       line-height: 1.4;
@@ -56,11 +60,16 @@
 
     .app {
       width: min(100%, 390px);
-      min-height: 100dvh;
+      height: 100dvh;
       margin: 0 auto;
       padding: calc(16px + var(--safe-t)) 20px calc(72px + var(--safe-b));
       display: flex;
       flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chrome {
+      flex: 0 0 auto;
     }
 
     .top {
@@ -330,11 +339,16 @@
     }
 
     .waves {
-      margin-top: 26px;
-      flex: 1;
+      margin-top: 18px;
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
 
     .waves h2 {
+      flex: 0 0 auto;
       margin: 0 0 8px;
       font-size: 12px;
       font-weight: 600;
@@ -346,14 +360,19 @@
     .wave-list {
       list-style: none;
       margin: 0;
-      padding: 0;
+      padding: 0 0 8px;
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
     }
 
     body.is-active .wave-list {
       background: var(--surface);
       border: 1px solid var(--line);
       border-radius: var(--radius);
-      overflow: hidden;
     }
 
     .wave {
@@ -906,6 +925,7 @@
 </head>
 <body>
   <div class="app">
+    <div class="chrome">
     <header class="top">
       <h1>Mesa</h1>
       <p class="live"><span class="live-dot" aria-hidden="true"></span><span id="liveLabel">Fábrica ligada</span></p>
@@ -959,6 +979,7 @@
         <button type="button" class="btn btn-ghost" id="pauseActive">Pausar</button>
       </div>
     </section>
+    </div>
 
     <section class="waves" aria-label="Ondas">
       <h2>Ondas</h2>
@@ -1063,13 +1084,19 @@
       var idleWaves = [
         { id: "1042", title: "Onda #1042", sub: "pronta", stat: "14 ped.", live: false },
         { id: "1043", title: "Onda #1043", sub: "pronta", stat: "14 ped.", live: false },
-        { id: "1044", title: "Onda #1044", sub: "pronta", stat: "9 ped.", live: false }
+        { id: "1044", title: "Onda #1044", sub: "pronta", stat: "9 ped.", live: false },
+        { id: "1041", title: "Onda #1041", sub: "pronta", stat: "11 ped.", live: false },
+        { id: "1040", title: "Onda #1040", sub: "pronta", stat: "16 ped.", live: false },
+        { id: "1039", title: "Onda #1039", sub: "pronta", stat: "7 ped.", live: false }
       ];
 
       var activeWaves = [
         { id: "1042", title: "Onda #1042", sub: "em andamento · C-08", stat: "10/18", live: true, pill: "setup" },
         { id: "1043", title: "Onda #1043", sub: "pronta", stat: "14 ped.", live: false },
-        { id: "1044", title: "Onda #1044", sub: "pronta", stat: "9 ped.", live: false }
+        { id: "1044", title: "Onda #1044", sub: "pronta", stat: "9 ped.", live: false },
+        { id: "1041", title: "Onda #1041", sub: "pronta", stat: "11 ped.", live: false },
+        { id: "1040", title: "Onda #1040", sub: "pronta", stat: "16 ped.", live: false },
+        { id: "1039", title: "Onda #1039", sub: "pronta", stat: "7 ped.", live: false }
       ];
 
       var FINISHED_RUNS = {
