@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>Onda 14</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --paper: #f6f9fc;
+      --ink: #0a2540;
+      --mute: #6b7c93;
+      --faint: #9aa8bc;
+      --line: rgba(10, 37, 64, 0.08);
+      --accent: #635bff;
+      --accent-deep: #4b44d6;
+      --ok: #1d9e75;
+      --miss: #c45c26;
+      --safe-t: env(safe-area-inset-top, 0px);
+      --safe-b: env(safe-area-inset-bottom, 0px);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: #e6ecf3;
+      color: var(--ink);
+      font: 16px/1.35 Inter, "SF Pro Text", system-ui, sans-serif;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      min-height: 100dvh;
+    }
+
+    .phone {
+      position: relative;
+      width: 100%;
+      max-width: 390px;
+      height: 100dvh;
+      max-height: 844px;
+      margin: 0 auto;
+      overflow: hidden;
+      background: var(--paper);
+    }
+
+    @media (min-height: 900px) {
+      body {
+        display: grid;
+        place-items: center;
+      }
+      .phone {
+        height: 844px;
+        border-radius: 28px;
+        box-shadow: 0 24px 64px rgba(10, 37, 64, 0.12);
+      }
+    }
+
+    .map {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+    }
+
+    .map svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .aisle {
+      fill: rgba(148, 163, 184, 0.16);
+    }
+
+    .path-rest {
+      fill: none;
+      stroke: rgba(99, 91, 255, 0.12);
+      stroke-width: 10;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .hop {
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .hop-done {
+      stroke-width: 9;
+      opacity: 0.88;
+      stroke-dasharray: 7 11;
+      animation: ants 1.8s linear infinite;
+    }
+
+    .hop-now {
+      stroke-width: 12;
+      opacity: 1;
+      stroke-dasharray: 6 10;
+      animation: ants 1.15s linear infinite;
+      filter: drop-shadow(0 0 10px color-mix(in srgb, var(--hop) 35%, transparent));
+    }
+
+    .hop-next {
+      stroke-width: 8;
+      opacity: 0.34;
+      stroke-dasharray: 5 12;
+      animation: ants 2.4s linear infinite;
+    }
+
+    .hop-miss {
+      stroke: var(--miss);
+      stroke-width: 8;
+      opacity: 0.7;
+      stroke-dasharray: 3 9;
+      animation: ants 1.4s linear infinite;
+    }
+
+    .node-future {
+      fill: #fff;
+      stroke: rgba(10, 37, 64, 0.12);
+      stroke-width: 2;
+    }
+
+    .node-done { fill: var(--ok); }
+    .node-miss { fill: var(--miss); }
+
+    .node-here {
+      fill: #fff;
+      stroke: var(--ok);
+      stroke-width: 4;
+    }
+
+    .node-halo {
+      fill: none;
+      stroke: var(--ok);
+      stroke-width: 2;
+      opacity: 0.28;
+    }
+
+    .veil {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      background:
+        radial-gradient(120% 70% at 50% 0%, rgba(246, 249, 252, 0.55), transparent 58%),
+        linear-gradient(180deg, rgba(246, 249, 252, 0.2) 0%, transparent 22%, transparent 58%, rgba(246, 249, 252, 0.92) 86%, var(--paper) 100%);
+    }
+
+    .chrome {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .chrome button,
+    .chrome a {
+      pointer-events: auto;
+    }
+
+    .count {
+      position: absolute;
+      top: calc(14px + var(--safe-t));
+      right: 18px;
+      margin: 0;
+      color: var(--faint);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .stage {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 0 22px calc(22px + var(--safe-b));
+    }
+
+    .claim,
+    .done,
+    .run {
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
+      transition: opacity 0.45s ease, transform 0.45s ease;
+    }
+
+    .claim.is-on,
+    .done.is-on,
+    .run.is-on {
+      opacity: 1;
+      transform: none;
+      pointer-events: auto;
+    }
+
+    .claim,
+    .done {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 0 28px calc(36px + var(--safe-b));
+    }
+
+    .kicker {
+      margin: 0 0 8px;
+      color: var(--mute);
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+    }
+
+    .hero {
+      margin: 0;
+      font-size: 40px;
+      font-weight: 600;
+      letter-spacing: -0.05em;
+      line-height: 1.05;
+    }
+
+    .sub {
+      margin: 10px 0 0;
+      color: var(--mute);
+      font-size: 15px;
+    }
+
+    .go,
+    .again {
+      appearance: none;
+      border: 0;
+      cursor: pointer;
+      font: inherit;
+    }
+
+    .go {
+      margin-top: 28px;
+      width: 100%;
+      height: 52px;
+      border-radius: 999px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .go:active { transform: scale(0.985); background: var(--accent-deep); }
+
+    .again {
+      margin-top: 22px;
+      align-self: flex-start;
+      padding: 0;
+      background: none;
+      color: var(--accent);
+      font-size: 15px;
+      font-weight: 500;
+    }
+
+    .speek {
+      display: grid;
+      gap: 2px;
+      margin: 0 0 22px;
+      padding: 0;
+      border: 0;
+      background: none;
+      color: inherit;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+      width: min(100%, 16rem);
+    }
+
+    .speek:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 6px;
+      border-radius: 8px;
+    }
+
+    .qty {
+      margin: 0;
+      font-size: 72px;
+      font-weight: 600;
+      letter-spacing: -0.07em;
+      line-height: 0.86;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .slot {
+      margin: 10px 0 0;
+      font-size: 20px;
+      font-weight: 500;
+      letter-spacing: -0.03em;
+    }
+
+    .sku {
+      margin: 4px 0 0;
+      color: var(--mute);
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+    }
+
+    .pegos {
+      margin: 14px 0 0;
+      color: var(--faint);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .speek.is-pegos .pegos { color: var(--ok); }
+    .speek.is-miss .pegos { color: var(--miss); }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .skip {
+      padding: 10px 0;
+      border: 0;
+      background: none;
+      color: var(--mute);
+      font: inherit;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .feito {
+      width: 88px;
+      height: 44px;
+      border: 0;
+      border-radius: 999px;
+      background: var(--ink);
+      color: #fff;
+      font: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      cursor: pointer;
+    }
+
+    .feito:active,
+    .skip:active { transform: scale(0.97); }
+
+    .phone.is-claim .veil {
+      background:
+        radial-gradient(90% 55% at 50% 28%, rgba(246, 249, 252, 0.05), transparent 60%),
+        linear-gradient(180deg, transparent 40%, rgba(246, 249, 252, 0.72) 68%, var(--paper) 86%);
+    }
+
+    .phone.is-done .veil {
+      background:
+        linear-gradient(180deg, rgba(246, 249, 252, 0.15) 0%, rgba(246, 249, 252, 0.55) 46%, var(--paper) 78%);
+    }
+
+    @keyframes ants {
+      to { stroke-dashoffset: -68; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .claim, .done, .run, .hop-done, .hop-now, .hop-next, .hop-miss {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="phone is-claim" id="app">
+    <div class="map" id="map" role="img" aria-label="Caminho da onda"></div>
+    <div class="veil" aria-hidden="true"></div>
+    <div class="chrome">
+      <p class="count" id="count" hidden>0 de 18</p>
+
+      <section class="claim is-on" id="claim">
+        <p class="kicker">Onda 14</p>
+        <h1 class="hero">18 paradas</h1>
+        <p class="sub">8 pedidos · 166 un.</p>
+        <button type="button" class="go" id="iniciar">Iniciar</button>
+      </section>
+
+      <section class="run" id="run" aria-live="polite">
+        <button type="button" class="speek" id="speek" aria-pressed="false">
+          <p class="qty" id="qty">10</p>
+          <p class="slot" id="slot">A-01</p>
+          <p class="sku" id="sku">TOALHA-220</p>
+          <p class="pegos" id="pegos">Todos pegos</p>
+        </button>
+        <div class="actions">
+          <button type="button" class="skip" id="skip">Não achei</button>
+          <button type="button" class="feito" id="feito">Feito</button>
+        </div>
+      </section>
+
+      <section class="done" id="done">
+        <p class="kicker">Onda 14</p>
+        <h2 class="hero">Todos pegos</h2>
+        <p class="sub" id="done-sub">18 paradas</p>
+        <button type="button" class="again" id="again">Começar de novo</button>
+      </section>
+    </div>
+  </main>
+  <script>
+    (function () {
+      const NS = "http://www.w3.org/2000/svg";
+      const AISLE = { A: 36, B: 82, C: 128, D: 174, E: 220, F: 266, G: 312, H: 358 };
+      const Y0 = 72;
+      const Y1 = 618;
+      const TOP = 36;
+      const BOT = 656;
+      const FULL_BOX = [0, 0, 390, 844];
+      const COLORS = [
+        "#635bff", "#00d4ff", "#7a73ff", "#0a2540", "#3ecf8e",
+        "#80e9ff", "#f6a4ec", "#ffc43d", "#00d4aa", "#4b44d6",
+        "#2bb0ed", "#0a2540", "#635bff", "#7c5cff", "#1d9e75",
+        "#00b8d9", "#8b7cff", "#0a2540"
+      ];
+
+      const STOPS = [
+        { code: "A-01", qty: 10, sku: "TOALHA-220" },
+        { code: "C-02", qty: 8, sku: "JOGO-LENCOL" },
+        { code: "E-01", qty: 10, sku: "FRONHA-PAR" },
+        { code: "E-10", qty: 10, sku: "COBERTOR-CAS" },
+        { code: "F-02", qty: 42, sku: "KIT-HIGIENE" },
+        { code: "H-09", qty: 3, sku: "SABONETE" },
+        { code: "H-03", qty: 12, sku: "SHAMPOO-400" },
+        { code: "B-09", qty: 5, sku: "ESC-DENTES" },
+        { code: "G-01", qty: 7, sku: "CREME-HID" },
+        { code: "G-08", qty: 4, sku: "ALGODAO" },
+        { code: "C-08", qty: 6, sku: "PILLOW-TOP" },
+        { code: "F-10", qty: 9, sku: "TAPETE-BAN" },
+        { code: "D-04", qty: 2, sku: "CORTINA-180" },
+        { code: "D-09", qty: 15, sku: "TOALHA-MAO" },
+        { code: "A-08", qty: 1, sku: "ROUPAO-M" },
+        { code: "B-02", qty: 11, sku: "SACO-LIXO" },
+        { code: "H-01", qty: 8, sku: "PAPEL-HIG" },
+        { code: "G-05", qty: 3, sku: "AMACIANTE" }
+      ];
+
+      const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      function slotY(n) {
+        return Y0 + ((n - 1) * (Y1 - Y0)) / 9;
+      }
+
+      function parseCode(code) {
+        return { aisle: code[0], n: Number(code.slice(2)) };
+      }
+
+      function xy(code) {
+        const parsed = parseCode(code);
+        return { x: AISLE[parsed.aisle], y: slotY(parsed.n), aisle: parsed.aisle, n: parsed.n };
+      }
+
+      function hop(a, b) {
+        if (a.aisle === b.aisle) return [a, { x: a.x, y: b.y }];
+        const mid = (Y0 + Y1) / 2;
+        const sameTop = a.y <= mid && b.y <= mid;
+        const sameBot = a.y >= mid && b.y >= mid;
+        let end;
+        if (sameTop) end = Math.min(a.y, b.y) - 36;
+        else if (sameBot) end = Math.max(a.y, b.y) + 36;
+        else {
+          const viaTop = Math.abs(a.y - TOP) + Math.abs(b.y - TOP);
+          const viaBot = Math.abs(a.y - BOT) + Math.abs(b.y - BOT);
+          end = viaTop <= viaBot ? TOP : BOT;
+        }
+        end = Math.max(TOP, Math.min(BOT, end));
+        return [a, { x: a.x, y: end }, { x: b.x, y: end }, { x: b.x, y: b.y }];
+      }
+
+      function samePoint(p, q) {
+        return Math.abs(p.x - q.x) < 0.4 && Math.abs(p.y - q.y) < 0.4;
+      }
+
+      function joinHops(hops) {
+        const out = [];
+        hops.forEach((seg) => {
+          seg.forEach((p, i) => {
+            if (i === 0 && out.length && samePoint(out[out.length - 1], p)) return;
+            out.push(p);
+          });
+        });
+        return out;
+      }
+
+      function pts(list) {
+        return list.map((p) => p.x.toFixed(1) + " " + p.y.toFixed(1)).join(" ");
+      }
+
+      function el(name, attrs) {
+        const node = document.createElementNS(NS, name);
+        Object.keys(attrs).forEach((key) => node.setAttribute(key, String(attrs[key])));
+        return node;
+      }
+
+      function ease(t) {
+        return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      }
+
+      const points = STOPS.map((stop) => xy(stop.code));
+      const hops = points.slice(1).map((pt, i) => hop(points[i], pt));
+      const fullPath = joinHops(hops);
+
+      const app = document.getElementById("app");
+      const map = document.getElementById("map");
+      const countEl = document.getElementById("count");
+      const claimEl = document.getElementById("claim");
+      const runEl = document.getElementById("run");
+      const doneEl = document.getElementById("done");
+      const doneSub = document.getElementById("done-sub");
+      const speekEl = document.getElementById("speek");
+      const qtyEl = document.getElementById("qty");
+      const slotEl = document.getElementById("slot");
+      const skuEl = document.getElementById("sku");
+      const pegosEl = document.getElementById("pegos");
+      const feitoEl = document.getElementById("feito");
+      const skipEl = document.getElementById("skip");
+
+      let mode = "claim";
+      let here = 0;
+      let confirmed = false;
+      const status = STOPS.map(() => "pending");
+      let box = FULL_BOX.slice();
+      let svgRoot = null;
+      let anim = 0;
+
+      function show(which) {
+        mode = which;
+        app.classList.toggle("is-claim", which === "claim");
+        app.classList.toggle("is-done", which === "done");
+        claimEl.classList.toggle("is-on", which === "claim");
+        runEl.classList.toggle("is-on", which === "run");
+        doneEl.classList.toggle("is-on", which === "done");
+        countEl.hidden = which === "claim";
+      }
+
+      function frameFor(index) {
+        if (index >= STOPS.length) {
+          return [0, 0, 390, 844];
+        }
+        const now = points[index];
+        const next = points[Math.min(index + 1, points.length - 1)];
+        const xs = [now.x, next.x];
+        const ys = [now.y, next.y];
+        if (index > 0) {
+          hops[index - 1].forEach((p) => {
+            xs.push(p.x);
+            ys.push(p.y);
+          });
+        }
+        if (index < hops.length) {
+          hops[index].forEach((p) => {
+            xs.push(p.x);
+            ys.push(p.y);
+          });
+        }
+        let minX = Math.min.apply(null, xs) - 54;
+        let maxX = Math.max.apply(null, xs) + 54;
+        let minY = Math.min.apply(null, ys) - 70;
+        let maxY = Math.max.apply(null, ys) + 90;
+        const aspect = 390 / 844;
+        let w = Math.max(168, maxX - minX);
+        let h = Math.max(280, maxY - minY);
+        if (w / h > aspect) h = w / aspect;
+        else w = h * aspect;
+        const cx = (minX + maxX) / 2;
+        const cy = (minY + maxY) / 2 + 36;
+        return [cx - w / 2, cy - h / 2, w, h];
+      }
+
+      function setBox(next, ms) {
+        const from = box.slice();
+        const dur = reduce ? 0 : ms;
+        if (!svgRoot || dur <= 0) {
+          box = next.slice();
+          if (svgRoot) svgRoot.setAttribute("viewBox", box.join(" "));
+          return;
+        }
+        const start = performance.now();
+        const token = ++anim;
+        function tick(now) {
+          if (token !== anim) return;
+          const t = Math.min(1, (now - start) / dur);
+          const e = ease(t);
+          box = from.map((v, i) => v + (next[i] - v) * e);
+          svgRoot.setAttribute("viewBox", box.map((n) => n.toFixed(2)).join(" "));
+          if (t < 1) requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+      }
+
+      function paintMap() {
+        map.replaceChildren();
+        const svg = el("svg", {
+          viewBox: box.map((n) => n.toFixed(2)).join(" "),
+          preserveAspectRatio: "xMidYMid slice",
+          "aria-hidden": "true"
+        });
+        svgRoot = svg;
+
+        Object.keys(AISLE).forEach((letter) => {
+          const x = AISLE[letter];
+          svg.appendChild(el("rect", {
+            class: "aisle",
+            x: x - 11,
+            y: 18,
+            width: 22,
+            height: 660,
+            rx: 11
+          }));
+        });
+
+        if (fullPath.length > 1) {
+          svg.appendChild(el("polyline", { class: "path-rest", points: pts(fullPath) }));
+        }
+
+        hops.forEach((seg, i) => {
+          const color = COLORS[i % COLORS.length];
+          const missedHop = status[i] === "missed" || status[i + 1] === "missed";
+          let cls = "hop hop-next";
+          if (mode === "done" || i < here) {
+            cls = missedHop ? "hop hop-miss" : "hop hop-done";
+          } else if (i === here) {
+            cls = "hop hop-now";
+          }
+          const node = el("polyline", {
+            class: cls,
+            points: pts(seg),
+            stroke: color
+          });
+          node.style.setProperty("--hop", color);
+          svg.appendChild(node);
+        });
+
+        points.forEach((p, i) => {
+          if (mode === "run" && i === here) {
+            svg.appendChild(el("circle", { class: "node-halo", cx: p.x, cy: p.y, r: 16 }));
+            svg.appendChild(el("circle", { class: "node-here", cx: p.x, cy: p.y, r: 8 }));
+            return;
+          }
+          if (status[i] === "picked") {
+            svg.appendChild(el("circle", { class: "node-done", cx: p.x, cy: p.y, r: 5 }));
+            return;
+          }
+          if (status[i] === "missed") {
+            svg.appendChild(el("circle", { class: "node-miss", cx: p.x, cy: p.y, r: 5 }));
+            return;
+          }
+          svg.appendChild(el("circle", { class: "node-future", cx: p.x, cy: p.y, r: 4.5 }));
+        });
+
+        map.appendChild(svg);
+      }
+
+      function paintHud() {
+        const picked = status.filter((s) => s === "picked").length;
+        const missed = status.filter((s) => s === "missed").length;
+        const doneCount = picked + missed;
+        countEl.textContent = doneCount + " de " + STOPS.length;
+        if (mode === "done") {
+          const missCopy = missed ? " · " + missed + " sem estoque" : "";
+          doneSub.textContent = picked + " pegos" + missCopy;
+          return;
+        }
+        if (here >= STOPS.length) return;
+        const stop = STOPS[here];
+        qtyEl.textContent = String(stop.qty);
+        slotEl.textContent = stop.code;
+        skuEl.textContent = stop.sku;
+        confirmed = status[here] === "picked";
+        speekEl.classList.toggle("is-pegos", confirmed);
+        speekEl.classList.toggle("is-miss", false);
+        speekEl.setAttribute("aria-pressed", confirmed ? "true" : "false");
+        pegosEl.textContent = confirmed ? "Todos pegos" : "Todos pegos";
+      }
+
+      function goRun(index, zoomMs) {
+        here = Math.max(0, Math.min(index, STOPS.length));
+        confirmed = false;
+        if (here >= STOPS.length) {
+          finish();
+          return;
+        }
+        show("run");
+        paintHud();
+        paintMap();
+        setBox(frameFor(here), zoomMs);
+      }
+
+      function mark(kind) {
+        if (mode !== "run" || here >= STOPS.length) return;
+        status[here] = kind;
+        confirmed = kind === "picked";
+        paintHud();
+        paintMap();
+      }
+
+      function advance(kind) {
+        if (mode !== "run" || here >= STOPS.length) return;
+        status[here] = kind;
+        const next = here + 1;
+        if (next >= STOPS.length) {
+          finish();
+          return;
+        }
+        here = next;
+        confirmed = false;
+        paintHud();
+        paintMap();
+        setBox(frameFor(here), 780);
+      }
+
+      function finish() {
+        here = STOPS.length;
+        show("done");
+        paintHud();
+        paintMap();
+        setBox(FULL_BOX, 900);
+      }
+
+      function reset() {
+        here = 0;
+        confirmed = false;
+        for (let i = 0; i < status.length; i += 1) status[i] = "pending";
+        show("claim");
+        paintHud();
+        paintMap();
+        setBox(FULL_BOX, 700);
+      }
+
+      function start() {
+        goRun(0, 1100);
+      }
+
+      document.getElementById("iniciar").addEventListener("click", start);
+      document.getElementById("again").addEventListener("click", reset);
+      speekEl.addEventListener("click", function () {
+        if (mode !== "run") return;
+        mark("picked");
+      });
+      feitoEl.addEventListener("click", function () {
+        advance("picked");
+      });
+      skipEl.addEventListener("click", function () {
+        advance("missed");
+      });
+
+      const params = new URLSearchParams(window.location.search);
+      const at = parseInt(params.get("at") || "", 10);
+      paintMap();
+      if (!isNaN(at) && at >= 0) {
+        for (let i = 0; i < Math.min(at, STOPS.length); i += 1) status[i] = "picked";
+        if (at >= STOPS.length) finish();
+        else goRun(at, 0);
+      }
+    })();
+  </script>
+</body>
+</html>
