@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Onda #1042 — caminho</title>
+  <style>
+    :root {
+      --ink: #111827;
+      --muted: #6b7a8d;
+      --paper: #d5e3ee;
+      --accent: #635bff;
+      --here: #1aa36a;
+      --here-ring: #2bb673;
+      --safe-b: env(safe-area-inset-bottom, 0px);
+      --safe-t: env(safe-area-inset-top, 0px);
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: var(--paper);
+      color: var(--ink);
+      font: 17px/1.3 "SF Pro Text", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    body {
+      overflow: hidden;
+    }
+    .app {
+      position: relative;
+      height: 100dvh;
+      max-width: 430px;
+      margin: 0 auto;
+      overflow: hidden;
+      background:
+        radial-gradient(140% 80% at 50% 0%, rgba(255, 255, 255, 0.55), transparent 52%),
+        var(--paper);
+    }
+    .floor {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+    }
+    .floor svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    .aisle {
+      fill: url(#aisleFade);
+    }
+    .path-rest {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 0.42;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: 0.22;
+    }
+    .path-done {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 0.62;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: 0.88;
+    }
+    .path-play {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 0.78;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: 1;
+    }
+    .path-play.is-draw {
+      stroke-dasharray: var(--len);
+      stroke-dashoffset: var(--len);
+      animation: draw-leg 0.9s ease-out forwards;
+    }
+    .path-ahead {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 0.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: 0.38;
+      stroke-dasharray: 0.7 0.55;
+    }
+    .node {
+      fill: rgba(17, 24, 39, 0.22);
+      cursor: pointer;
+    }
+    .node.is-done {
+      fill: rgba(99, 91, 255, 0.45);
+    }
+    .node.is-next {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 0.16;
+    }
+    .here-ring {
+      fill: none;
+      stroke: var(--here-ring);
+      stroke-width: 0.2;
+      opacity: 0.95;
+    }
+    .here {
+      fill: var(--here);
+    }
+    .here.is-live {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: pulse-here 2.4s ease-in-out infinite;
+    }
+    .count {
+      position: absolute;
+      top: calc(10px + var(--safe-t));
+      right: 14px;
+      z-index: 4;
+      margin: 0;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+      pointer-events: none;
+    }
+    .back-desk {
+      position: absolute;
+      top: calc(8px + var(--safe-t));
+      left: 12px;
+      z-index: 4;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.28rem;
+      padding: 0.32rem 0.7rem 0.32rem 0.5rem;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.62);
+      color: var(--ink);
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 550;
+      letter-spacing: -0.02em;
+      backdrop-filter: blur(10px);
+    }
+    .hud {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 5;
+      padding: 0 1.15rem calc(1.15rem + var(--safe-b));
+      background: linear-gradient(
+        180deg,
+        rgba(213, 227, 238, 0) 0%,
+        rgba(232, 240, 246, 0.92) 28%,
+        rgba(232, 240, 246, 0.98) 100%
+      );
+    }
+    .scrub {
+      display: grid;
+      grid-template-columns: 36px 1fr 36px;
+      align-items: center;
+      gap: 0.15rem;
+      margin: 0 0 0.85rem;
+    }
+    .scrub-btn {
+      width: 36px;
+      height: 36px;
+      border: 0;
+      border-radius: 50%;
+      background: transparent;
+      color: var(--ink);
+      font-size: 22px;
+      line-height: 1;
+      padding: 0;
+    }
+    .scrub-btn:disabled {
+      opacity: 0.28;
+    }
+    .scrub-track {
+      position: relative;
+      height: 36px;
+    }
+    .scrub-track input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      margin: 0;
+      background: transparent;
+      cursor: pointer;
+    }
+    .scrub-track input[type="range"]::-webkit-slider-runnable-track {
+      height: 4px;
+      border-radius: 999px;
+      background: linear-gradient(
+        90deg,
+        var(--accent) var(--fill, 0%),
+        rgba(99, 91, 255, 0.22) var(--fill, 0%)
+      );
+    }
+    .scrub-track input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      margin-top: -7px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 0 0 3px var(--accent), 0 2px 8px rgba(17, 24, 39, 0.16);
+    }
+    .scrub-track input[type="range"]::-moz-range-track {
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(99, 91, 255, 0.22);
+    }
+    .scrub-track input[type="range"]::-moz-range-progress {
+      height: 4px;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+    .scrub-track input[type="range"]::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border: 0;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 0 0 3px var(--accent);
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.8rem 1rem;
+      align-items: end;
+    }
+    .qty {
+      margin: 0;
+      font-size: 64px;
+      font-weight: 650;
+      letter-spacing: -0.07em;
+      line-height: 0.86;
+      font-variant-numeric: tabular-nums;
+    }
+    .slot {
+      margin: 0.18rem 0 0;
+      font-size: 17px;
+      font-weight: 550;
+      letter-spacing: -0.02em;
+    }
+    .next {
+      margin: 0.08rem 0 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .meta {
+      margin: 0.18rem 0 0;
+      font-size: 12px;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+    .feito {
+      width: 72px;
+      height: 72px;
+      border: 0;
+      border-radius: 50%;
+      background: var(--ink);
+      color: #fff;
+      font: 650 15px/1 "SF Pro Text", system-ui, sans-serif;
+      letter-spacing: -0.03em;
+      align-self: center;
+    }
+    .feito[hidden] { display: none; }
+    @keyframes draw-leg {
+      to { stroke-dashoffset: 0; }
+    }
+    @keyframes pulse-here {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.55; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .path-play.is-draw,
+      .here.is-live {
+        animation: none !important;
+        stroke-dasharray: none !important;
+        stroke-dashoffset: 0 !important;
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <a class="back-desk" href="../desk/02.html">‹ Mesa</a>
+    <p class="count" id="count">4 de 18</p>
+    <div class="floor" id="floor" role="img" aria-label="Caminho desta corrida"></div>
+    <div class="hud">
+      <div class="scrub">
+        <button type="button" class="scrub-btn" id="back" aria-label="Parada anterior">‹</button>
+        <div class="scrub-track">
+          <input
+            id="scrub"
+            type="range"
+            min="0"
+            max="17"
+            step="1"
+            value="4"
+            aria-label="Percorrer a caminhada"
+          />
+        </div>
+        <button type="button" class="scrub-btn" id="fwd" aria-label="Próxima parada">›</button>
+      </div>
+      <div class="row">
+        <div>
+          <p class="qty" id="qty">42</p>
+          <p class="slot" id="slot">F-02</p>
+          <p class="next" id="peek">depois H-09</p>
+          <p class="meta" id="meta">12 pedidos · 3 fechados</p>
+        </div>
+        <button type="button" class="feito" id="feito">Feito</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const AISLES = [2.2, 4.8, 7.4, 10.0, 12.6, 15.2, 17.8, 20.4];
+      const STOPS = [
+        { slot: "A-01", qty: 10, x: 2.2, y: 26.4, sku: "Cabo USB-C", orders: ["1042"] },
+        { slot: "C-02", qty: 3, x: 7.4, y: 24.8, sku: "Capinha 14", orders: ["1042"] },
+        { slot: "C-05", qty: 1, x: 7.4, y: 18.2, sku: "Película", orders: ["1043"] },
+        { slot: "D-04", qty: 8, x: 10.0, y: 20.0, sku: "Meia kit", orders: ["1043", "1045"] },
+        { slot: "F-02", qty: 42, x: 15.2, y: 24.6, sku: "Etiqueta A4", orders: ["1048"] },
+        { slot: "H-09", qty: 7, x: 20.4, y: 8.2, sku: "Toner", orders: ["1048", "1050"] },
+        { slot: "H-04", qty: 2, x: 20.4, y: 18.4, sku: "Grampeador", orders: ["1050"] },
+        { slot: "B-09", qty: 5, x: 4.8, y: 8.0, sku: "Caderno A5", orders: ["1051"] },
+        { slot: "G-01", qty: 2, x: 17.8, y: 26.2, sku: "Caneta kit", orders: ["1051"] },
+        { slot: "G-06", qty: 4, x: 17.8, y: 15.6, sku: "Fita", orders: ["1052"] },
+        { slot: "C-08", qty: 6, x: 7.4, y: 10.2, sku: "Envelope", orders: ["1052", "1054"] },
+        { slot: "F-10", qty: 12, x: 15.2, y: 6.0, sku: "Papel A4", orders: ["1054"] },
+        { slot: "E-09", qty: 3, x: 12.6, y: 8.4, sku: "Clips", orders: ["1055"] },
+        { slot: "D-01", qty: 1, x: 10.0, y: 26.6, sku: "Tesoura", orders: ["1055"] },
+        { slot: "A-07", qty: 2, x: 2.2, y: 12.4, sku: "Pasta L", orders: ["1056"] },
+        { slot: "B-03", qty: 9, x: 4.8, y: 22.0, sku: "Post-it", orders: ["1056", "1058"] },
+        { slot: "C-04", qty: 1, x: 7.4, y: 20.4, sku: "Grampo", orders: ["1058"] },
+        { slot: "H-01", qty: 4, x: 20.4, y: 26.4, sku: "Fita dupla", orders: ["1059"] }
+      ];
+      const PATH = [
+        { x: 2.2, y: 29.2 },
+        { x: 2.2, y: 26.4 },
+        { x: 2.2, y: 18.2 },
+        { x: 7.4, y: 18.2 },
+        { x: 7.4, y: 24.8 },
+        { x: 7.4, y: 20.0 },
+        { x: 10.0, y: 20.0 },
+        { x: 10.0, y: 24.6 },
+        { x: 15.2, y: 24.6 },
+        { x: 15.2, y: 18.4 },
+        { x: 20.4, y: 18.4 },
+        { x: 20.4, y: 8.2 },
+        { x: 20.4, y: 8.0 },
+        { x: 4.8, y: 8.0 },
+        { x: 4.8, y: 15.6 },
+        { x: 17.8, y: 15.6 },
+        { x: 17.8, y: 26.2 },
+        { x: 17.8, y: 10.2 },
+        { x: 7.4, y: 10.2 },
+        { x: 7.4, y: 6.0 },
+        { x: 15.2, y: 6.0 },
+        { x: 15.2, y: 8.4 },
+        { x: 12.6, y: 8.4 },
+        { x: 12.6, y: 26.6 },
+        { x: 10.0, y: 26.6 },
+        { x: 10.0, y: 12.4 },
+        { x: 2.2, y: 12.4 },
+        { x: 2.2, y: 22.0 },
+        { x: 4.8, y: 22.0 },
+        { x: 4.8, y: 20.4 },
+        { x: 7.4, y: 20.4 },
+        { x: 7.4, y: 26.4 },
+        { x: 20.4, y: 26.4 }
+      ];
+      const ALL_ORDERS = ["1042", "1043", "1045", "1048", "1050", "1051", "1052", "1054", "1055", "1056", "1058", "1059"];
+      const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const floor = document.getElementById("floor");
+      const countEl = document.getElementById("count");
+      const qtyEl = document.getElementById("qty");
+      const slotEl = document.getElementById("slot");
+      const peekEl = document.getElementById("peek");
+      const metaEl = document.getElementById("meta");
+      const feitoEl = document.getElementById("feito");
+      const scrubEl = document.getElementById("scrub");
+      const backEl = document.getElementById("back");
+      const fwdEl = document.getElementById("fwd");
+      const NS = "http://www.w3.org/2000/svg";
+      const state = {
+        cursor: 4,
+        done: new Set([0, 1, 2, 3])
+      };
+
+      function el(name, attrs) {
+        const node = document.createElementNS(NS, name);
+        Object.keys(attrs || {}).forEach(function (key) {
+          node.setAttribute(key, String(attrs[key]));
+        });
+        return node;
+      }
+
+      function pts(list) {
+        return list.map(function (p) { return p.x + " " + p.y; }).join(" ");
+      }
+
+      function nearest(stop) {
+        let best = 0;
+        let bestD = Infinity;
+        for (let i = 0; i < PATH.length; i += 1) {
+          const dx = PATH[i].x - stop.x;
+          const dy = PATH[i].y - stop.y;
+          const d = dx * dx + dy * dy;
+          if (d < bestD) {
+            bestD = d;
+            best = i;
+          }
+        }
+        return best;
+      }
+
+      function span(fromIdx, toIdx) {
+        let i0 = nearest(STOPS[fromIdx]);
+        let i1 = nearest(STOPS[toIdx]);
+        if (i0 > i1) {
+          const swap = i0;
+          i0 = i1;
+          i1 = swap;
+        }
+        if (i1 <= i0) return PATH.slice(i0, i0 + 2);
+        return PATH.slice(i0, i1 + 1);
+      }
+
+      function closedOrders() {
+        return ALL_ORDERS.filter(function (id) {
+          return STOPS.every(function (stop, i) {
+            return stop.orders.indexOf(id) === -1 || state.done.has(i);
+          });
+        }).length;
+      }
+
+      function paintHud() {
+        const here = STOPS[state.cursor];
+        const nxt = STOPS[state.cursor + 1];
+        const doneN = state.done.size;
+        const allDone = doneN === STOPS.length;
+        countEl.textContent = doneN + " de " + STOPS.length;
+        if (allDone && state.cursor === STOPS.length - 1) {
+          qtyEl.textContent = "";
+          slotEl.textContent = "Corrida concluída.";
+          peekEl.textContent = "";
+          metaEl.textContent = "12 pedidos · 12 fechados";
+          feitoEl.textContent = "Mesa";
+        } else {
+          qtyEl.textContent = String(here.qty);
+          slotEl.textContent = here.slot;
+          peekEl.textContent = nxt ? "depois " + nxt.slot : "última parada";
+          metaEl.textContent = "12 pedidos · " + closedOrders() + " fechados";
+          feitoEl.textContent = "Feito";
+        }
+        scrubEl.value = String(state.cursor);
+        scrubEl.setAttribute("aria-valuetext", here.slot + ", parada " + (state.cursor + 1) + " de " + STOPS.length);
+        scrubEl.style.setProperty("--fill", (state.cursor / (STOPS.length - 1)) * 100 + "%");
+        backEl.disabled = state.cursor === 0;
+        fwdEl.disabled = state.cursor === STOPS.length - 1;
+      }
+
+      function drawMap(fromIdx, animate) {
+        floor.replaceChildren();
+        const svg = el("svg", {
+          viewBox: "0 0 22.6 33",
+          preserveAspectRatio: "xMidYMid slice",
+          "aria-hidden": "true"
+        });
+        const defs = el("defs", {});
+        const fade = el("linearGradient", { id: "aisleFade", x1: "0", y1: "0", x2: "0", y2: "1" });
+        fade.appendChild(el("stop", { offset: "0%", "stop-color": "#9aabbc", "stop-opacity": "0.42" }));
+        fade.appendChild(el("stop", { offset: "78%", "stop-color": "#9aabbc", "stop-opacity": "0.16" }));
+        fade.appendChild(el("stop", { offset: "100%", "stop-color": "#9aabbc", "stop-opacity": "0" }));
+        defs.appendChild(fade);
+        svg.appendChild(defs);
+        AISLES.forEach(function (x) {
+          svg.appendChild(el("rect", {
+            class: "aisle",
+            x: x - 0.42,
+            y: 3.2,
+            width: 0.84,
+            height: 26.4,
+            rx: 0.42
+          }));
+        });
+        svg.appendChild(el("polyline", { class: "path-rest", points: pts(PATH) }));
+        const ahead = state.cursor < STOPS.length - 1
+          ? PATH.slice(nearest(STOPS[state.cursor]))
+          : [];
+        if (ahead.length > 1) {
+          svg.appendChild(el("polyline", { class: "path-ahead", points: pts(ahead) }));
+        }
+        const doneSeg = span(0, state.cursor);
+        if (doneSeg.length > 1) {
+          svg.appendChild(el("polyline", { class: "path-done", points: pts(doneSeg) }));
+        }
+        const hopFrom = fromIdx == null ? Math.max(0, state.cursor - 1) : fromIdx;
+        const playSeg = span(hopFrom, state.cursor);
+        let playNode = null;
+        if (playSeg.length > 1) {
+          playNode = el("polyline", { class: "path-play", points: pts(playSeg) });
+          svg.appendChild(playNode);
+        }
+        STOPS.forEach(function (stop, i) {
+          if (i === state.cursor) {
+            svg.appendChild(el("circle", {
+              class: "here-ring",
+              cx: stop.x,
+              cy: stop.y,
+              r: 0.78
+            }));
+            const here = el("circle", {
+              class: "here" + (animate && !reduce ? " is-live" : ""),
+              cx: stop.x,
+              cy: stop.y,
+              r: 0.42
+            });
+            svg.appendChild(here);
+            return;
+          }
+          const klass = i === state.cursor + 1
+            ? "node is-next"
+            : state.done.has(i)
+              ? "node is-done"
+              : "node";
+          const node = el("circle", {
+            class: klass,
+            cx: stop.x,
+            cy: stop.y,
+            r: i === state.cursor + 1 ? 0.34 : 0.22,
+            "data-i": String(i)
+          });
+          svg.appendChild(node);
+        });
+        floor.appendChild(svg);
+        if (playNode && animate && !reduce) {
+          const len = playNode.getTotalLength();
+          playNode.style.setProperty("--len", String(len));
+          playNode.classList.add("is-draw");
+        }
+        svg.addEventListener("click", function (event) {
+          const hit = event.target.closest("[data-i]");
+          if (!hit) return;
+          jumpTo(Number(hit.getAttribute("data-i")), true);
+        });
+      }
+
+      function jumpTo(index, animate) {
+        const last = STOPS.length - 1;
+        const next = Math.max(0, Math.min(last, index));
+        const from = state.cursor;
+        if (next === from && !animate) {
+          paintHud();
+          return;
+        }
+        state.cursor = next;
+        paintHud();
+        drawMap(from, Boolean(animate) && from !== next);
+      }
+
+      function markAndAdvance() {
+        if (state.done.size === STOPS.length && state.cursor === STOPS.length - 1) {
+          window.location.href = "../desk/02.html";
+          return;
+        }
+        state.done.add(state.cursor);
+        if (state.cursor < STOPS.length - 1) {
+          jumpTo(state.cursor + 1, true);
+          return;
+        }
+        paintHud();
+        drawMap(state.cursor, false);
+      }
+
+      scrubEl.addEventListener("input", function () {
+        jumpTo(Number(scrubEl.value), false);
+      });
+      scrubEl.addEventListener("change", function () {
+        drawMap(null, true);
+      });
+      backEl.addEventListener("click", function () {
+        jumpTo(state.cursor - 1, true);
+      });
+      fwdEl.addEventListener("click", function () {
+        jumpTo(state.cursor + 1, true);
+      });
+      feitoEl.addEventListener("click", markAndAdvance);
+
+      paintHud();
+      drawMap(0, true);
+    })();
+  </script>
+</body>
+</html>
