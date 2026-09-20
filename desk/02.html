@@ -49,17 +49,6 @@
       flex-direction: column;
     }
 
-    header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .brand {
-      margin: 0;
-    }
-
     .tag {
       margin: 0 0 4px;
       font-size: 11px;
@@ -75,67 +64,82 @@
       letter-spacing: -0.035em;
     }
 
-    .chip {
-      display: inline-flex;
-      align-items: center;
+    .factory { margin-top: 18px; }
+
+    .glances {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(var(--n, 4), 1fr);
       gap: 8px;
-      padding: 7px 11px 7px 9px;
-      border-radius: 999px;
-      background: var(--card);
-      box-shadow: 0 1px 0 rgba(18, 20, 26, 0.04), 0 8px 24px rgba(99, 91, 255, 0.06);
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--ink-2);
-      white-space: nowrap;
     }
 
-    .chip .meter {
-      width: 36px;
-      height: 5px;
+    .glance {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .tile {
+      position: relative;
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: var(--accent-soft);
+      display: grid;
+      place-items: center;
+      box-shadow: 0 1px 0 rgba(18, 20, 26, 0.03);
+    }
+
+    .tile .glyph {
+      width: 24px;
+      height: 24px;
+      color: var(--accent);
+      margin-bottom: 5px;
+    }
+
+    .meter {
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      bottom: 8px;
+      height: 3px;
       border-radius: 999px;
-      background: #e6e8f2;
+      background: rgba(99, 91, 255, 0.16);
       overflow: hidden;
     }
 
-    .chip .meter i {
+    .meter i {
       display: block;
       height: 100%;
-      width: 62%;
       border-radius: inherit;
       background: var(--accent);
     }
 
-    .chip .pulse {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--accent);
-      box-shadow: 0 0 0 0 rgba(99, 91, 255, 0.45);
-      animation: factory-pulse 1.8s ease-out infinite;
+    .remain {
+      font-size: 11px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      color: var(--ink-2);
+      letter-spacing: -0.02em;
+      white-space: nowrap;
     }
 
-    .chip .copy { font-variant-numeric: tabular-nums; }
-
-    body.is-paused .chip .pulse {
-      background: var(--mute);
-      animation: none;
-      box-shadow: none;
+    .remain em {
+      font-style: normal;
+      font-weight: 500;
+      color: var(--mute);
     }
 
-    body.is-paused .chip .meter i {
-      width: 0;
-      background: var(--mute);
-    }
-
-    @keyframes factory-pulse {
-      0% { box-shadow: 0 0 0 0 rgba(99, 91, 255, 0.45); }
-      70% { box-shadow: 0 0 0 8px rgba(99, 91, 255, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(99, 91, 255, 0); }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      .chip .pulse { animation: none; }
-    }
+    body.is-paused .tile { background: #eceef3; }
+    body.is-paused .tile .glyph { color: var(--mute); }
+    body.is-paused .meter { background: #d8dbe3; }
+    body.is-paused .meter i { background: var(--mute); }
+    body.is-paused .remain,
+    body.is-paused .remain em { color: var(--mute); }
 
     .strip {
       margin: auto 0;
@@ -315,21 +319,77 @@
       opacity: 1;
       transform: translateX(-50%) translateY(0);
     }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
   </style>
 </head>
 <body>
   <div class="phone">
     <header>
-      <div class="brand">
-        <p class="tag">Desk B · faixa</p>
-        <h1>Mesa</h1>
-      </div>
-      <div class="chip" id="factoryChip" aria-label="Próxima onda automática">
-        <span class="pulse" aria-hidden="true"></span>
-        <span class="meter" aria-hidden="true"><i></i></span>
-        <span class="copy" id="chipCopy">faltam 8 · ~18 min</span>
-      </div>
+      <p class="tag">Desk B · faixa</p>
+      <h1>Mesa</h1>
     </header>
+
+    <section class="factory" id="factory" aria-label="Fábrica — gatilhos ligados">
+      <ul class="glances" style="--n: 4">
+        <li class="glance">
+          <span class="tile" aria-hidden="true">
+            <svg class="glyph" viewBox="0 0 24 24">
+              <rect x="4.5" y="3.5" width="11" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/>
+              <path d="M8 7.5h5M8 10.5h5M8 13.5h3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              <path d="M16 7.2v8.3a2 2 0 0 1-2 2H7.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+            <span class="meter"><i style="width:40%"></i></span>
+          </span>
+          <span class="remain">8 <em>ped.</em></span>
+          <span class="visually-hidden">Pedidos, faltam 8</span>
+        </li>
+        <li class="glance">
+          <span class="tile" aria-hidden="true">
+            <svg class="glyph" viewBox="0 0 24 24">
+              <path d="M12 3.2 20 7.4v9.2L12 20.8 4 16.6V7.4Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+              <path d="M12 3.2v17.6M4 7.4l8 4.2 8-4.2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+            </svg>
+            <span class="meter"><i style="width:30%"></i></span>
+          </span>
+          <span class="remain">42 <em>un.</em></span>
+          <span class="visually-hidden">Unidades, faltam 42</span>
+        </li>
+        <li class="glance">
+          <span class="tile" aria-hidden="true">
+            <svg class="glyph" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="8.2" fill="none" stroke="currentColor" stroke-width="1.8"/>
+              <path d="M12 7.4v5.1l3.4 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="meter"><i style="width:40%"></i></span>
+          </span>
+          <span class="remain">18 <em>min</em></span>
+          <span class="visually-hidden">Horário, faltam 18 min</span>
+        </li>
+        <li class="glance">
+          <span class="tile" aria-hidden="true">
+            <svg class="glyph" viewBox="0 0 24 24">
+              <path d="M9.2 3.4h5.6M12 3.4v2.3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              <circle cx="12" cy="13.2" r="7" fill="none" stroke="currentColor" stroke-width="1.8"/>
+              <path d="M12 13.2V9.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+            <span class="meter"><i style="width:44%"></i></span>
+          </span>
+          <span class="remain">11 <em>min</em></span>
+          <span class="visually-hidden">Tempo decorrido, faltam 11 min</span>
+        </li>
+      </ul>
+    </section>
 
     <section class="strip" aria-label="Ondas do dia">
       <div class="timeline">
@@ -376,8 +436,7 @@
     (function () {
       var KEY = "pisoly-desk-02-paused";
       var body = document.body;
-      var chipCopy = document.getElementById("chipCopy");
-      var chip = document.getElementById("factoryChip");
+      var factory = document.getElementById("factory");
       var pauseBtn = document.getElementById("pauseBtn");
       var shareBtn = document.getElementById("shareBtn");
       var toastEl = document.getElementById("toast");
@@ -398,10 +457,9 @@
 
       function renderPaused(paused) {
         body.classList.toggle("is-paused", paused);
-        chipCopy.textContent = paused ? "fábrica pausada" : "faltam 8 · ~18 min";
-        chip.setAttribute(
+        factory.setAttribute(
           "aria-label",
-          paused ? "Fábrica pausada" : "Próxima onda automática, faltam 8 pedidos, cerca de 18 minutos"
+          paused ? "Fábrica pausada" : "Fábrica — gatilhos ligados"
         );
         pauseBtn.textContent = paused ? "Retomar automático" : "Pausar automático";
       }
