@@ -609,6 +609,7 @@
       var misses = {};
       var startedAt = 0;
       var viewBox = WIDE.slice();
+      var vbToken = 0;
 
       function freeIndexes() {
         return RUNS.map(function (_, i) { return i; }).filter(function (i) {
@@ -639,7 +640,9 @@
       function animateView(toBox) {
         var from = viewBox.slice();
         var t0 = performance.now();
+        var token = (vbToken += 1);
         function tick(now) {
+          if (token !== vbToken) return;
           var t = Math.min(1, (now - t0) / 720);
           viewBox = mixBox(from, toBox, easeOut(t));
           svg.setAttribute("viewBox", boxString(viewBox));
@@ -736,9 +739,10 @@
       function render(fly) {
         assertPhase(phase);
         if (phase === PHASES.open || phase === PHASES.empty || phase === PHASES.zen) {
+          vbToken += 1;
           paintOpenPaths();
-          svg.setAttribute("viewBox", boxString(WIDE));
           viewBox = WIDE.slice();
+          svg.setAttribute("viewBox", boxString(viewBox));
           return;
         }
         paintPickPaths();
