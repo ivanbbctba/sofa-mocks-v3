@@ -94,29 +94,21 @@
       animation: draw-leg 0.9s cubic-bezier(0.22, 0.7, 0.2, 1) forwards;
     }
 
-    .path-ahead {
+    .path-ahead,
+    .path-wave {
       fill: none;
-      stroke: var(--run);
-      stroke-width: 0.36;
-      stroke-linecap: round;
+      stroke-linecap: butt;
       stroke-linejoin: round;
-      opacity: 0.78;
+      opacity: 0.9;
     }
 
-    .path-ahead.is-march {
-      animation: dash-travel 0.7s linear infinite;
+    .path-ahead {
+      stroke: var(--run);
+      stroke-width: 0.34;
     }
 
     .path-wave {
-      fill: none;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      stroke-width: 0.3;
-      opacity: 0.88;
-    }
-
-    .path-wave.is-march {
-      animation: dash-travel 0.85s linear infinite;
+      stroke-width: 0.28;
     }
 
     .node-done { fill: #b8bcc8; }
@@ -374,10 +366,6 @@
 
     @keyframes draw-leg {
       to { stroke-dashoffset: 0; }
-    }
-
-    @keyframes dash-travel {
-      to { stroke-dashoffset: var(--march); }
     }
 
     @keyframes here-pulse {
@@ -676,13 +664,11 @@
           const period = item.dash + item.gap;
           node.setAttribute("stroke-dasharray", item.dash + " " + item.gap);
           node.setAttribute("stroke-dashoffset", "0");
-          node.style.strokeDasharray = item.dash + " " + item.gap;
-          node.style.setProperty("--march", String(-period));
-          node.classList.add("is-march");
+          node.style.strokeLinecap = "butt";
           if (node._march) cancelAnimationFrame(node._march);
           let offset = 0;
           function tick() {
-            offset -= period / 16;
+            offset -= period / 12;
             if (offset <= -period) offset += period;
             node.setAttribute("stroke-dashoffset", String(offset));
             node._march = requestAnimationFrame(tick);
@@ -759,7 +745,7 @@
               opacity: taken ? "0.28" : "0.9"
             });
             svg.appendChild(line);
-            if (!taken) queueMarch(line, 0.42, 0.3);
+            if (!taken) queueMarch(line, 0.72, 0.58);
             tour.geo.points.forEach(function (p) {
               svg.appendChild(el("circle", {
                 cx: p.x,
@@ -818,7 +804,7 @@
           });
           map.appendChild(svg);
           applyViewBox(svg, activeViewBox(), fly);
-          if (aheadNode) queueMarch(aheadNode, 0.4, 0.28);
+          if (aheadNode) queueMarch(aheadNode, 0.62, 0.5);
           startMarch();
           if (playNode && !reduce) {
             try {
