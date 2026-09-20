@@ -60,44 +60,37 @@
     }
 
     .aisle {
-      fill: var(--aisle);
+      fill: url(#aisleFade);
     }
 
     .ghost-dot {
-      fill: rgba(148, 160, 176, 0.45);
+      fill: rgba(148, 160, 176, 0.5);
     }
 
     .path-rest {
       fill: none;
       stroke: var(--accent);
-      stroke-width: 7;
+      stroke-width: 10;
       stroke-linecap: round;
       stroke-linejoin: round;
-      opacity: 0.18;
+      opacity: 0.22;
     }
 
     .path-ahead {
       fill: none;
       stroke: var(--accent);
-      stroke-width: 8;
+      stroke-width: 11;
       stroke-linecap: round;
       stroke-linejoin: round;
-      stroke-dasharray: 10 12;
-      opacity: 0.38;
+      stroke-dasharray: 14 14;
+      opacity: 0.42;
     }
 
-    .path-done {
-      fill: none;
-      stroke: var(--accent);
-      stroke-width: 10;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-
+    .path-done,
     .path-leg {
       fill: none;
       stroke: var(--accent);
-      stroke-width: 10;
+      stroke-width: 14;
       stroke-linecap: round;
       stroke-linejoin: round;
     }
@@ -261,9 +254,10 @@
     }
 
     .next {
-      margin: 3px 0 0;
+      margin: 4px 0 0;
       color: var(--mute);
       font-size: 14px;
+      letter-spacing: 0;
     }
 
     .actions {
@@ -475,11 +469,9 @@
       const pathLeg = document.getElementById("path-leg");
       const nodes = document.getElementById("nodes");
       const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      const FRONT = 80;
-      const BACK = 760;
-
       let index = 6;
       let complete = false;
+      let settleTimer = 0;
 
       function aisleWalk(points) {
         if (!points.length) return "";
@@ -487,14 +479,12 @@
         for (let i = 1; i < points.length; i += 1) {
           const a = points[i - 1];
           const b = points[i];
-          if (a.x === b.x) {
+          if (a.x === b.x || a.y === b.y) {
             d += ` L ${b.x} ${b.y}`;
             continue;
           }
-          const viaFront = Math.abs(a.y - FRONT) + Math.abs(b.y - FRONT);
-          const viaBack = Math.abs(a.y - BACK) + Math.abs(b.y - BACK);
-          const y = viaFront <= viaBack ? FRONT : BACK;
-          d += ` L ${a.x} ${y} L ${b.x} ${y} L ${b.x} ${b.y}`;
+          const midY = (a.y + b.y) / 2;
+          d += ` L ${a.x} ${midY} L ${b.x} ${midY} L ${b.x} ${b.y}`;
         }
         return d;
       }
@@ -518,12 +508,11 @@
         AISLES.forEach((x) => {
           const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
           rect.setAttribute("class", "aisle");
-          rect.setAttribute("x", String(x - 7));
-          rect.setAttribute("y", "36");
-          rect.setAttribute("width", "14");
-          rect.setAttribute("height", "772");
-          rect.setAttribute("rx", "7");
-          rect.setAttribute("fill", "url(#aisleFade)");
+          rect.setAttribute("x", String(x - 11));
+          rect.setAttribute("y", "28");
+          rect.setAttribute("width", "22");
+          rect.setAttribute("height", "788");
+          rect.setAttribute("rx", "11");
           g.appendChild(rect);
         });
         const ghosts = document.getElementById("ghosts");
@@ -576,31 +565,39 @@
         });
       }
 
+      function settleDone(toIndex) {
+        pathDone.setAttribute("d", complete ? aisleWalk(STOPS) : stopPath(toIndex));
+        pathLeg.removeAttribute("d");
+        pathLeg.classList.remove("is-play");
+      }
+
       function paintPaths(fromIndex, toIndex, animate) {
+        window.clearTimeout(settleTimer);
         pathRest.setAttribute("d", aisleWalk(STOPS));
         const aheadFrom = complete ? STOPS.length - 1 : toIndex;
         pathAhead.setAttribute("d", aisleWalk(STOPS.slice(aheadFrom)));
-        const settled = complete ? TOTAL - 1 : (animate ? fromIndex : toIndex);
-        pathDone.setAttribute("d", stopPath(settled));
         pathLeg.classList.remove("is-play");
         pathLeg.removeAttribute("d");
         if (complete) {
-          pathDone.setAttribute("d", aisleWalk(STOPS));
+          settleDone(toIndex);
           return;
         }
-        if (animate && !reduce && fromIndex !== toIndex) {
-          pathLeg.setAttribute("d", legPath(fromIndex, toIndex));
-          requestAnimationFrame(() => {
-            const len = pathLeg.getTotalLength();
-            pathLeg.style.setProperty("--len", `${len}`);
-            pathLeg.classList.add("is-play");
-            pathLeg.addEventListener("animationend", () => {
-              pathDone.setAttribute("d", stopPath(toIndex));
-              pathLeg.removeAttribute("d");
-              pathLeg.classList.remove("is-play");
-            }, { once: true });
-          });
-        }
+        const shouldPlay = animate && !reduce && fromIndex !== toIndex;
+        pathDone.setAttribute("d", stopPath(shouldPlay ? fromIndex : toIndex));
+        if (!shouldPlay) return;
+        pathLeg.setAttribute("d", legPath(fromIndex, toIndex));
+        requestAnimationFrame(() => {
+          const len = pathLeg.getTotalLength();
+          if (!len) {
+            settleDone(toIndex);
+            return;
+          }
+          pathLeg.style.setProperty("--len", `${len}`);
+          pathLeg.classList.add("is-play");
+          const finish = () => settleDone(toIndex);
+          pathLeg.addEventListener("animationend", finish, { once: true });
+          settleTimer = window.setTimeout(finish, 1300);
+        });
       }
 
       function paintHud() {
