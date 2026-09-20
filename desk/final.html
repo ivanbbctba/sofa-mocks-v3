@@ -3,21 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#f7f6f2" />
+  <meta name="theme-color" content="#f4f6f8" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Mesa · Pisoly</title>
   <style>
     :root {
-      --bg: #f7f6f2;
-      --surface: #fffcf8;
-      --ink: #1a1b1a;
-      --muted: #6d706c;
-      --accent: #3d6f60;
-      --accent-soft: #dce8e3;
-      --line: #e3e1da;
-      --go: #2f9a55;
-      --warn: #b87a3d;
+      --ink: #0a2540;
+      --muted: #425466;
+      --faint: #6b7c93;
+      --paper: #f4f6f8;
+      --surface: #ffffff;
+      --line: rgba(10, 37, 64, 0.08);
+      --accent: #635bff;
+      --accent-soft: rgba(99, 91, 255, 0.12);
+      --go: #0f766e;
+      --warn: #b45309;
       --radius: 18px;
       --safe-t: env(safe-area-inset-top, 0px);
       --safe-b: env(safe-area-inset-bottom, 0px);
@@ -40,7 +41,7 @@
       font-size: 15px;
       line-height: 1.4;
       color: var(--ink);
-      background: var(--bg);
+      background: var(--paper);
     }
 
     button,
@@ -90,7 +91,7 @@
       height: 7px;
       border-radius: 50%;
       background: var(--accent);
-      box-shadow: 0 0 0 0 rgba(61, 111, 96, 0.5);
+      box-shadow: 0 0 0 0 rgba(99, 91, 255, 0.5);
       animation: live-ping 2.2s ease-out infinite;
     }
 
@@ -185,7 +186,7 @@
       margin: 8px 0 0;
       font-size: 12px;
       font-weight: 500;
-      color: var(--muted);
+      color: var(--faint);
     }
 
     .plates {
@@ -284,7 +285,7 @@
     .kind {
       font-size: 10px;
       font-weight: 500;
-      color: var(--muted);
+      color: var(--faint);
       line-height: 1;
     }
 
@@ -393,7 +394,7 @@
       display: block;
       margin-top: 3px;
       font-size: 13px;
-      color: var(--muted);
+      color: var(--faint);
     }
 
     .wave-link .stat {
@@ -499,7 +500,7 @@
       height: 7px;
       border-radius: 50%;
       background: var(--go);
-      box-shadow: 0 0 0 4px rgba(47, 154, 85, 0.16);
+      box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.16);
     }
 
     .pulse-dot {
@@ -608,7 +609,7 @@
     .scrim {
       position: fixed;
       inset: 0;
-      background: rgba(26, 27, 26, 0.28);
+      background: rgba(10, 37, 64, 0.28);
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.22s ease;
@@ -714,7 +715,7 @@
     }
 
     .sheet-actions .btn-ghost {
-      background: var(--bg);
+      background: var(--paper);
     }
 
     .toast {
@@ -752,7 +753,7 @@
       padding: 4px;
       border-radius: 999px;
       background: var(--surface);
-      box-shadow: 0 0 0 1px var(--line), 0 8px 24px rgba(26, 27, 26, 0.08);
+      box-shadow: 0 0 0 1px var(--line), 0 8px 24px rgba(10, 37, 64, 0.08);
     }
 
     .demo span {
@@ -796,9 +797,9 @@
     }
 
     @keyframes live-ping {
-      0% { box-shadow: 0 0 0 0 rgba(61, 111, 96, 0.5); }
-      70% { box-shadow: 0 0 0 7px rgba(61, 111, 96, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(61, 111, 96, 0); }
+      0% { box-shadow: 0 0 0 0 rgba(99, 91, 255, 0.5); }
+      70% { box-shadow: 0 0 0 7px rgba(99, 91, 255, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(99, 91, 255, 0); }
     }
 
     @keyframes pulse {
@@ -1098,6 +1099,16 @@
       function renderWaves() {
         var html = "";
         waves().forEach(function (wave) {
+          var share = "";
+          if (wave.live) {
+            share =
+              '<button type="button" class="share" data-wave="' + wave.title + '" aria-label="Compartilhar ' + wave.title + '">' +
+                '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">' +
+                  '<path d="M8 10.2V2.6M8 2.6 5.2 5.3M8 2.6l2.8 2.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>' +
+                  '<path d="M3.2 8.4v4.2A1.2 1.2 0 0 0 4.4 13.8h7.2a1.2 1.2 0 0 0 1.2-1.2V8.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>' +
+                "</svg>" +
+              "</button>";
+          }
           html +=
             '<li class="wave' + (wave.live ? " is-live" : "") + '">' +
               '<a class="wave-link" href="' + RICH + '">' +
@@ -1109,12 +1120,7 @@
                 "</span>" +
                 '<span class="stat">' + wave.stat + "</span>" +
               "</a>" +
-              '<button type="button" class="share" data-wave="' + wave.title + '" aria-label="Compartilhar ' + wave.title + '">' +
-                '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">' +
-                  '<path d="M8 10.2V2.6M8 2.6 5.2 5.3M8 2.6l2.8 2.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>' +
-                  '<path d="M3.2 8.4v4.2A1.2 1.2 0 0 0 4.4 13.8h7.2a1.2 1.2 0 0 0 1.2-1.2V8.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>' +
-                "</svg>" +
-              "</button>" +
+              share +
             "</li>";
         });
         waveList.innerHTML = html;
