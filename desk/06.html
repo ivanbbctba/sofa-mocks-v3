@@ -43,7 +43,7 @@
     .feed {
       list-style: none;
       margin: 0;
-      padding: calc(28px + var(--safe-top)) 22px 132px;
+      padding: calc(28px + var(--safe-top)) 22px 168px;
       max-width: 420px;
       margin-inline: auto;
     }
@@ -116,26 +116,25 @@
       left: 0;
       right: 0;
       bottom: 0;
-      padding: 16px 22px calc(18px + var(--safe-bottom));
-      background: linear-gradient(180deg, rgba(246, 246, 249, 0) 0%, var(--paper) 28%);
+      padding: 14px 22px calc(16px + var(--safe-bottom));
+      background: linear-gradient(180deg, rgba(246, 246, 249, 0) 0%, var(--paper) 26%);
     }
 
     .cta {
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
+      gap: 8px;
       width: 100%;
       max-width: 376px;
       margin: 0 auto;
-      height: 52px;
+      padding: 12px 18px 13px;
       border: 0;
-      border-radius: 999px;
+      border-radius: 22px;
       background: var(--accent);
       color: var(--white);
       font: inherit;
-      font-size: 15px;
-      font-weight: 600;
-      letter-spacing: -0.02em;
       cursor: pointer;
     }
 
@@ -153,10 +152,54 @@
       animation: none;
     }
 
+    .glances {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .glance {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      min-width: 0;
+    }
+
+    .glance svg {
+      display: block;
+      flex: 0 0 16px;
+    }
+
+    .glance .meter {
+      display: flex;
+      align-items: baseline;
+      gap: 3px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .glance .value {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+    }
+
+    .glance .unit {
+      font-size: 11px;
+      font-weight: 500;
+      opacity: 0.72;
+    }
+
+    .verb {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
     .toast {
       position: fixed;
       left: 50%;
-      bottom: calc(96px + var(--safe-bottom));
+      bottom: calc(128px + var(--safe-bottom));
       transform: translateX(-50%) translateY(8px);
       padding: 8px 14px;
       border-radius: 999px;
@@ -188,7 +231,10 @@
   <ul class="feed" id="feed" aria-label="Atividade da fábrica"></ul>
 
   <div class="dock">
-    <button type="button" class="cta" id="cta">Antecipar · 8 ped.</button>
+    <button type="button" class="cta" id="cta" aria-label="Antecipar. Faltam 8 pedidos e 18 minutos.">
+      <span class="glances" id="glances" aria-hidden="true"></span>
+      <span class="verb" id="verb">Antecipar</span>
+    </button>
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -197,10 +243,18 @@
     const RICH = new URL("../rich/06.html", location.href).href;
 
     const factory = [
-      { id: "ready", label: "Antecipar · 8 ped.", cls: "", event: "Fábrica retomada", wave: "#1042" },
-      { id: "live", label: "Pausar automático", cls: "is-pulse", event: "Onda #1045 · antecipada", wave: "#1045" },
-      { id: "paused", label: "Retomar", cls: "is-paused", event: "Fábrica em pausa", wave: "#1042" },
+      { id: "ready", label: "Antecipar", spoken: "Antecipar. Faltam 8 pedidos e 18 minutos.", cls: "", event: "Fábrica retomada", wave: "#1042" },
+      { id: "live", label: "Pausar automático", spoken: "Pausar automático. Faltam 8 pedidos e 18 minutos.", cls: "is-pulse", event: "Onda #1045 · antecipada", wave: "#1045" },
+      { id: "paused", label: "Retomar", spoken: "Retomar. Faltam 8 pedidos e 18 minutos.", cls: "is-paused", event: "Fábrica em pausa", wave: "#1042" },
     ];
+
+    const ON_TRIGGERS = ["order_count", "elapsed"];
+
+    const feed = document.getElementById("feed");
+    const cta = document.getElementById("cta");
+    const glances = document.getElementById("glances");
+    const verb = document.getElementById("verb");
+    const toast = document.getElementById("toast");
 
     const events = [
       { when: "agora", text: "Ana · 10 · A-01", live: true, wave: "#1042" },
@@ -212,11 +266,42 @@
       { when: "40 min", text: "#1044 · 9 ped.", wave: "#1044" },
     ];
 
-    const feed = document.getElementById("feed");
-    const cta = document.getElementById("cta");
-    const toast = document.getElementById("toast");
     let factoryIndex = 0;
     let toastTimer = 0;
+
+    function triggerIcon(kind) {
+      switch (kind) {
+        case "order_count":
+          return '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M1.35 2.15h1.55l.3 1.25h10.95a.7.7 0 0 1 .68.88l-1.15 4.15A1.45 1.45 0 0 1 12.3 9.7H6.15l.22 1.15h6.35a.7.7 0 1 1 0 1.4H5.55a.7.7 0 0 1-.69-.54L3.38 3.55H1.35a.7.7 0 0 1 0-1.4Zm4.3 11.15a1.15 1.15 0 1 0 .02 2.3 1.15 1.15 0 0 0-.02-2.3Zm5.55 0a1.15 1.15 0 1 0 .02 2.3 1.15 1.15 0 0 0-.02-2.3Z"/></svg>';
+        case "quantity":
+          return '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 1.2 14.2 4.4v7.2L8 14.8 1.8 11.6V4.4L8 1.2Zm0 1.55L3.2 5.05 8 7.5l4.8-2.45L8 2.75ZM3.2 6.35v4.55L7.3 13.1V8.5L3.2 6.35Zm9.6 0L8.7 8.5v4.6l4.1-2.2V6.35Z"/></svg>';
+        case "schedule":
+          return '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 1.2a6.8 6.8 0 1 1 0 13.6A6.8 6.8 0 0 1 8 1.2Zm.7 3.1a.7.7 0 0 0-1.4 0v4.05c0 .2.1.4.25.54l2.3 2.15a.7.7 0 0 0 .94-1.04L8.7 8.1V4.3Z"/></svg>';
+        case "elapsed":
+          return '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M6.1 1.25h3.8a.7.7 0 1 1 0 1.4h-.55v.55a6.55 6.55 0 1 1-2.7 0V2.65H6.1a.7.7 0 1 1 0-1.4ZM8 4.55a.7.7 0 0 0-.7.7v3.05c0 .2.08.39.23.52l1.95 1.7a.7.7 0 0 0 .92-1.06L8.7 8.1V5.25a.7.7 0 0 0-.7-.7Z"/></svg>';
+        default: {
+          const _never = kind;
+          throw new Error("gatilho desconhecido: " + _never);
+        }
+      }
+    }
+
+    function triggerMeter(kind) {
+      switch (kind) {
+        case "order_count":
+          return { value: "8", unit: "ped.", name: "pedidos" };
+        case "quantity":
+          return { value: "42", unit: "un.", name: "unidades" };
+        case "schedule":
+          return { value: "14:30", unit: "", name: "horário" };
+        case "elapsed":
+          return { value: "18", unit: "min", name: "tempo" };
+        default: {
+          const _never = kind;
+          throw new Error("gatilho desconhecido: " + _never);
+        }
+      }
+    }
 
     function shareIcon() {
       return '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 2.2 11.3 5.4a.7.7 0 0 1-1 1L8.7 4.8V10a.7.7 0 0 1-1.4 0V4.8L5.7 6.4a.7.7 0 1 1-1-1L8 2.2ZM3.2 8.2c.4 0 .7.3.7.7v3.2c0 .2.2.4.4.4h7.4c.2 0 .4-.2.4-.4V8.9a.7.7 0 1 1 1.4 0v3.2A1.8 1.8 0 0 1 11.7 14H4.3A1.8 1.8 0 0 1 2.5 12.1V8.9c0-.4.3-.7.7-.7Z"/></svg>';
@@ -294,10 +379,40 @@
       say(RICH);
     }
 
+    function glanceEl(kind) {
+      const meter = triggerMeter(kind);
+      const item = document.createElement("span");
+      item.className = "glance";
+      item.dataset.kind = kind;
+      item.innerHTML = triggerIcon(kind);
+      const meterEl = document.createElement("span");
+      meterEl.className = "meter";
+      const value = document.createElement("span");
+      value.className = "value";
+      value.textContent = meter.value;
+      meterEl.appendChild(value);
+      if (meter.unit) {
+        const unit = document.createElement("span");
+        unit.className = "unit";
+        unit.textContent = meter.unit;
+        meterEl.appendChild(unit);
+      }
+      item.appendChild(meterEl);
+      return item;
+    }
+
+    function paintGlances() {
+      glances.replaceChildren();
+      ON_TRIGGERS.forEach(function (kind) {
+        glances.appendChild(glanceEl(kind));
+      });
+    }
+
     function paintCta() {
       const state = factory[factoryIndex];
-      cta.textContent = state.label;
+      verb.textContent = state.label;
       cta.className = "cta" + (state.cls ? " " + state.cls : "");
+      cta.setAttribute("aria-label", state.spoken);
     }
 
     cta.addEventListener("click", function () {
@@ -318,6 +433,7 @@
       paintCta();
     });
 
+    paintGlances();
     render();
     paintCta();
   </script>
