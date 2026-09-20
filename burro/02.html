@@ -164,11 +164,6 @@
       pointer-events: none;
     }
 
-    .chrome button,
-    .chrome a {
-      pointer-events: auto;
-    }
-
     .count {
       position: absolute;
       top: calc(14px + var(--safe-t));
@@ -179,6 +174,7 @@
       font-weight: 500;
       letter-spacing: 0.01em;
       font-variant-numeric: tabular-nums;
+      pointer-events: none;
     }
 
     .claim,
@@ -199,8 +195,15 @@
     .done.is-on,
     .run.is-on {
       opacity: 1;
+      visibility: visible;
       transform: none;
       pointer-events: auto;
+    }
+
+    .claim:not(.is-on),
+    .done:not(.is-on),
+    .run:not(.is-on) {
+      visibility: hidden;
     }
 
     .claim,
@@ -541,9 +544,17 @@
         mode = which;
         app.classList.toggle("is-claim", which === "claim");
         app.classList.toggle("is-done", which === "done");
-        claimEl.classList.toggle("is-on", which === "claim");
-        runEl.classList.toggle("is-on", which === "run");
-        doneEl.classList.toggle("is-on", which === "done");
+        const panels = [
+          [claimEl, "claim"],
+          [runEl, "run"],
+          [doneEl, "done"]
+        ];
+        panels.forEach((pair) => {
+          const on = pair[1] === which;
+          pair[0].classList.toggle("is-on", on);
+          pair[0].setAttribute("aria-hidden", on ? "false" : "true");
+          pair[0].inert = !on;
+        });
         countEl.hidden = which === "claim";
       }
 
