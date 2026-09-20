@@ -69,30 +69,6 @@
 
     .run-map { position: absolute; inset: 0; }
 
-    .aisles {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      justify-content: space-evenly;
-      padding: 0 22px;
-      pointer-events: none;
-    }
-
-    .aisles i {
-      display: block;
-      width: 22px;
-      height: 100%;
-      border-radius: 999px;
-      background: linear-gradient(
-        180deg,
-        transparent 0%,
-        var(--aisle) 10%,
-        rgba(176, 184, 200, 0.5) 46%,
-        var(--aisle) 82%,
-        transparent 100%
-      );
-    }
-
     .route-svg {
       position: absolute;
       inset: 0;
@@ -101,19 +77,21 @@
       display: block;
     }
 
+    .aisle-pill { fill: url(#aisleFade); }
+
     .path-rest {
       fill: none;
       stroke: #635bff;
-      stroke-width: 8;
+      stroke-width: 7;
       stroke-linecap: round;
       stroke-linejoin: round;
-      opacity: 0.16;
+      opacity: 0.14;
     }
 
     .route-solid {
       fill: none;
       stroke: #635bff;
-      stroke-width: 9;
+      stroke-width: 11;
       stroke-linecap: round;
       stroke-linejoin: round;
     }
@@ -121,11 +99,11 @@
     .route-dash {
       fill: none;
       stroke: #635bff;
-      stroke-width: 8;
+      stroke-width: 9;
       stroke-linecap: round;
       stroke-linejoin: round;
-      stroke-dasharray: 7 11;
-      opacity: 0.38;
+      stroke-dasharray: 8 12;
+      opacity: 0.36;
     }
 
     .node { fill: #c5cad6; }
@@ -218,7 +196,8 @@
     .speak {
       position: absolute;
       left: 16px;
-      right: 110px;
+      right: auto;
+      width: min(228px, calc(100% - 118px));
       bottom: calc(26px + var(--safe-bottom));
       z-index: 4;
       margin: 0;
@@ -232,6 +211,10 @@
       text-align: left;
       cursor: pointer;
       overflow: hidden;
+    }
+
+    .speak.is-open {
+      width: min(252px, calc(100% - 108px));
     }
 
     .speak:focus-visible {
@@ -300,15 +283,16 @@
     .speak-full,
     .speak-hint {
       margin: 0;
-      font-size: 13px;
+      font-size: 12px;
       color: var(--mute);
-      line-height: 1.4;
+      line-height: 1.45;
     }
 
-    .speak-full { color: var(--ink-2); }
+    .speak-full { color: var(--ink-2); margin-top: 2px; }
+    .speak-hint { margin-top: 8px; }
 
     .peeks {
-      margin: 14px 0 0;
+      margin: 0;
       padding: 0;
       list-style: none;
       display: grid;
@@ -316,7 +300,7 @@
     }
 
     .peeks-label {
-      margin: 0 0 2px;
+      margin: 12px 0 8px;
       font-size: 11px;
       font-weight: 600;
       letter-spacing: 0.05em;
@@ -326,8 +310,9 @@
 
     .peeks li {
       display: grid;
-      grid-template-columns: auto 1fr auto;
-      gap: 10px;
+      grid-template-columns: 1fr auto;
+      grid-template-areas: "loc qty" "sku sku";
+      gap: 2px 10px;
       align-items: baseline;
       padding: 8px 10px;
       border-radius: 12px;
@@ -335,9 +320,15 @@
       font-size: 13px;
     }
 
-    .peek-loc { font-weight: 600; }
-    .peek-sku { color: var(--ink-2); overflow-wrap: anywhere; }
+    .peek-loc { grid-area: loc; font-weight: 600; }
+    .peek-sku {
+      grid-area: sku;
+      color: var(--ink-2);
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
     .peek-qty {
+      grid-area: qty;
       color: var(--mute);
       font-variant-numeric: tabular-nums;
       white-space: nowrap;
@@ -396,14 +387,21 @@
 <body>
   <div class="run-app" id="app">
     <div class="run-map" aria-hidden="true">
-      <div class="aisles"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-      <svg id="route-svg" class="route-svg" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid meet">
+      <svg id="route-svg" class="route-svg" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice">
         <defs>
           <linearGradient id="nodeGreen" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stop-color="#6ad88a" />
             <stop offset="100%" stop-color="#2f9a55" />
           </linearGradient>
+          <linearGradient id="aisleFade" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#b0b8c8" stop-opacity="0" />
+            <stop offset="10%" stop-color="#b0b8c8" stop-opacity="0.38" />
+            <stop offset="46%" stop-color="#b0b8c8" stop-opacity="0.48" />
+            <stop offset="82%" stop-color="#b0b8c8" stop-opacity="0.38" />
+            <stop offset="100%" stop-color="#b0b8c8" stop-opacity="0" />
+          </linearGradient>
         </defs>
+        <g id="aisle-pills"></g>
         <path id="path-rest" class="path-rest" d="" />
         <path id="route-dash" class="route-dash" d="" />
         <path id="route-solid" class="route-solid" d="" />
@@ -429,7 +427,8 @@
       <div class="speak-more" id="speak-more">
         <div class="speak-detail">
           <p class="speak-name" id="speak-name">Moletom cinza M</p>
-          <p class="speak-meta" id="speak-meta">10 unidades · 3 pedidos · 0 de 18</p>
+          <p class="speak-meta" id="speak-meta">10 unidades · 3 pedidos</p>
+          <p class="speak-meta" id="speak-progress">0 de 18</p>
           <p class="speak-full" id="speak-full">Corredor A · posição 01 · chão</p>
           <p class="speak-hint">Toque no cartão para recolher</p>
         </div>
@@ -553,6 +552,23 @@
         return d;
       }
 
+      function frameBox(points, extra) {
+        var xs = points.map(function (p) { return p[0]; });
+        var ys = points.map(function (p) { return p[1]; });
+        var minX = Math.min.apply(null, xs) - extra;
+        var maxX = Math.max.apply(null, xs) + extra;
+        var minY = Math.min.apply(null, ys) - extra;
+        var maxY = Math.max.apply(null, ys) + extra;
+        var aspect = 390 / 844;
+        var w = Math.max(210, maxX - minX);
+        var h = Math.max(360, maxY - minY);
+        if (w / h > aspect) h = w / aspect;
+        else w = h * aspect;
+        var cx = (minX + maxX) / 2;
+        var cy = (minY + maxY) / 2 - 22;
+        return [cx - w / 2, cy - h / 2, w, h].map(function (n) { return n.toFixed(1); }).join(" ");
+      }
+
       function qtyCopy(n) {
         return n === 1 ? "1 unidade" : n + " unidades";
       }
@@ -563,17 +579,25 @@
       if (isNaN(index) || index < 0) index = 0;
       if (index > STOPS.length - 1) index = STOPS.length - 1;
       var expanded = false;
+      var wantOpen = params.get("open") === "1";
 
       var route = buildRoute();
+      var svg = document.getElementById("route-svg");
       var rest = document.getElementById("path-rest");
       var solid = document.getElementById("route-solid");
       var dash = document.getElementById("route-dash");
       var nodes = document.getElementById("route-nodes");
+      var aislePills = document.getElementById("aisle-pills");
+      aislePills.innerHTML = Object.keys(AISLE_X).map(function (key) {
+        var x = AISLE_X[key];
+        return '<rect class="aisle-pill" x="' + (x - 11).toFixed(1) + '" y="0" width="22" height="844" rx="11"></rect>';
+      }).join("");
       var qtyEl = document.getElementById("speak-qty");
       var locEl = document.getElementById("speak-loc");
       var skuEl = document.getElementById("speak-sku");
       var nameEl = document.getElementById("speak-name");
       var metaEl = document.getElementById("speak-meta");
+      var stopProgressEl = document.getElementById("speak-progress");
       var fullEl = document.getElementById("speak-full");
       var peeksEl = document.getElementById("peeks");
       var progressEl = document.getElementById("run-progress");
@@ -599,13 +623,19 @@
         var len = 0;
         try { len = pathEl.getTotalLength(); } catch (err) { return; }
         if (!len) return;
+        window.clearTimeout(animateSolid.tid);
         pathEl.style.transition = "none";
         pathEl.style.strokeDasharray = String(len);
-        pathEl.style.strokeDashoffset = firstDraw ? String(len) : String(len * 0.28);
+        pathEl.style.strokeDashoffset = firstDraw ? String(len) : String(Math.min(len, 90));
         pathEl.getBoundingClientRect();
         window.requestAnimationFrame(function () {
           pathEl.style.transition = "stroke-dashoffset 0.72s ease";
           pathEl.style.strokeDashoffset = "0";
+          animateSolid.tid = window.setTimeout(function () {
+            pathEl.style.transition = "none";
+            pathEl.style.strokeDasharray = "none";
+            pathEl.style.strokeDashoffset = "0";
+          }, 780);
         });
       }
 
@@ -628,8 +658,8 @@
           return (
             "<li>" +
               "<span class=\"peek-loc\">" + stop.loc + "</span>" +
-              "<span class=\"peek-sku\">" + stop.sku + "</span>" +
               "<span class=\"peek-qty\">" + stop.qty + " un.</span>" +
+              "<span class=\"peek-sku\">" + stop.sku + "</span>" +
             "</li>"
           );
         }).join("");
@@ -653,6 +683,11 @@
         if (solidPts.length === 1) solidPts = [solidPts[0], solidPts[0]];
         solid.setAttribute("d", toPath(solidPts));
         dash.setAttribute("d", toPath(dashPts.length ? dashPts : solidPts));
+        var focusStart = Math.max(0, here - 5);
+        var focusEnd = Math.min(route.length, nextPt + 7);
+        var framePts = route.slice(focusStart, focusEnd);
+        if (!framePts.length) framePts = [xy(stop.loc)];
+        svg.setAttribute("viewBox", frameBox(framePts, 80));
         animateSolid(solid);
         firstDraw = false;
 
@@ -678,13 +713,15 @@
         locEl.textContent = stop.loc;
         skuEl.textContent = stop.sku;
         nameEl.textContent = stop.name;
-        metaEl.textContent = qtyCopy(stop.qty) + " · " + stop.orders + (stop.orders === 1 ? " pedido" : " pedidos") + " · " + index + " de " + TOTAL;
+        metaEl.textContent = qtyCopy(stop.qty) + " · " + stop.orders + (stop.orders === 1 ? " pedido" : " pedidos");
+        stopProgressEl.textContent = index + " de " + TOTAL;
         fullEl.textContent = stop.locFull;
         progressEl.textContent = index + " de " + TOTAL;
         backBtn.disabled = false;
         backBtn.setAttribute("aria-label", index <= 0 ? "Voltar à mesa" : "Parada anterior");
         renderPeeks();
-        setExpanded(false);
+        setExpanded(wantOpen);
+        wantOpen = false;
       }
 
       function go(nextIndex) {
