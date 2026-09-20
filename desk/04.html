@@ -813,13 +813,7 @@
     }
 
     function bindCards() {
-      stack.querySelectorAll(".card").forEach(function (card, i) {
-        card.addEventListener("click", function (ev) {
-          if (ignoreTap) return;
-          if (ev.target.closest("[data-share]")) return;
-          if (rel(i) !== 0) return;
-          openWave();
-        });
+      stack.querySelectorAll(".card").forEach(function (card) {
         card.addEventListener("keydown", function (ev) {
           if (ev.key === "Enter" || ev.key === " ") {
             ev.preventDefault();
@@ -829,6 +823,8 @@
       });
       stack.querySelectorAll("[data-share]").forEach(function (btn) {
         btn.addEventListener("click", function (ev) {
+          ev.preventDefault();
+          ev.stopPropagation();
           const wave = WAVES.find(function (w) { return w.id === btn.getAttribute("data-share"); });
           if (wave) shareWave(wave, ev);
         });
@@ -848,11 +844,15 @@
       if (drag.moved) layout(drag.dx);
     }
 
-    function onPointerUp() {
+    function onPointerUp(ev) {
       if (!drag) return;
       const dx = drag.dx;
       const moved = drag.moved;
       drag = null;
+      if (ev.type === "pointercancel") {
+        layout(0);
+        return;
+      }
       if (moved) {
         ignoreTap = true;
         setTimeout(function () { ignoreTap = false; }, 280);
@@ -861,7 +861,17 @@
         return;
       }
       layout(0);
+      if (ev.target.closest("[data-share]")) return;
+      openWave();
     }
+
+    stack.addEventListener("click", function (ev) {
+      if (ev.target.closest("[data-share]")) return;
+      if (ignoreTap) {
+        ev.preventDefault();
+        ev.stopPropagation();
+      }
+    }, true);
 
     stack.addEventListener("pointerdown", onPointerDown);
     stack.addEventListener("pointermove", onPointerMove);
