@@ -73,7 +73,7 @@
     }
 
     .aisle {
-      fill: rgba(148, 163, 184, 0.16);
+      fill: rgba(148, 163, 184, 0.22);
     }
 
     .path-rest {
@@ -107,9 +107,14 @@
 
     .hop-next {
       stroke-width: 8;
-      opacity: 0.34;
+      opacity: 0.55;
       stroke-dasharray: 5 12;
       animation: ants 2.4s linear infinite;
+    }
+
+    .phone.is-claim .hop-next {
+      stroke-width: 9;
+      opacity: 0.82;
     }
 
     .hop-miss {
@@ -176,18 +181,14 @@
       font-variant-numeric: tabular-nums;
     }
 
-    .stage {
+    .claim,
+    .done,
+    .run {
       position: absolute;
       inset: 0;
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
-      padding: 0 22px calc(22px + var(--safe-b));
-    }
-
-    .claim,
-    .done,
-    .run {
       opacity: 0;
       transform: translateY(8px);
       pointer-events: none;
@@ -204,12 +205,11 @@
 
     .claim,
     .done {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
       padding: 0 28px calc(36px + var(--safe-b));
+    }
+
+    .run {
+      padding: 0 22px calc(22px + var(--safe-b));
     }
 
     .kicker {
@@ -338,8 +338,8 @@
     }
 
     .feito {
-      width: 88px;
-      height: 44px;
+      min-width: 96px;
+      height: 48px;
       border: 0;
       border-radius: 999px;
       background: var(--ink);
@@ -668,7 +668,7 @@
       function paintHud() {
         const picked = status.filter((s) => s === "picked").length;
         const missed = status.filter((s) => s === "missed").length;
-        const doneCount = picked + missed;
+        const doneCount = mode === "done" ? STOPS.length : here;
         countEl.textContent = doneCount + " de " + STOPS.length;
         if (mode === "done") {
           const missCopy = missed ? " · " + missed + " sem estoque" : "";
