@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Onda #1042 — Galpão noite</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --void: #05060a;
+      --floor: #0b0f16;
+      --rack: #151b26;
+      --rack-lit: #1d2634;
+      --paper: #f4efe4;
+      --paper-2: #d8d2c4;
+      --mute: #8d93a3;
+      --line: rgba(244, 239, 228, 0.12);
+      --sodium: #ffb020;
+      --ok: #3dcc70;
+      --miss: #fb7185;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    *,
+    *::before,
+    *::after { box-sizing: border-box; }
+
+    html { -webkit-text-size-adjust: 100%; }
+
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      font-family: "IBM Plex Sans", system-ui, sans-serif;
+      color: var(--paper);
+      background: #020308;
+    }
+
+    .yard {
+      width: 100%;
+      max-width: 390px;
+      height: 100dvh;
+      max-height: 844px;
+      margin: 0 auto;
+      position: relative;
+      overflow: hidden;
+      background:
+        radial-gradient(120% 52% at 50% -8%, rgba(255, 176, 32, 0.16), transparent 52%),
+        radial-gradient(70% 40% at 12% 88%, rgba(2, 132, 200, 0.1), transparent 50%),
+        radial-gradient(50% 30% at 88% 18%, rgba(99, 91, 255, 0.12), transparent 46%),
+        var(--floor);
+    }
+
+    @media (min-height: 900px) {
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .yard {
+        height: 844px;
+        border-radius: 28px;
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+      }
+    }
+
+    .map {
+      position: absolute;
+      inset: 0;
+    }
+
+    .map svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .grain {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.18;
+      background-image: radial-gradient(rgba(255, 255, 255, 0.16) 0.6px, transparent 0.7px);
+      background-size: 3px 3px;
+      mix-blend-mode: overlay;
+    }
+
+    .vignette {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(180deg, rgba(5, 6, 10, 0.22) 0%, transparent 18%, transparent 52%, rgba(5, 6, 10, 0.78) 100%),
+        radial-gradient(ellipse at 50% 42%, transparent 42%, rgba(5, 6, 10, 0.55) 100%);
+    }
+
+    .yard.is-zen .vignette {
+      background:
+        linear-gradient(180deg, rgba(5, 6, 10, 0.12) 0%, transparent 28%, transparent 60%, rgba(5, 6, 10, 0.72) 100%),
+        radial-gradient(ellipse at 50% 40%, transparent 50%, rgba(5, 6, 10, 0.42) 100%);
+    }
+
+    .rack { fill: url(#rackFill); }
+    .rack-edge { fill: none; stroke: rgba(180, 198, 230, 0.22); stroke-width: 1.2; }
+    .shelf { stroke: rgba(180, 198, 230, 0.1); stroke-width: 1; }
+    .dock { fill: #1a140c; stroke: rgba(255, 176, 32, 0.35); stroke-width: 1.4; }
+    .aisle-mark {
+      fill: var(--mute);
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+
+    .hop {
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .hop.is-dash {
+      stroke-dasharray: 8 12;
+      animation: ants 1.05s linear infinite;
+    }
+
+    .hop.is-done {
+      stroke-dasharray: none;
+      opacity: 0.42;
+    }
+
+    .hop.is-now {
+      filter: url(#glow);
+      stroke-width: 9;
+    }
+
+    .hop.is-wait {
+      opacity: 0.28;
+    }
+
+    .node-done { fill: #6b7280; }
+    .node-miss {
+      fill: none;
+      stroke: var(--miss);
+      stroke-width: 2.4;
+    }
+    .node-wait {
+      fill: var(--floor);
+      stroke: #6b7490;
+      stroke-width: 2;
+    }
+    .node-next {
+      fill: none;
+      stroke: #3dcc70;
+      stroke-width: 3;
+    }
+    .node-now {
+      fill: url(#nowFill);
+    }
+    .node-ring {
+      fill: none;
+      stroke: #3dcc70;
+      stroke-width: 3;
+    }
+
+    .progress {
+      position: absolute;
+      top: calc(14px + var(--safe-top));
+      right: 16px;
+      z-index: 4;
+      margin: 0;
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--mute);
+      letter-spacing: 0.02em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .link-card,
+    .zen-card,
+    .speak,
+    .actions {
+      position: absolute;
+      z-index: 5;
+    }
+
+    .link-card,
+    .zen-card {
+      left: 16px;
+      right: 16px;
+      bottom: calc(20px + var(--safe-bottom));
+      padding: 22px 22px 20px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: rgba(8, 10, 16, 0.78);
+      backdrop-filter: blur(16px);
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+    }
+
+    .kicker {
+      margin: 0;
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--sodium);
+    }
+
+    .wave-title {
+      margin: 8px 0 0;
+      font-size: 44px;
+      font-weight: 700;
+      letter-spacing: -0.05em;
+      line-height: 0.95;
+    }
+
+    .wave-meta,
+    .zen-note {
+      margin: 8px 0 0;
+      color: var(--mute);
+      font-size: 15px;
+    }
+
+    .btn-iniciar,
+    .btn-again {
+      display: block;
+      width: 100%;
+      margin-top: 20px;
+      border: 0;
+      border-radius: 16px;
+      padding: 15px 16px;
+      background: var(--paper);
+      color: var(--void);
+      font: inherit;
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      cursor: pointer;
+    }
+
+    .btn-iniciar:active,
+    .btn-again:active,
+    .btn-feito:active { transform: scale(0.98); }
+
+    .speak {
+      left: 16px;
+      width: min(236px, calc(100% - 122px));
+      bottom: calc(26px + var(--safe-bottom));
+      margin: 0;
+      padding: 16px 16px 14px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: rgba(8, 10, 16, 0.82);
+      backdrop-filter: blur(16px);
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.32);
+    }
+
+    .speak-label {
+      margin: 0;
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--sodium);
+    }
+
+    .speak-line {
+      margin: 8px 0 0;
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      line-height: 1.25;
+    }
+
+    .speak-face {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px dashed var(--line);
+    }
+
+    .speak-qty {
+      margin: 0;
+      font-size: 40px;
+      font-weight: 700;
+      letter-spacing: -0.06em;
+      line-height: 0.85;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .speak-loc {
+      margin: 0;
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .speak-sku,
+    .speak-depois {
+      margin: 6px 0 0;
+      color: var(--paper-2);
+      font-size: 13px;
+    }
+
+    .speak-depois { color: var(--mute); }
+
+    .actions {
+      right: 16px;
+      bottom: calc(26px + var(--safe-bottom));
+      display: grid;
+      justify-items: center;
+      gap: 10px;
+    }
+
+    .btn-miss {
+      border: 0;
+      background: transparent;
+      color: var(--mute);
+      font: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      padding: 6px 4px;
+      cursor: pointer;
+    }
+
+    .btn-feito {
+      width: 78px;
+      height: 78px;
+      border: 0;
+      border-radius: 50%;
+      background: var(--paper);
+      color: var(--void);
+      font: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
+    }
+
+    .zen-card { text-align: center; }
+
+    .zen-title {
+      margin: 10px 0 0;
+      font-size: 40px;
+      font-weight: 700;
+      letter-spacing: -0.05em;
+    }
+
+    .hidden { display: none !important; }
+
+    .toast {
+      position: absolute;
+      left: 50%;
+      top: calc(22% + var(--safe-top));
+      transform: translateX(-50%);
+      z-index: 8;
+      display: none;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(244, 239, 228, 0.92);
+      color: var(--void);
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .toast.is-on { display: block; }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+    }
+
+    @keyframes ants {
+      to { stroke-dashoffset: -40; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .hop.is-dash { animation: none; }
+      .btn-iniciar:active,
+      .btn-again:active,
+      .btn-feito:active { transform: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="yard" id="app">
+    <div class="map" aria-hidden="true">
+      <svg id="floor" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <linearGradient id="rackFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#0c1018" />
+            <stop offset="8%" stop-color="#1a2230" />
+            <stop offset="50%" stop-color="#151b26" />
+            <stop offset="92%" stop-color="#1a2230" />
+            <stop offset="100%" stop-color="#0c1018" />
+          </linearGradient>
+          <linearGradient id="nowFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#7ae89a" />
+            <stop offset="100%" stop-color="#1f9a52" />
+          </linearGradient>
+          <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur stdDeviation="2.6" result="b" />
+            <feMerge>
+              <feMergeNode in="b" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+        <rect width="390" height="844" fill="#0b0f16" />
+        <ellipse cx="195" cy="70" rx="150" ry="46" fill="rgba(255,176,32,0.08)" />
+        <ellipse cx="70" cy="430" rx="40" ry="160" fill="rgba(2,132,200,0.05)" />
+        <ellipse cx="320" cy="300" rx="46" ry="150" fill="rgba(99,91,255,0.06)" />
+        <rect class="dock" x="148" y="708" width="94" height="22" rx="6" />
+        <g id="aisles"></g>
+        <g id="hops"></g>
+        <g id="nodes"></g>
+      </svg>
+    </div>
+    <div class="grain"></div>
+    <div class="vignette"></div>
+
+    <p class="progress hidden" id="progress">0 de 18</p>
+
+    <section class="link-card" id="link-card">
+      <p class="kicker">Link da onda</p>
+      <h1 class="wave-title">Onda #1042</h1>
+      <p class="wave-meta">18 paradas · 8 pedidos</p>
+      <button type="button" class="btn-iniciar" id="btn-iniciar">Iniciar</button>
+    </section>
+
+    <article class="speak hidden" id="speak" aria-live="polite">
+      <p class="speak-label">Falar</p>
+      <p class="speak-line" id="speak-line">Dez moletom cinza M no A-01.</p>
+      <div class="speak-face">
+        <p class="speak-qty" id="speak-qty">10</p>
+        <div>
+          <p class="speak-loc" id="speak-loc">A-01</p>
+          <p class="speak-sku" id="speak-sku">ML-CINZA-M</p>
+        </div>
+      </div>
+      <p class="speak-depois" id="speak-depois">depois C-02</p>
+    </article>
+
+    <div class="actions hidden" id="actions">
+      <button type="button" class="btn-miss" id="btn-miss">Não achei</button>
+      <button type="button" class="btn-feito" id="btn-feito">Feito</button>
+    </div>
+
+    <section class="zen-card hidden" id="zen-card">
+      <p class="kicker">Corrida</p>
+      <h1 class="zen-title">Todos pegos</h1>
+      <p class="zen-note" id="zen-note">18 de 18</p>
+      <button type="button" class="btn-again" id="btn-again">Começar de novo</button>
+    </section>
+
+    <div class="toast" id="toast" role="status"></div>
+    <p class="sr-only">Corrida do burro. Só avança. Link da onda, Iniciar reclama e aproxima o mapa.</p>
+  </div>
+
+  <script>
+    (function () {
+      var TOTAL = 18;
+      var PATH_COLORS = ["#635bff", "#059669", "#ea580c", "#9333ea", "#e11d48", "#0284c8"];
+      var AISLE_X = { A: 36, B: 84, C: 132, D: 180, E: 228, F: 276, G: 324, H: 372 };
+      var BACK_Y = 92;
+      var FRONT_Y = 640;
+      var OVERVIEW = [0, 0, 390, 844];
+      var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      var STOPS = [
+        { qty: 10, loc: "A-01", sku: "ML-CINZA-M", name: "Moletom cinza M", orders: 3 },
+        { qty: 8, loc: "C-02", sku: "CJ-JEANS-42", name: "Calça jeans 42", orders: 2 },
+        { qty: 10, loc: "E-01", sku: "CT-BRANCA-P", name: "Camiseta branca P", orders: 4 },
+        { qty: 10, loc: "E-10", sku: "VN-PRETA-38", name: "Vestido preto 38", orders: 2 },
+        { qty: 42, loc: "F-02", sku: "MK-MEIA-3", name: "Meia kit 3 pares", orders: 6 },
+        { qty: 5, loc: "H-09", sku: "BL-LINHO-M", name: "Blusa linho M", orders: 1 },
+        { qty: 7, loc: "B-03", sku: "CL-CHINO-40", name: "Calça chino 40", orders: 2 },
+        { qty: 5, loc: "B-09", sku: "JA-NYLON-G", name: "Jaqueta nylon G", orders: 1 },
+        { qty: 9, loc: "G-01", sku: "TN-BASIC-M", name: "Tênis básico 40", orders: 3 },
+        { qty: 7, loc: "G-09", sku: "SH-SLIM-P", name: "Shorts slim P", orders: 2 },
+        { qty: 6, loc: "C-08", sku: "RG-ALGOD-M", name: "Regata algodão M", orders: 2 },
+        { qty: 4, loc: "F-10", sku: "CS-LISA-G", name: "Camisa lisa G", orders: 1 },
+        { qty: 8, loc: "D-04", sku: "SA-MIDI-36", name: "Saia midi 36", orders: 3 },
+        { qty: 3, loc: "D-10", sku: "CR-TRICOT-P", name: "Cardigã tricot P", orders: 1 },
+        { qty: 11, loc: "A-06", sku: "CL-MOLE-M", name: "Calça moletom M", orders: 4 },
+        { qty: 6, loc: "H-02", sku: "BT-COURO-37", name: "Bota couro 37", orders: 2 },
+        { qty: 4, loc: "A-10", sku: "BL-POLO-G", name: "Polo piqué G", orders: 1 },
+        { qty: 2, loc: "H-10", sku: "CN-LA-U", name: "Cinto lã único", orders: 1 }
+      ];
+
+      var WORDS = {
+        1: "Um", 2: "Dois", 3: "Três", 4: "Quatro", 5: "Cinco", 6: "Seis",
+        7: "Sete", 8: "Oito", 9: "Nove", 10: "Dez", 11: "Onze", 12: "Doze"
+      };
+
+      function parseLoc(code) {
+        var parts = code.split("-");
+        return { aisle: parts[0], bin: parseInt(parts[1], 10) };
+      }
+
+      function binY(n) {
+        return BACK_Y + (n - 1) * ((FRONT_Y - BACK_Y) / 9);
+      }
+
+      function xy(code) {
+        var loc = parseLoc(code);
+        return [AISLE_X[loc.aisle], binY(loc.bin)];
+      }
+
+      function corridorY(fromCode, toCode) {
+        var a = parseLoc(fromCode);
+        var b = parseLoc(toCode);
+        var y1 = binY(a.bin);
+        var y2 = binY(b.bin);
+        var viaBack = Math.abs(y1 - BACK_Y) + Math.abs(y2 - BACK_Y);
+        var viaFront = Math.abs(y1 - FRONT_Y) + Math.abs(y2 - FRONT_Y);
+        return viaBack <= viaFront ? BACK_Y : FRONT_Y;
+      }
+
+      function segment(fromCode, toCode) {
+        var p1 = xy(fromCode);
+        var p2 = xy(toCode);
+        if (fromCode.charAt(0) === toCode.charAt(0)) return [p1, p2];
+        var via = corridorY(fromCode, toCode);
+        var pts = [p1];
+        if (Math.abs(p1[1] - via) > 1) pts.push([p1[0], via]);
+        pts.push([p2[0], via]);
+        if (Math.abs(p2[1] - via) > 1) pts.push(p2);
+        return pts;
+      }
+
+      function toPath(points) {
+        var d = "M " + points[0][0].toFixed(1) + " " + points[0][1].toFixed(1);
+        var i;
+        for (i = 1; i < points.length; i += 1) {
+          d += " L " + points[i][0].toFixed(1) + " " + points[i][1].toFixed(1);
+        }
+        return d;
+      }
+
+      function hopPoints() {
+        var hops = [];
+        var i;
+        for (i = 0; i < STOPS.length - 1; i += 1) {
+          hops.push(segment(STOPS[i].loc, STOPS[i + 1].loc));
+        }
+        return hops;
+      }
+
+      function frameBox(points, extra) {
+        var xs = points.map(function (p) { return p[0]; });
+        var ys = points.map(function (p) { return p[1]; });
+        var minX = Math.min.apply(null, xs) - extra;
+        var maxX = Math.max.apply(null, xs) + extra;
+        var minY = Math.min.apply(null, ys) - extra;
+        var maxY = Math.max.apply(null, ys) + extra;
+        var aspect = 390 / 844;
+        var w = Math.max(168, maxX - minX);
+        var h = Math.max(300, maxY - minY);
+        if (w / h > aspect) h = w / aspect;
+        else w = h * aspect;
+        var cx = (minX + maxX) / 2;
+        var cy = (minY + maxY) / 2 - 18;
+        return [cx - w / 2, cy - h / 2, w, h];
+      }
+
+      function qtyWord(n) {
+        return WORDS[n] || String(n);
+      }
+
+      function speakText(stop) {
+        return qtyWord(stop.qty) + " " + stop.name.toLowerCase() + " no " + stop.loc + ".";
+      }
+
+      function ease(t) {
+        return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+      }
+
+      var hops = hopPoints();
+      var app = document.getElementById("app");
+      var svg = document.getElementById("floor");
+      var aisleLayer = document.getElementById("aisles");
+      var hopLayer = document.getElementById("hops");
+      var nodeLayer = document.getElementById("nodes");
+      var linkCard = document.getElementById("link-card");
+      var zenCard = document.getElementById("zen-card");
+      var speak = document.getElementById("speak");
+      var actions = document.getElementById("actions");
+      var progressEl = document.getElementById("progress");
+      var toastEl = document.getElementById("toast");
+      var boxNow = OVERVIEW.slice();
+      var boxTid = 0;
+
+      var params = new URLSearchParams(window.location.search);
+      var phase = params.get("fase") || "link";
+      if (phase !== "link" && phase !== "run" && phase !== "zen") phase = "link";
+      var index = parseInt(params.get("i") || "0", 10);
+      if (isNaN(index) || index < 0) index = 0;
+      if (index > STOPS.length - 1) index = STOPS.length - 1;
+      var missed = {};
+
+      aisleLayer.innerHTML = Object.keys(AISLE_X).map(function (key) {
+        var x = AISLE_X[key];
+        var shelves = "";
+        var n;
+        for (n = 1; n <= 10; n += 1) {
+          var y = binY(n);
+          shelves += '<line class="shelf" x1="' + (x - 10) + '" y1="' + y.toFixed(1) + '" x2="' + (x + 10) + '" y2="' + y.toFixed(1) + '"></line>';
+        }
+        return (
+          '<g>' +
+            '<rect class="rack" x="' + (x - 12) + '" y="70" width="24" height="590" rx="12"></rect>' +
+            '<rect class="rack-edge" x="' + (x - 12) + '" y="70" width="24" height="590" rx="12"></rect>' +
+            shelves +
+            '<text class="aisle-mark" x="' + x + '" y="678" text-anchor="middle">' + key + "</text>" +
+          "</g>"
+        );
+      }).join("");
+
+      function toast(msg) {
+        toastEl.textContent = msg;
+        toastEl.classList.add("is-on");
+        window.clearTimeout(toast.tid);
+        toast.tid = window.setTimeout(function () {
+          toastEl.classList.remove("is-on");
+        }, 1200);
+      }
+
+      function syncUrl() {
+        var url = new URL(window.location.href);
+        if (phase === "link") {
+          url.search = "";
+        } else {
+          url.searchParams.set("fase", phase);
+          if (phase === "run") url.searchParams.set("i", String(index));
+          else url.searchParams.delete("i");
+        }
+        window.history.replaceState({}, "", url);
+      }
+
+      function setViewBox(box, animate) {
+        var next = box.slice();
+        if (!animate || reduce) {
+          boxNow = next;
+          svg.setAttribute("viewBox", next.join(" "));
+          return;
+        }
+        var from = boxNow.slice();
+        var t0 = performance.now();
+        var ms = 820;
+        window.cancelAnimationFrame(boxTid);
+        function tick(now) {
+          var t = Math.min(1, (now - t0) / ms);
+          var e = ease(t);
+          var cur = [
+            from[0] + (next[0] - from[0]) * e,
+            from[1] + (next[1] - from[1]) * e,
+            from[2] + (next[2] - from[2]) * e,
+            from[3] + (next[3] - from[3]) * e
+          ];
+          boxNow = cur;
+          svg.setAttribute("viewBox", cur.map(function (n) { return n.toFixed(2); }).join(" "));
+          if (t < 1) boxTid = window.requestAnimationFrame(tick);
+        }
+        boxTid = window.requestAnimationFrame(tick);
+      }
+
+      function focusBox() {
+        var stop = STOPS[index];
+        var next = STOPS[index + 1];
+        var pts = [xy(stop.loc)];
+        if (next) {
+          pts = pts.concat(segment(stop.loc, next.loc));
+        } else if (index > 0) {
+          pts = pts.concat(segment(STOPS[index - 1].loc, stop.loc));
+        }
+        return frameBox(pts, 54);
+      }
+
+      function paintHops() {
+        var html = "";
+        var i;
+        for (i = 0; i < hops.length; i += 1) {
+          var color = PATH_COLORS[i % PATH_COLORS.length];
+          var cls = "hop is-dash";
+          var width = 7;
+          if (phase === "zen") {
+            cls = "hop is-done";
+            width = 8;
+          } else if (phase === "run") {
+            if (i < index) {
+              cls = "hop is-done";
+              width = 7;
+            } else if (i === index) {
+              cls = "hop is-dash is-now";
+              width = 9;
+            } else {
+              cls = "hop is-dash is-wait";
+              width = 6;
+            }
+          }
+          html +=
+            '<path class="' + cls + '" d="' + toPath(hops[i]) +
+            '" stroke="' + color + '" stroke-width="' + width + '"></path>';
+        }
+        hopLayer.innerHTML = html;
+      }
+
+      function paintNodes() {
+        var html = "";
+        var i;
+        for (i = 0; i < STOPS.length; i += 1) {
+          var p = xy(STOPS[i].loc);
+          var x = p[0].toFixed(1);
+          var y = p[1].toFixed(1);
+          if (phase === "link") {
+            html += '<circle class="node-wait" cx="' + x + '" cy="' + y + '" r="5"></circle>';
+            continue;
+          }
+          if (phase === "zen") {
+            if (missed[i]) {
+              html += '<circle class="node-miss" cx="' + x + '" cy="' + y + '" r="6"></circle>';
+            } else {
+              html += '<circle class="node-done" cx="' + x + '" cy="' + y + '" r="5.5"></circle>';
+            }
+            continue;
+          }
+          if (i === index) {
+            html += '<circle class="node-ring" cx="' + x + '" cy="' + y + '" r="13"></circle>';
+            html += '<circle class="node-now" cx="' + x + '" cy="' + y + '" r="8"></circle>';
+            continue;
+          }
+          if (i === index + 1) {
+            html += '<circle class="node-next" cx="' + x + '" cy="' + y + '" r="8"></circle>';
+            continue;
+          }
+          if (i < index) {
+            if (missed[i]) {
+              html += '<circle class="node-miss" cx="' + x + '" cy="' + y + '" r="6"></circle>';
+            } else {
+              html += '<circle class="node-done" cx="' + x + '" cy="' + y + '" r="5"></circle>';
+            }
+            continue;
+          }
+          html += '<circle class="node-wait" cx="' + x + '" cy="' + y + '" r="5"></circle>';
+        }
+        nodeLayer.innerHTML = html;
+      }
+
+      function paintSpeak() {
+        var stop = STOPS[index];
+        var next = STOPS[index + 1];
+        document.getElementById("speak-line").textContent = speakText(stop);
+        document.getElementById("speak-qty").textContent = String(stop.qty);
+        document.getElementById("speak-loc").textContent = stop.loc;
+        document.getElementById("speak-sku").textContent = stop.sku;
+        document.getElementById("speak-depois").textContent = next ? "depois " + next.loc : "última parada";
+        progressEl.textContent = index + " de " + TOTAL;
+      }
+
+      function paintChrome() {
+        var isLink = phase === "link";
+        var isRun = phase === "run";
+        var isZen = phase === "zen";
+        app.classList.toggle("is-zen", isZen);
+        linkCard.classList.toggle("hidden", !isLink);
+        speak.classList.toggle("hidden", !isRun);
+        actions.classList.toggle("hidden", !isRun);
+        progressEl.classList.toggle("hidden", !isRun);
+        zenCard.classList.toggle("hidden", !isZen);
+        if (isZen) {
+          var missN = Object.keys(missed).length;
+          document.getElementById("zen-note").textContent =
+            missN ? TOTAL + " de " + TOTAL + " · " + missN + " não achei" : TOTAL + " de " + TOTAL;
+        }
+      }
+
+      function paint(animateBox) {
+        paintChrome();
+        paintHops();
+        paintNodes();
+        if (phase === "run") paintSpeak();
+        var box = OVERVIEW;
+        if (phase === "run") box = focusBox();
+        setViewBox(box, animateBox);
+      }
+
+      function setPhase(next, opts) {
+        switch (next) {
+          case "link":
+          case "run":
+          case "zen":
+            phase = next;
+            break;
+          default: {
+            var unknown = next;
+            throw new Error("fase desconhecida: " + unknown);
+          }
+        }
+        if (opts && opts.index != null) index = opts.index;
+        syncUrl();
+        paint(opts && opts.zoom);
+      }
+
+      function advance(didMiss) {
+        if (phase !== "run") return;
+        if (didMiss) missed[index] = true;
+        if (index >= STOPS.length - 1) {
+          setPhase("zen", { zoom: true });
+          return;
+        }
+        index += 1;
+        syncUrl();
+        paint(true);
+      }
+
+      document.getElementById("btn-iniciar").addEventListener("click", function () {
+        toast("Onda sua");
+        setPhase("run", { index: 0, zoom: true });
+      });
+
+      document.getElementById("btn-feito").addEventListener("click", function () {
+        advance(false);
+      });
+
+      document.getElementById("btn-miss").addEventListener("click", function () {
+        toast("Seguinte");
+        advance(true);
+      });
+
+      document.getElementById("btn-again").addEventListener("click", function () {
+        missed = {};
+        index = 0;
+        setPhase("link", { zoom: true });
+      });
+
+      paint(false);
+    })();
+  </script>
+</body>
+</html>
