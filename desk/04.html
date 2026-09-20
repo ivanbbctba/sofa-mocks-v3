@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Mesa — Pilha de ondas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #16171d;
+      --ink-2: #3d3f4a;
+      --mute: #7a7d8a;
+      --line: #e6e8f0;
+      --paper: #eef1f8;
+      --white: #ffffff;
+      --accent: #635bff;
+      --accent-deep: #4f48d4;
+      --accent-soft: #eeedff;
+      --ok: #22c55e;
+      --safe-t: env(safe-area-inset-top, 0px);
+      --safe-b: env(safe-area-inset-bottom, 0px);
+    }
+
+    *,
+    *::before,
+    *::after { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      min-height: 100dvh;
+    }
+
+    .app {
+      width: min(100%, 390px);
+      min-height: 100dvh;
+      margin: 0 auto;
+      padding: calc(18px + var(--safe-t)) 20px calc(22px + var(--safe-b));
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -0.04em;
+    }
+
+    .factory-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 0;
+      background: var(--white);
+      color: var(--ink-2);
+      padding: 8px 12px 8px 10px;
+      border-radius: 999px;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      box-shadow: 0 1px 0 rgba(22, 23, 29, 0.04), 0 8px 24px rgba(99, 91, 255, 0.08);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .factory-pill:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+    }
+
+    .pulse {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 0 rgba(99, 91, 255, 0.55);
+      animation: pulse 2.2s ease-out infinite;
+      flex: 0 0 auto;
+    }
+
+    .factory-pill.is-paused .pulse {
+      background: var(--mute);
+      animation: none;
+      box-shadow: none;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(99, 91, 255, 0.5); }
+      70% { box-shadow: 0 0 0 8px rgba(99, 91, 255, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(99, 91, 255, 0); }
+    }
+
+    .factory-pill .num {
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .stage {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 0;
+    }
+
+    .stack {
+      position: relative;
+      height: 420px;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .card {
+      position: absolute;
+      left: 6px;
+      right: 6px;
+      top: 0;
+      height: 372px;
+      padding: 26px 24px 20px;
+      border-radius: 28px;
+      background: var(--white);
+      border: 1px solid rgba(230, 232, 240, 0.9);
+      box-shadow: 0 18px 40px rgba(22, 23, 29, 0.08);
+      display: flex;
+      flex-direction: column;
+      color: inherit;
+      text-decoration: none;
+      cursor: pointer;
+      will-change: transform, opacity;
+      transition: transform 0.48s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.36s ease;
+    }
+
+    .card.is-dragging {
+      transition: none;
+    }
+
+    .card[data-pos="0"] { z-index: 3; }
+    .card[data-pos="1"] { z-index: 2; pointer-events: none; }
+    .card[data-pos="2"] { z-index: 1; pointer-events: none; }
+    .card[data-pos="away"] {
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .chip {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: var(--accent-soft);
+      padding: 5px 9px;
+      border-radius: 999px;
+    }
+
+    .chip.is-queue {
+      color: var(--mute);
+      background: #f1f3f8;
+    }
+
+    .setup {
+      font-size: 12px;
+      color: var(--mute);
+    }
+
+    .card h2 {
+      margin: 0 0 6px;
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -0.04em;
+    }
+
+    .progress {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin: 18px 0 8px;
+    }
+
+    .progress .big {
+      font-size: 64px;
+      font-weight: 700;
+      letter-spacing: -0.06em;
+      line-height: 0.9;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .progress .rest {
+      font-size: 16px;
+      color: var(--mute);
+      font-weight: 500;
+    }
+
+    .meter {
+      height: 4px;
+      background: #eef0f6;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 22px;
+    }
+
+    .meter span {
+      display: block;
+      height: 100%;
+      width: var(--p, 0%);
+      background: var(--accent);
+      border-radius: inherit;
+    }
+
+    .where {
+      margin: 0;
+      font-size: 16px;
+      color: var(--ink-2);
+      letter-spacing: -0.02em;
+    }
+
+    .where strong {
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .where .depois {
+      color: var(--mute);
+    }
+
+    .path {
+      margin-top: 18px;
+      height: 46px;
+    }
+
+    .path svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .card-foot {
+      margin-top: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .hint {
+      font-size: 13px;
+      color: var(--mute);
+    }
+
+    .share {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border: 0;
+      background: var(--accent-soft);
+      color: var(--accent-deep);
+      font: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 10px 13px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+
+    .share:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+    }
+
+    .share svg {
+      width: 15px;
+      height: 15px;
+    }
+
+    .dots {
+      display: flex;
+      justify-content: center;
+      gap: 7px;
+      margin-top: 18px;
+    }
+
+    .dots button {
+      width: 7px;
+      height: 7px;
+      padding: 0;
+      border: 0;
+      border-radius: 50%;
+      background: #c9cedb;
+      cursor: pointer;
+    }
+
+    .dots button[aria-current="true"] {
+      width: 18px;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+
+    .nudge {
+      margin: 16px 0 0;
+      text-align: center;
+      font-size: 13px;
+      color: var(--mute);
+    }
+
+    .scrim {
+      position: fixed;
+      inset: 0;
+      background: rgba(22, 23, 29, 0.28);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.22s ease;
+      z-index: 20;
+    }
+
+    .scrim.is-on {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .sheet {
+      position: fixed;
+      left: 50%;
+      bottom: 0;
+      width: min(100%, 390px);
+      transform: translate(-50%, 110%);
+      background: var(--white);
+      border-radius: 24px 24px 0 0;
+      padding: 14px 20px calc(22px + var(--safe-b));
+      z-index: 21;
+      transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .sheet.is-on { transform: translate(-50%, 0); }
+
+    .grab {
+      width: 36px;
+      height: 4px;
+      border-radius: 999px;
+      background: #d6d9e3;
+      margin: 0 auto 16px;
+    }
+
+    .sheet h2 {
+      margin: 0 0 6px;
+      font-size: 18px;
+      letter-spacing: -0.03em;
+    }
+
+    .sheet p {
+      margin: 0 0 18px;
+      color: var(--ink-2);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .sheet-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 14px;
+      padding: 14px 16px;
+      font: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-ghost {
+      background: #f3f4f8;
+      color: var(--ink-2);
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(28px + var(--safe-b));
+      transform: translate(-50%, 16px);
+      background: var(--ink);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 10px 14px;
+      border-radius: 999px;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 30;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .toast.is-on {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .pulse { animation: none; }
+      .card, .sheet, .scrim, .toast { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>Mesa</h1>
+      <button type="button" class="factory-pill" id="factoryPill" aria-haspopup="dialog" aria-controls="factorySheet">
+        <span class="pulse" aria-hidden="true"></span>
+        <span id="pillLabel">Auto · <span class="num">8</span> ped. · ~18 min</span>
+      </button>
+    </header>
+
+    <div class="stage">
+      <div class="stack" id="stack" aria-label="Ondas em pilha"></div>
+      <div class="dots" id="dots" role="tablist" aria-label="Ondas"></div>
+      <p class="nudge">Deslize as cartas · toque para abrir</p>
+    </div>
+  </div>
+
+  <div class="scrim" id="scrim" hidden></div>
+  <div class="sheet" id="factorySheet" role="dialog" aria-modal="true" aria-labelledby="factoryTitle" hidden>
+    <div class="grab" aria-hidden="true"></div>
+    <h2 id="factoryTitle">Próxima onda automática</h2>
+    <p id="factoryCopy">Faltam <strong>8 pedidos</strong> ou cerca de 18 minutos. Antecipe agora, ou pause o automático.</p>
+    <div class="sheet-actions">
+      <button type="button" class="btn btn-primary" id="anticipateBtn">Antecipar Pedidos do dia</button>
+      <button type="button" class="btn btn-ghost" id="pauseBtn">Pausar automático</button>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const RICH = "../rich/04.html";
+    const WAVES = [
+      {
+        id: "1042",
+        live: true,
+        chip: "Agora",
+        setup: "Gerada no setup",
+        title: "Onda #1042",
+        big: "4",
+        rest: "de 18",
+        pct: 22,
+        here: "F-02",
+        next: "H-09",
+        share: "Onda #1042 — 4 de 18 · agora F-02"
+      },
+      {
+        id: "1043",
+        live: false,
+        chip: "Na fila",
+        setup: "",
+        title: "Onda #1043",
+        big: "14",
+        rest: "pedidos",
+        pct: 0,
+        here: "A-01",
+        next: "C-02",
+        share: "Onda #1043 — 14 pedidos"
+      },
+      {
+        id: "1044",
+        live: false,
+        chip: "Na fila",
+        setup: "",
+        title: "Onda #1044",
+        big: "9",
+        rest: "pedidos",
+        pct: 0,
+        here: "C-08",
+        next: "F-10",
+        share: "Onda #1044 — 9 pedidos"
+      }
+    ];
+
+    const stack = document.getElementById("stack");
+    const dotsEl = document.getElementById("dots");
+    const pill = document.getElementById("factoryPill");
+    const pillLabel = document.getElementById("pillLabel");
+    const sheet = document.getElementById("factorySheet");
+    const scrim = document.getElementById("scrim");
+    const toast = document.getElementById("toast");
+    const anticipateBtn = document.getElementById("anticipateBtn");
+    const pauseBtn = document.getElementById("pauseBtn");
+
+    let index = 0;
+    let paused = false;
+    let drag = null;
+    let ignoreTap = false;
+    let toastTimer = 0;
+
+    function pathSvg(live) {
+      const solid = live ? "#635bff" : "#c5c9d6";
+      const dash = "#cfd3e0";
+      const node = live ? "#22c55e" : "#b8bcc8";
+      return (
+        '<svg viewBox="0 0 280 46" fill="none" aria-hidden="true">' +
+          '<path d="M8 38 V14 H92 V8 H188" stroke="' + dash + '" stroke-width="5" stroke-linecap="round" stroke-dasharray="2 10"/>' +
+          '<path d="M8 38 V22 H70 V10 H148" stroke="' + solid + '" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>' +
+          '<circle cx="148" cy="10" r="7" fill="' + node + '"/>' +
+        "</svg>"
+      );
+    }
+
+    function cardHtml(wave) {
+      const where = wave.live
+        ? "<strong>" + wave.here + "</strong> <span class=\"depois\">depois " + wave.next + "</span>"
+        : "Começa em <strong>" + wave.here + "</strong>";
+      return (
+        '<article class="card" role="link" tabindex="0" data-id="' + wave.id + '">' +
+          '<div class="eyebrow">' +
+            '<span class="chip' + (wave.live ? "" : " is-queue") + '">' + wave.chip + "</span>" +
+            (wave.setup ? '<span class="setup">' + wave.setup + "</span>" : "") +
+          "</div>" +
+          "<h2>" + wave.title + "</h2>" +
+          '<div class="progress"><span class="big">' + wave.big + '</span><span class="rest">' + wave.rest + "</span></div>" +
+          '<div class="meter" style="--p:' + wave.pct + '%"><span></span></div>' +
+          '<p class="where">' + where + "</p>" +
+          '<div class="path">' + pathSvg(wave.live) + "</div>" +
+          '<div class="card-foot">' +
+            '<span class="hint">Abrir a onda</span>' +
+            '<button type="button" class="share" data-share="' + wave.id + '">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">' +
+                '<path d="M12 3v12"/><path d="M8 7l4-4 4 4"/>' +
+                '<path d="M5 13v6h14v-6"/>' +
+              "</svg>" +
+              "Compartilhar" +
+            "</button>" +
+          "</div>" +
+        "</article>"
+      );
+    }
+
+    function render() {
+      stack.innerHTML = WAVES.map(cardHtml).join("");
+      dotsEl.innerHTML = WAVES.map(function (_w, i) {
+        return '<button type="button" aria-label="Onda ' + (i + 1) + '"' + (i === index ? ' aria-current="true"' : "") + "></button>";
+      }).join("");
+      layout(0);
+      bindCards();
+    }
+
+    function rel(i) {
+      const n = WAVES.length;
+      return (i - index + n) % n;
+    }
+
+    function layout(dx) {
+      const cards = stack.querySelectorAll(".card");
+      cards.forEach(function (card, i) {
+        const r = rel(i);
+        card.classList.toggle("is-dragging", Boolean(drag) && r === 0);
+        if (r === 0) {
+          card.dataset.pos = "0";
+          card.style.transform = "translate3d(" + dx + "px,0,0) scale(1)";
+          card.style.opacity = "1";
+        } else if (r === 1) {
+          card.dataset.pos = "1";
+          card.style.transform = "translate3d(0,18px,0) scale(0.94)";
+          card.style.opacity = "0.72";
+        } else if (r === 2) {
+          card.dataset.pos = "2";
+          card.style.transform = "translate3d(0,34px,0) scale(0.88)";
+          card.style.opacity = "0.42";
+        } else {
+          card.dataset.pos = "away";
+          card.style.transform = "translate3d(0,48px,0) scale(0.84)";
+        }
+      });
+      dotsEl.querySelectorAll("button").forEach(function (dot, i) {
+        if (i === index) dot.setAttribute("aria-current", "true");
+        else dot.removeAttribute("aria-current");
+      });
+    }
+
+    function go(next) {
+      const n = WAVES.length;
+      index = (next + n) % n;
+      layout(0);
+    }
+
+    function openWave() {
+      window.location.href = RICH;
+    }
+
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add("is-on");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () {
+        toast.classList.remove("is-on");
+      }, 1800);
+    }
+
+    async function shareWave(wave, ev) {
+      ev.preventDefault();
+      ev.stopPropagation();
+      const url = new URL(RICH, window.location.href).href;
+      const payload = { title: "Pisoly · " + wave.title, text: wave.share, url: url };
+      if (navigator.share) {
+        try {
+          await navigator.share(payload);
+          return;
+        } catch (err) {
+          if (err && err.name === "AbortError") return;
+        }
+      }
+      try {
+        await navigator.clipboard.writeText(url);
+        showToast("Link copiado");
+      } catch (_err) {
+        showToast(url);
+      }
+    }
+
+    function bindCards() {
+      stack.querySelectorAll(".card").forEach(function (card, i) {
+        card.addEventListener("click", function (ev) {
+          if (ignoreTap) return;
+          if (ev.target.closest("[data-share]")) return;
+          if (rel(i) !== 0) return;
+          openWave();
+        });
+        card.addEventListener("keydown", function (ev) {
+          if (ev.key === "Enter" || ev.key === " ") {
+            ev.preventDefault();
+            openWave();
+          }
+        });
+      });
+      stack.querySelectorAll("[data-share]").forEach(function (btn) {
+        btn.addEventListener("click", function (ev) {
+          const wave = WAVES.find(function (w) { return w.id === btn.getAttribute("data-share"); });
+          if (wave) shareWave(wave, ev);
+        });
+      });
+    }
+
+    function onPointerDown(ev) {
+      if (ev.target.closest("[data-share]")) return;
+      drag = { x: ev.clientX, dx: 0, moved: false, id: ev.pointerId };
+      stack.setPointerCapture(ev.pointerId);
+    }
+
+    function onPointerMove(ev) {
+      if (!drag) return;
+      drag.dx = ev.clientX - drag.x;
+      if (Math.abs(drag.dx) > 8) drag.moved = true;
+      layout(drag.dx);
+    }
+
+    function onPointerUp() {
+      if (!drag) return;
+      const dx = drag.dx;
+      const moved = drag.moved;
+      drag = null;
+      if (moved) {
+        ignoreTap = true;
+        setTimeout(function () { ignoreTap = false; }, 280);
+        if (Math.abs(dx) > 56) go(dx < 0 ? index + 1 : index - 1);
+        else layout(0);
+        return;
+      }
+      layout(0);
+    }
+
+    stack.addEventListener("pointerdown", onPointerDown);
+    stack.addEventListener("pointermove", onPointerMove);
+    stack.addEventListener("pointerup", onPointerUp);
+    stack.addEventListener("pointercancel", onPointerUp);
+
+    dotsEl.addEventListener("click", function (ev) {
+      const buttons = Array.from(dotsEl.querySelectorAll("button"));
+      const i = buttons.indexOf(ev.target.closest("button"));
+      if (i >= 0) go(i);
+    });
+
+    document.addEventListener("keydown", function (ev) {
+      if (sheet.classList.contains("is-on")) {
+        if (ev.key === "Escape") closeSheet();
+        return;
+      }
+      if (ev.key === "ArrowLeft") go(index - 1);
+      if (ev.key === "ArrowRight") go(index + 1);
+    });
+
+    function openSheet() {
+      sheet.hidden = false;
+      scrim.hidden = false;
+      requestAnimationFrame(function () {
+        sheet.classList.add("is-on");
+        scrim.classList.add("is-on");
+      });
+      pill.setAttribute("aria-expanded", "true");
+    }
+
+    function closeSheet() {
+      sheet.classList.remove("is-on");
+      scrim.classList.remove("is-on");
+      pill.setAttribute("aria-expanded", "false");
+      setTimeout(function () {
+        if (!sheet.classList.contains("is-on")) {
+          sheet.hidden = true;
+          scrim.hidden = true;
+        }
+      }, 280);
+    }
+
+    function syncFactory() {
+      if (paused) {
+        pill.classList.add("is-paused");
+        pillLabel.innerHTML = "Pausado";
+        pauseBtn.textContent = "Retomar automático";
+        document.getElementById("factoryCopy").innerHTML =
+          "O automático está pausado. Nada entra na próxima onda até você retomar.";
+      } else {
+        pill.classList.remove("is-paused");
+        pillLabel.innerHTML = 'Auto · <span class="num">8</span> ped. · ~18 min';
+        pauseBtn.textContent = "Pausar automático";
+        document.getElementById("factoryCopy").innerHTML =
+          "Faltam <strong>8 pedidos</strong> ou cerca de 18 minutos. Antecipe agora, ou pause o automático.";
+      }
+    }
+
+    pill.addEventListener("click", openSheet);
+    scrim.addEventListener("click", closeSheet);
+
+    anticipateBtn.addEventListener("click", function () {
+      paused = false;
+      syncFactory();
+      closeSheet();
+      showToast("Onda antecipada");
+    });
+
+    pauseBtn.addEventListener("click", function () {
+      paused = !paused;
+      syncFactory();
+      closeSheet();
+      showToast(paused ? "Automático pausado" : "Automático retomado");
+    });
+
+    render();
+  </script>
+</body>
+</html>
