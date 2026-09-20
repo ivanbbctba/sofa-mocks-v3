@@ -14,15 +14,22 @@
       --faint: #6b7c93;
       --paper: #f4f6f8;
       --surface: #ffffff;
+      --glass: rgba(255, 255, 255, 0.86);
       --line: rgba(10, 37, 64, 0.08);
+      --edge: rgba(10, 37, 64, 0.12);
       --accent: #635bff;
       --accent-soft: rgba(99, 91, 255, 0.12);
       --go: #0f766e;
+      --go-soft: rgba(15, 118, 110, 0.12);
       --warn: #b45309;
-      --fail: #c41e3a;
+      --floor: #efe8dc;
+    }
+
+    :root {
       --stage-h: 360px;
       --actions-h: 62px;
       --radius: 18px;
+      --fail: #c41e3a;
       --safe-t: env(safe-area-inset-top, 0px);
       --safe-b: env(safe-area-inset-bottom, 0px);
     }
@@ -44,7 +51,7 @@
       height: 100dvh;
       overflow: hidden;
       overscroll-behavior: none;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      font-family: "SF Pro Text", "Segoe UI Variable", system-ui, sans-serif;
       font-size: 15px;
       line-height: 1.4;
       color: var(--ink);
@@ -81,6 +88,8 @@
       min-height: 0;
       height: var(--stage-h);
       position: relative;
+      background: var(--floor);
+      border-radius: var(--radius);
     }
 
     .stage > section {
@@ -356,7 +365,7 @@
     }
 
     .btn-primary {
-      background: var(--accent);
+      background: #635bff;
       color: #fff;
     }
 
@@ -399,7 +408,7 @@
 
     body.is-active .wave-list {
       background: var(--surface);
-      border: 1px solid var(--line);
+      border: 1px solid var(--edge);
       border-radius: var(--radius);
     }
 
@@ -531,7 +540,7 @@
       height: 100%;
       padding: 14px 12px 12px;
       background: var(--surface);
-      border: 1px solid var(--line);
+      border: 1px solid var(--edge);
       border-radius: var(--radius);
       text-decoration: none;
       color: inherit;
@@ -601,7 +610,7 @@
       height: 7px;
       border-radius: 50%;
       background: var(--go);
-      box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.16);
+      box-shadow: 0 0 0 4px var(--go-soft);
     }
 
     .pulse-dot {
@@ -846,7 +855,7 @@
       font-size: 12px;
     }
 
-    .sheet-meters .dial.is-go .fill { stroke: var(--go); }
+    .sheet-meters .dial.is-go .fill { stroke: var(--accent); }
     .sheet-meters .dial.is-go .glyph { color: var(--go); }
     .sheet-meters .dial.is-fail .fill { stroke: var(--fail); }
     .sheet-meters .dial.is-fail .glyph { color: var(--fail); }
@@ -887,8 +896,8 @@
       gap: 6px;
       padding: 4px;
       border-radius: 999px;
-      background: var(--surface);
-      box-shadow: 0 0 0 1px var(--line), 0 8px 24px rgba(10, 37, 64, 0.08);
+      background: var(--glass);
+      box-shadow: 0 0 0 1px var(--edge), 0 8px 24px rgba(10, 37, 64, 0.08);
     }
 
     .demo span {
@@ -915,7 +924,7 @@
     }
 
     .demo button[aria-pressed="true"] {
-      background: var(--accent);
+      background: #635bff;
       color: #fff;
     }
 
