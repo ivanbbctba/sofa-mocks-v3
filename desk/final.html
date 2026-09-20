@@ -20,6 +20,8 @@
       --go: #0f766e;
       --warn: #b45309;
       --fail: #c41e3a;
+      --stage-h: 360px;
+      --actions-h: 62px;
       --radius: 18px;
       --safe-t: env(safe-area-inset-top, 0px);
       --safe-b: env(safe-area-inset-bottom, 0px);
@@ -70,6 +72,30 @@
 
     .chrome {
       flex: 0 0 auto;
+      display: grid;
+      grid-template-rows: auto var(--stage-h) var(--actions-h);
+      align-items: stretch;
+    }
+
+    .stage {
+      min-height: 0;
+      height: var(--stage-h);
+      position: relative;
+    }
+
+    .stage > section {
+      height: 100%;
+    }
+
+    .chrome-actions {
+      height: var(--actions-h);
+      display: flex;
+      align-items: flex-end;
+    }
+
+    .chrome-actions .actions {
+      width: 100%;
+      margin-top: 0;
     }
 
     .top {
@@ -115,7 +141,9 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 10px 0 4px;
+      justify-content: space-between;
+      height: 100%;
+      padding: 4px 0 0;
     }
 
     .orb-btn {
@@ -205,7 +233,7 @@
       justify-content: center;
       gap: 8px;
       width: 100%;
-      margin: 18px 0 0;
+      margin: 12px 0 0;
       padding: 0;
       border: none;
       background: transparent;
@@ -491,13 +519,16 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
-      margin: 12px 0 4px;
+      height: 100%;
+      margin: 0;
+      align-items: stretch;
     }
 
     .panel {
       display: flex;
       flex-direction: column;
-      min-height: 248px;
+      min-height: 0;
+      height: 100%;
       padding: 14px 12px 12px;
       background: var(--surface);
       border: 1px solid var(--line);
@@ -931,6 +962,7 @@
       <p class="live"><span class="live-dot" aria-hidden="true"></span><span id="liveLabel">Fábrica ligada</span></p>
     </header>
 
+    <div class="stage">
     <section class="factory" id="idleView" aria-label="Próxima onda automática">
       <button type="button" class="orb-btn" id="orbOpen" aria-haspopup="dialog" aria-controls="factorySheet" aria-label="Abrir gatilhos da próxima onda">
         <div class="orb-wrap">
@@ -948,11 +980,6 @@
       </button>
 
       <button type="button" class="plates" id="idlePlates" aria-haspopup="dialog" aria-controls="factorySheet" aria-label="Gatilhos automáticos ligados"></button>
-
-      <div class="actions">
-        <button type="button" class="btn btn-primary" id="anticipateIdle">Antecipar</button>
-        <button type="button" class="btn btn-ghost" id="pauseIdle">Pausar</button>
-      </div>
     </section>
 
     <section id="activeView" hidden aria-label="Agora e próxima">
@@ -974,11 +1001,19 @@
           <div class="glances" id="activeGlances" aria-label="Medidores da fábrica"></div>
         </button>
       </div>
-      <div class="actions">
+    </section>
+    </div>
+
+    <div class="chrome-actions">
+      <div class="actions" id="idleActions">
+        <button type="button" class="btn btn-primary" id="anticipateIdle">Antecipar</button>
+        <button type="button" class="btn btn-ghost" id="pauseIdle">Pausar</button>
+      </div>
+      <div class="actions" id="activeActions" hidden>
         <button type="button" class="btn btn-primary" id="endWave">Terminar Onda</button>
         <button type="button" class="btn btn-ghost" id="pauseActive">Pausar</button>
       </div>
-    </section>
+    </div>
     </div>
 
     <section class="waves" aria-label="Ondas">
@@ -1153,6 +1188,8 @@
       var waveList = document.getElementById("waveList");
       var idleView = document.getElementById("idleView");
       var activeView = document.getElementById("activeView");
+      var idleActions = document.getElementById("idleActions");
+      var activeActions = document.getElementById("activeActions");
       var proximaTitle = document.getElementById("proximaTitle");
       var proximaHint = document.getElementById("proximaHint");
       var sheet = document.getElementById("factorySheet");
@@ -1379,6 +1416,8 @@
         document.body.classList.toggle("is-active", mode === "active");
         idleView.hidden = mode !== "idle";
         activeView.hidden = mode !== "active";
+        idleActions.hidden = mode !== "idle";
+        activeActions.hidden = mode !== "active";
         modeIdleBtn.setAttribute("aria-pressed", mode === "idle" && !failDemo ? "true" : "false");
         modeActiveBtn.setAttribute("aria-pressed", mode === "active" && !failDemo ? "true" : "false");
         modeFailBtn.setAttribute("aria-pressed", failDemo ? "true" : "false");
