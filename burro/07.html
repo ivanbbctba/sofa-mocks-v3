@@ -132,7 +132,7 @@
     }
 
     .path-ghost {
-      stroke-width: 0.34;
+      stroke-width: 0.46;
     }
 
     .path-taken {
@@ -763,6 +763,16 @@
         return runIndex >= 0 ? tours[runIndex] : null;
       }
 
+      function nextTourIndex() {
+        var free = freeIndexes();
+        return free.length ? free[0] : -1;
+      }
+
+      function nextTour() {
+        var i = nextTourIndex();
+        return i >= 0 ? tours[i] : null;
+      }
+
       function setRun(color) {
         document.documentElement.style.setProperty("--run", color);
       }
@@ -790,7 +800,7 @@
         return [cx - w / 2, cy - h / 2, w, h];
       }
 
-      function routeViewBox(tour) {
+      function runViewBox(tour, kind) {
         var geo = tour.geo;
         var pts = geo.fullPath.length >= 2 ? geo.fullPath : geo.points;
         var xs = pts.map(function (p) { return p.x; });
@@ -798,15 +808,17 @@
         var start = geo.points[0];
         var midX = (Math.min.apply(null, xs) + Math.max.apply(null, xs)) / 2;
         var midY = (Math.min.apply(null, ys) + Math.max.apply(null, ys)) / 2;
+        var floor = kind === "floor";
+        var bias = floor ? 0.05 : 0.28;
         return fitBox(
           xs,
           ys,
-          1.9,
-          2.15,
-          8.15,
-          16.4,
-          (start.x - midX) * 0.16,
-          (start.y - midY) * 0.1
+          floor ? 2.7 : 1.65,
+          floor ? 2.9 : 1.85,
+          floor ? 9.5 : 7.4,
+          floor ? 19.4 : 15.0,
+          (start.x - midX) * bias,
+          (start.y - midY) * (floor ? 0.04 : 0.16)
         );
       }
 
@@ -886,22 +898,42 @@
           return;
         }
 
-        if (mode === "open" || mode === "zen") {
-          var multi = mode === "zen" || claimed.length > 0;
-          tours.forEach(function (tour) {
+        if (mode === "open") {
+          var preview = nextTour();
+          if (preview && preview.geo.fullPath.length >= 2) {
+            strokePath("path-ghost", preview.geo.fullPath, preview.color, true);
+            preview.geo.points.forEach(function (p) {
+              svg.appendChild(el("circle", {
+                cx: p.x,
+                cy: p.y,
+                r: 0.12,
+                fill: preview.color,
+                stroke: "#fffcf8",
+                "stroke-width": 0.05,
+                opacity: "0.78",
+                "data-run-mark": "1"
+              }));
+            });
+          }
+          map.appendChild(svg);
+          applyViewBox(svg, preview ? runViewBox(preview, "floor") : FULL_VB.slice(), fly);
+          return;
+        }
+
+        if (mode === "zen") {
+          tours.forEach(function (tour, i) {
             if (tour.geo.fullPath.length < 2) return;
             var taken = claimed.indexOf(i) !== -1;
-            var stroke = multi ? tour.color : TOUR_PALETTE[0];
-            strokePath(taken ? "path-taken" : "path-ghost", tour.geo.fullPath, stroke, !taken);
+            strokePath(taken ? "path-taken" : "path-ghost", tour.geo.fullPath, tour.color, !taken);
             tour.geo.points.forEach(function (p) {
               svg.appendChild(el("circle", {
                 cx: p.x,
                 cy: p.y,
                 r: taken ? 0.11 : 0.13,
-                fill: stroke,
+                fill: tour.color,
                 stroke: "#fffcf8",
                 "stroke-width": 0.05,
-                opacity: taken ? "0.36" : (multi ? "0.88" : "0.7"),
+                opacity: taken ? "0.36" : "0.88",
                 "data-run-mark": "1"
               }));
             });
@@ -945,7 +977,7 @@
           svg.appendChild(el("circle", { class: "node-future", cx: p.x, cy: p.y, r: 0.08 }));
         });
         map.appendChild(svg);
-        var destBox = routeViewBox(tour);
+        var destBox = runViewBox(tour, "start");
         applyViewBox(svg, destBox, fly);
         if (playNode && !reduce) {
           try {
@@ -967,7 +999,8 @@
         feitoEl.hidden = false;
 
         if (mode === "open") {
-          setRun(TOUR_PALETTE[0]);
+          var preview = nextTour();
+          setRun(preview ? preview.color : TOUR_PALETTE[0]);
           countEl.textContent = free.length + (free.length === 1 ? " livre" : " livres");
           document.title = "Onda 14 · folio";
           return;
@@ -1143,7 +1176,7 @@
         pickStartedAt = Date.now();
         acceptMs = 800;
         paintChrome();
-        viewBox = routeViewBox(currentTour());
+        viewBox = runViewBox(currentTour(), "start");
         paintMap(Math.max(0, here - 1), here, false);
       } else {
         paintChrome();
