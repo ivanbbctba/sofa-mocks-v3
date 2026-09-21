@@ -115,6 +115,7 @@
       font: 700 0.38px "IBM Plex Sans", system-ui, sans-serif;
     }
 
+    .path-case,
     .path-ghost,
     .path-done,
     .path-play,
@@ -125,8 +126,13 @@
       stroke-linejoin: round;
     }
 
+    .path-case {
+      stroke: #fffcf8;
+      stroke-width: 0.52;
+    }
+
     .path-ghost {
-      stroke-width: 0.3;
+      stroke-width: 0.34;
       stroke-dasharray: 0.42 0.3;
       animation: march 1.05s linear infinite;
     }
@@ -150,10 +156,10 @@
 
     .path-ahead {
       stroke: var(--run);
-      stroke-width: 0.32;
+      stroke-width: 0.4;
       stroke-linecap: butt;
-      stroke-dasharray: 0.36 0.26;
-      opacity: 0.78;
+      stroke-dasharray: 0.38 0.26;
+      opacity: 0.92;
       animation: march 0.82s linear infinite;
     }
 
@@ -194,8 +200,10 @@
 
     .chrome {
       position: absolute;
-      inset: 0;
-      z-index: 4;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 5;
       pointer-events: none;
     }
 
@@ -230,14 +238,25 @@
       left: 0;
       right: 0;
       bottom: 0;
-      padding: 0 14px calc(14px + var(--safe-b));
+      z-index: 6;
+      padding: 0 14px calc(16px + var(--safe-b));
       background: linear-gradient(
         180deg,
         rgba(247, 246, 242, 0) 0%,
-        rgba(247, 246, 242, 0.7) 28%,
-        #f7f6f2 72%
+        rgba(247, 246, 242, 0.62) 22%,
+        #f7f6f2 78%
       );
       pointer-events: none;
+    }
+
+    .phone.is-open .folio,
+    .phone.is-empty .folio {
+      background: linear-gradient(
+        180deg,
+        rgba(247, 246, 242, 0) 0%,
+        rgba(247, 246, 242, 0.28) 46%,
+        rgba(247, 246, 242, 0.88) 100%
+      );
     }
 
     .card {
@@ -249,19 +268,15 @@
       border: 1px solid var(--line);
       border-radius: 22px;
       box-shadow: 0 16px 36px rgba(26, 27, 26, 0.1);
-      padding: 22px 18px 16px;
+      padding: 18px 18px 16px;
     }
 
-    .perfs {
-      position: absolute;
-      left: 16px;
-      right: 16px;
-      top: -1px;
-      height: 10px;
-      background-image: radial-gradient(circle, #efe8dc 3px, transparent 3.2px);
-      background-size: 14px 10px;
-      background-position: center top;
-      opacity: 0.95;
+    .phone.is-open .card,
+    .phone.is-empty .card {
+      background: transparent;
+      border: 0;
+      box-shadow: none;
+      padding: 8px 4px 6px;
     }
 
     .open-wrap,
@@ -499,8 +514,6 @@
     <p class="whisper" id="whisper" role="status"></p>
     <div class="folio">
       <section class="card">
-        <div class="perfs" aria-hidden="true"></div>
-
         <div class="open-wrap" id="open-wrap">
           <p class="kicker">WhatsApp · onda 14</p>
           <button type="button" class="iniciar" id="iniciar">Iniciar</button>
@@ -547,7 +560,7 @@
       var TOP = 0.85;
       var BOT = 16.65;
       var NS = "http://www.w3.org/2000/svg";
-      var FULL_VB = [0, -0.35, 9.55, 18.2];
+      var FULL_VB = [-0.15, -0.55, 9.85, 19.6];
       var WAVE_SHARE = "Onda 14 no Pisoly";
 
       var RUNS = [
@@ -756,11 +769,21 @@
         var geo = tour.geo;
         var a = geo.points[here];
         var b = geo.points[Math.min(here + 1, geo.points.length - 1)];
-        var minX = Math.min(a.x, b.x) - 1.2;
-        var maxX = Math.max(a.x, b.x) + 1.2;
-        var minY = Math.min(a.y, b.y) - 1.4;
-        var maxY = Math.max(a.y, b.y) + 1.7;
-        return [minX, minY, Math.max(3.4, maxX - minX), Math.max(4.3, maxY - minY)];
+        var hopPts = (geo.hops[here] || [a, b]).slice();
+        var xs = hopPts.map(function (p) { return p.x; }).concat([a.x, b.x]);
+        var ys = hopPts.map(function (p) { return p.y; }).concat([a.y, b.y]);
+        var minX = Math.min.apply(null, xs) - 1.05;
+        var maxX = Math.max.apply(null, xs) + 1.05;
+        var minY = Math.min.apply(null, ys) - 1.15;
+        var maxY = Math.max.apply(null, ys) + 2.8;
+        var w = Math.max(3.8, maxX - minX);
+        var h = Math.max(6.2, maxY - minY);
+        var aspect = 390 / 844;
+        if (w / h > aspect) h = w / aspect;
+        else w = h * aspect;
+        var cx = (minX + maxX) / 2;
+        var cy = (minY + maxY) / 2 - 0.55;
+        return [cx - w / 2, cy - h / 2, w, h];
       }
 
       function applyViewBox(svg, dest, animate) {
@@ -802,27 +825,45 @@
         map.replaceChildren();
         var svg = el("svg", {
           viewBox: viewBox.join(" "),
-          preserveAspectRatio: "xMidYMid slice",
+          preserveAspectRatio: mode === "pick" ? "xMidYMid slice" : "xMidYMid meet",
           "aria-hidden": "true"
         });
         drawFloor(svg);
 
+        function strokePath(klass, points, stroke) {
+          if (!points || points.length < 2) return null;
+          var d = pts(points);
+          svg.appendChild(el("polyline", { class: "path-case", points: d }));
+          var line = el("polyline", { class: klass, points: d });
+          if (stroke) line.setAttribute("stroke", stroke);
+          svg.appendChild(line);
+          return line;
+        }
+
         if (mode === "open" || mode === "empty" || mode === "zen") {
-          tours.forEach(function (tour, i) {
+          var nextFree = freeIndexes()[0];
+          var order = tours.map(function (tour, i) { return i; }).sort(function (a, b) {
+            var at = claimed.indexOf(a) !== -1 ? 0 : 1;
+            var bt = claimed.indexOf(b) !== -1 ? 0 : 1;
+            if (at !== bt) return at - bt;
+            if (a === nextFree) return 1;
+            if (b === nextFree) return -1;
+            return a - b;
+          });
+          order.forEach(function (i) {
+            var tour = tours[i];
             if (tour.geo.fullPath.length < 2) return;
             var taken = claimed.indexOf(i) !== -1;
-            svg.appendChild(el("polyline", {
-              class: taken ? "path-taken" : "path-ghost",
-              points: pts(tour.geo.fullPath),
-              stroke: tour.color
-            }));
+            strokePath(taken ? "path-taken" : "path-ghost", tour.geo.fullPath, tour.color);
             tour.geo.points.forEach(function (p) {
               svg.appendChild(el("circle", {
                 cx: p.x,
                 cy: p.y,
-                r: taken ? 0.11 : 0.15,
+                r: taken ? 0.12 : 0.17,
                 fill: tour.color,
-                opacity: taken ? "0.4" : "1"
+                stroke: "#fffcf8",
+                "stroke-width": 0.05,
+                opacity: taken ? "0.42" : "1"
               }));
             });
           });
@@ -834,20 +875,12 @@
         var tour = currentTour();
         var geo = tour.geo;
         var doneSeg = slicePath(geo, 0, toIdx);
-        if (doneSeg.length > 1) {
-          svg.appendChild(el("polyline", { class: "path-done", points: pts(doneSeg) }));
-        }
+        strokePath("path-done", doneSeg);
         var aheadSeg = slicePath(geo, toIdx, geo.points.length);
-        if (aheadSeg.length > 1) {
-          svg.appendChild(el("polyline", { class: "path-ahead", points: pts(aheadSeg) }));
-        }
+        strokePath("path-ahead", aheadSeg);
         var playNode = null;
         if (toIdx > 0) {
-          var playSeg = slicePath(geo, fromIdx, toIdx);
-          if (playSeg.length > 1) {
-            playNode = el("polyline", { class: "path-play", points: pts(playSeg) });
-            svg.appendChild(playNode);
-          }
+          playNode = strokePath("path-play", slicePath(geo, fromIdx, toIdx));
         }
         geo.points.forEach(function (p, i) {
           if (i === toIdx) {
