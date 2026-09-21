@@ -24,12 +24,12 @@
       --ok: #0f766e;
       --miss: #b45309;
       --feito: #1a1b1a;
-      --run1: #4f8a78;
-      --run2: #0f766e;
-      --run3: #0284c7;
-      --run4: #c2410c;
-      --run5: #be123c;
-      --run6: #4d7c0f;
+      --leg-1: #635bff;
+      --leg-2: #059669;
+      --leg-3: #ea580c;
+      --leg-4: #9333ea;
+      --leg-5: #e11d48;
+      --leg-6: #0284c8;
       --safe-t: env(safe-area-inset-top, 0px);
       --safe-b: env(safe-area-inset-bottom, 0px);
     }
@@ -88,10 +88,11 @@
 
     .path-rest {
       fill: none;
-      stroke: var(--accent-soft);
+      stroke: var(--leg-1);
       stroke-width: 8;
       stroke-linecap: round;
       stroke-linejoin: round;
+      opacity: 0.78;
     }
 
     .hop {
@@ -322,7 +323,7 @@
       width: 76px;
       height: 76px;
       border-radius: 50%;
-      background: var(--feito);
+      background: var(--accent);
       color: #fff;
       font-size: 15px;
       font-weight: 600;
@@ -333,8 +334,8 @@
     .feito:active,
     .skip:active { transform: scale(0.96); }
 
-    @keyframes dash-move {
-      to { stroke-dashoffset: -80; }
+    @keyframes walk-dash {
+      to { stroke-dashoffset: var(--walk-cycle, -80); }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -392,8 +393,12 @@
       const Y1 = 618;
       const TOP = 36;
       const BOT = 656;
-      const FULL_BOX = [0, 0, 390, 844];
-      const RUN_COLORS = ["#4f8a78", "#0f766e", "#0284c7", "#c2410c", "#be123c", "#4d7c0f"];
+      const FULL_BOX = [-52, -70, 494, 984];
+      const TOUR_PALETTE = ["#635bff", "#059669", "#ea580c", "#9333ea", "#e11d48", "#0284c8"];
+      const RUN_COLORS = TOUR_PALETTE;
+      const WALK_PX_PER_MS = 0.26;
+      const WAVE_GAP_MS = 800;
+      const WAVE_LOOP_PAUSE_MS = 1000;
       const FREE_AT_START = 2;
 
       const STOPS = [
@@ -483,7 +488,20 @@
       }
 
       function hopColor() {
+        if (mode === "claim" && runIndex === 0 && freeRuns === FREE_AT_START) return TOUR_PALETTE[0];
         return RUN_COLORS[runIndex % RUN_COLORS.length];
+      }
+
+      function pathLengthPx(node) {
+        let len = 0;
+        try { len = node.getTotalLength() || 0; } catch (err) { return 0; }
+        const ctm = node.getScreenCTM && node.getScreenCTM();
+        if (ctm) return len * ((Math.hypot(ctm.a, ctm.b) + Math.hypot(ctm.c, ctm.d)) / 2);
+        return len;
+      }
+
+      function walkDurationMs(node) {
+        return Math.max(WAVE_GAP_MS, pathLengthPx(node) / WALK_PX_PER_MS);
       }
 
       function fmtSec(ms) {
@@ -576,8 +594,8 @@
         let minY = Math.min.apply(null, ys) - padY;
         let maxY = Math.max.apply(null, ys) + padY;
         const aspect = 390 / 844;
-        let w = Math.max(150, maxX - minX);
-        let h = Math.max(240, maxY - minY);
+        let w = Math.max(248, Math.min(308, maxX - minX));
+        let h = Math.max(430, Math.min(560, maxY - minY));
         if (w / h > aspect) h = w / aspect;
         else w = h * aspect;
         const cx = (minX + maxX) / 2;
@@ -587,8 +605,8 @@
 
       function frameActiveLeg(index) {
         if (index >= STOPS.length) return FULL_BOX.slice();
-        if (index < hops.length) return boxOf(hops[index], 48, 70);
-        return boxOf([points[index]], 72, 96);
+        const pts = index < hops.length ? hops[index] : [points[index]];
+        return boxOf(pts, 96, 140);
       }
 
       function setBox(next, ms) {
@@ -615,8 +633,10 @@
       function dashLoop(node, pattern) {
         node.style.strokeDasharray = pattern;
         node.style.strokeDashoffset = "0";
-        if (reduce) return;
-        node.style.animation = "dash-move 1.15s linear infinite";
+        if (reduce || mode !== "run") return;
+        const period = 20;
+        node.style.setProperty("--walk-cycle", String(-period));
+        node.style.animation = "walk-dash " + (walkDurationMs(node) + WAVE_LOOP_PAUSE_MS) + "ms linear infinite";
       }
 
       function drawSolid(node) {
@@ -629,20 +649,21 @@
           return;
         }
         const token = ++dashToken;
+        const dur = walkDurationMs(node);
         node.style.transition = "none";
         node.style.strokeDasharray = String(len);
         node.style.strokeDashoffset = String(len);
         node.getBoundingClientRect();
         requestAnimationFrame(function () {
           if (token !== dashToken) return;
-          node.style.transition = "stroke-dashoffset 0.82s ease";
+          node.style.transition = "stroke-dashoffset " + dur + "ms linear";
           node.style.strokeDashoffset = "0";
           window.setTimeout(function () {
             if (token !== dashToken) return;
             node.style.transition = "none";
             node.style.strokeDasharray = "none";
             node.style.strokeDashoffset = "0";
-          }, 840);
+          }, dur + 40);
         });
       }
 
@@ -722,7 +743,12 @@
         map.appendChild(svg);
 
         play.forEach((item) => {
-          if (item.cls === "hop-next" || item.cls === "hop-preview" || item.cls === "hop-miss") {
+          if (item.cls === "hop-preview") {
+            item.node.style.strokeDasharray = "none";
+            item.node.style.strokeDashoffset = "0";
+            return;
+          }
+          if (item.cls === "hop-next" || item.cls === "hop-miss") {
             dashLoop(item.node, item.cls === "hop-miss" ? "4 10" : "8 12");
             return;
           }

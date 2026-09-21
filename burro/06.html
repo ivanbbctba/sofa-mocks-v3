@@ -21,15 +21,15 @@
       --accent-soft: #dce8e3;
       --go: #0f766e;
       --warn: #b45309;
-      --floor: #0c1018;
+      --floor: #efe8dc;
       --ok: #0f766e;
       --miss: #be123c;
-      --run1: #4f8a78;
-      --run2: #0f766e;
-      --run3: #0284c7;
-      --run4: #c2410c;
-      --run5: #be123c;
-      --run6: #4d7c0f;
+      --leg-1: #635bff;
+      --leg-2: #059669;
+      --leg-3: #ea580c;
+      --leg-4: #9333ea;
+      --leg-5: #e11d48;
+      --leg-6: #0284c8;
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
@@ -44,8 +44,8 @@
       margin: 0;
       min-height: 100dvh;
       font-family: "IBM Plex Sans", system-ui, sans-serif;
-      color: var(--paper);
-      background: #020308;
+      color: var(--ink);
+      background: #e3e1da;
     }
 
     .yard {
@@ -57,7 +57,7 @@
       position: relative;
       overflow: hidden;
       background:
-        radial-gradient(120% 42% at 50% -10%, rgba(255, 176, 32, 0.2), transparent 50%),
+        radial-gradient(120% 70% at 50% 0%, rgba(255, 252, 248, 0.7), transparent 58%),
         var(--floor);
     }
 
@@ -89,16 +89,16 @@
       position: absolute;
       inset: 0;
       pointer-events: none;
-      background: linear-gradient(180deg, rgba(7, 8, 12, 0.04) 0%, transparent 22%, transparent 52%, rgba(7, 8, 12, 0.78) 100%);
+      background: linear-gradient(180deg, rgba(247, 246, 242, 0) 52%, rgba(247, 246, 242, 0.72) 100%);
     }
 
     .hall { fill: rgba(255, 176, 32, 0.045); }
     .rack { fill: url(#rackFill); }
-    .rack-edge { fill: none; stroke: rgba(214, 226, 248, 0.38); stroke-width: 1.3; }
-    .shelf { stroke: rgba(200, 214, 240, 0.14); stroke-width: 1; }
-    .dock { fill: #2a1d0c; stroke: rgba(255, 176, 32, 0.5); stroke-width: 1.5; }
+    .rack-edge { fill: none; stroke: #d4c4a8; stroke-width: 1.3; }
+    .shelf { stroke: rgba(201, 180, 138, 0.35); stroke-width: 1; }
+    .dock { fill: #efe8dc; stroke: var(--accent); stroke-width: 1.5; }
     .aisle-mark {
-      fill: #b7becd;
+      fill: #6d706c;
       font-family: "IBM Plex Sans", system-ui, sans-serif;
       font-size: 12px;
       font-weight: 600;
@@ -108,9 +108,11 @@
       fill: none;
       stroke-linecap: round;
       stroke-linejoin: round;
+    }
+
+    .hop.is-now {
+      stroke-linecap: butt;
       stroke-dasharray: 11 12;
-      animation: ants 1s linear infinite;
-      filter: url(#glow);
     }
 
     .hop.is-other { opacity: 0.2; }
@@ -120,8 +122,8 @@
     .hop.is-done { opacity: 0.58; }
 
     .node-wait {
-      fill: var(--floor);
-      stroke: #7f8798;
+      fill: var(--surface);
+      stroke: #c9b48a;
       stroke-width: 2;
     }
     .node-done { fill: #6b7280; }
@@ -169,14 +171,14 @@
       height: 104px;
       border: 0;
       border-radius: 50%;
-      background: var(--paper);
-      color: var(--void);
+      background: var(--accent);
+      color: #fff;
       font: inherit;
       font-size: 17px;
       font-weight: 700;
       letter-spacing: -0.03em;
       cursor: pointer;
-      box-shadow: 0 14px 32px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 14px 28px rgba(79, 138, 120, 0.32);
     }
 
     .hud {
@@ -218,7 +220,7 @@
     .speek {
       margin: 12px 0 0;
       max-width: 15.5rem;
-      color: var(--paper);
+      color: var(--ink);
       font-size: 14px;
       font-weight: 500;
       line-height: 1.35;
@@ -245,8 +247,8 @@
     .btn-feito,
     .btn-again {
       border: 0;
-      background: var(--paper);
-      color: var(--void);
+      background: var(--accent);
+      color: #fff;
       font: inherit;
       font-weight: 700;
       cursor: pointer;
@@ -277,8 +279,8 @@
       padding: 22px 20px 18px;
       border: 1px solid var(--line);
       border-radius: 22px;
-      background: rgba(8, 10, 16, 0.82);
-      backdrop-filter: blur(16px);
+      background: var(--surface);
+      box-shadow: 0 14px 32px rgba(26, 27, 26, 0.1);
     }
 
     .empty {
@@ -346,8 +348,8 @@
       clip: rect(0, 0, 0, 0);
     }
 
-    @keyframes ants {
-      to { stroke-dashoffset: -46; }
+    @keyframes walk-dash {
+      to { stroke-dashoffset: var(--walk-cycle, -46); }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -361,10 +363,10 @@
       <svg id="floor" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice">
         <defs>
           <linearGradient id="rackFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#12161f" />
-            <stop offset="12%" stop-color="#2a3448" />
-            <stop offset="88%" stop-color="#2a3448" />
-            <stop offset="100%" stop-color="#12161f" />
+            <stop offset="0%" stop-color="#e8dcc8" />
+            <stop offset="12%" stop-color="#e4d6b8" />
+            <stop offset="88%" stop-color="#e4d6b8" />
+            <stop offset="100%" stop-color="#e8dcc8" />
           </linearGradient>
           <linearGradient id="nowFill" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stop-color="#4f8a78" />
@@ -378,8 +380,8 @@
             </feMerge>
           </filter>
         </defs>
-        <rect width="390" height="844" fill="#0c1018" />
-        <ellipse cx="195" cy="60" rx="170" ry="54" fill="rgba(255,176,32,0.14)" />
+        <rect width="390" height="844" fill="#efe8dc" />
+        <ellipse cx="195" cy="60" rx="170" ry="54" fill="rgba(255,252,248,0.35)" />
         <rect class="hall" x="18" y="78" width="354" height="34" rx="10" />
         <rect class="hall" x="18" y="528" width="354" height="34" rx="10" />
         <rect class="dock" x="148" y="582" width="94" height="22" rx="6" />
@@ -426,7 +428,11 @@
 
   <script>
     (function () {
-      var COLORS = ["#4f8a78", "#0f766e", "#0284c7", "#c2410c", "#be123c", "#4d7c0f"];
+      var TOUR_PALETTE = ["#635bff", "#059669", "#ea580c", "#9333ea", "#e11d48", "#0284c8"];
+      var COLORS = TOUR_PALETTE;
+      var WALK_PX_PER_MS = 0.26;
+      var WAVE_GAP_MS = 800;
+      var WAVE_LOOP_PAUSE_MS = 1000;
       var AISLE_X = { A: 36, B: 84, C: 132, D: 180, E: 228, F: 276, G: 324, H: 372 };
       var BACK_Y = 96;
       var FRONT_Y = 546;
@@ -546,13 +552,13 @@
       function frameLeg(points) {
         var xs = points.map(function (p) { return p[0]; });
         var ys = points.map(function (p) { return p[1]; });
-        var minX = Math.min.apply(null, xs) - 38;
-        var maxX = Math.max.apply(null, xs) + 38;
-        var minY = Math.min.apply(null, ys) - 48;
-        var maxY = Math.max.apply(null, ys) + 56;
+        var minX = Math.min.apply(null, xs) - 88;
+        var maxX = Math.max.apply(null, xs) + 96;
+        var minY = Math.min.apply(null, ys) - 92;
+        var maxY = Math.max.apply(null, ys) + 140;
         var aspect = 390 / 844;
-        var w = Math.max(132, maxX - minX);
-        var h = Math.max(220, maxY - minY);
+        var w = Math.max(248, Math.min(308, maxX - minX));
+        var h = Math.max(430, Math.min(560, maxY - minY));
         if (w / h > aspect) h = w / aspect;
         else w = h * aspect;
         var cx = (minX + maxX) / 2;
@@ -573,6 +579,26 @@
 
       function fmtNum(n, digits) {
         return n.toFixed(digits).replace(".", ",");
+      }
+
+      function startedOnce() {
+        return claimed.length > 0;
+      }
+
+      function overviewStroke(i) {
+        return startedOnce() ? COLORS[i] : TOUR_PALETTE[0];
+      }
+
+      function pathLengthPx(node) {
+        var len = 0;
+        try { len = node.getTotalLength() || 0; } catch (err) { return 0; }
+        var ctm = node.getScreenCTM && node.getScreenCTM();
+        if (ctm) return len * ((Math.hypot(ctm.a, ctm.b) + Math.hypot(ctm.c, ctm.d)) / 2);
+        return len;
+      }
+
+      function walkDurationMs(node) {
+        return Math.max(WAVE_GAP_MS, pathLengthPx(node) / WALK_PX_PER_MS);
       }
 
       var tours = RUNS.map(function (run, i) {
@@ -688,10 +714,12 @@
       function paintHops() {
         var html = "";
         tours.forEach(function (item, t) {
+          if (phase === "run" && t !== runIndex) return;
           var taken = claimed.indexOf(t) !== -1;
           item.hops.forEach(function (hop, i) {
             var cls = "hop";
-            var width = 7;
+            var width = 8;
+            var hue = phase === "link" ? overviewStroke(t) : item.color;
             if (phase === "run" && t === runIndex) {
               if (i < index) {
                 cls += " is-done";
@@ -709,18 +737,22 @@
             } else if (taken || phase === "empty") {
               cls += " is-taken";
               width = 6;
-            } else if (phase === "run") {
-              cls += " is-other";
-              width = 6;
             } else {
               width = 8;
             }
             html +=
               '<path class="' + cls + '" d="' + toPath(hop) +
-              '" stroke="' + item.color + '" stroke-width="' + width + '"></path>';
+              '" stroke="' + hue + '" stroke-width="' + width + '"></path>';
           });
         });
         hopLayer.innerHTML = html;
+        if (phase === "run" && !reduce) {
+          Array.prototype.forEach.call(hopLayer.querySelectorAll(".hop.is-now"), function (node) {
+            node.style.strokeLinecap = "butt";
+            node.style.setProperty("--walk-cycle", "-23");
+            node.style.animation = "walk-dash " + (walkDurationMs(node) + WAVE_LOOP_PAUSE_MS) + "ms linear infinite";
+          });
+        }
       }
 
       function paintNodes() {

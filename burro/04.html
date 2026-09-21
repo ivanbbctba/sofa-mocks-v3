@@ -20,12 +20,12 @@
       --go: #0f766e;
       --warn: #b45309;
       --floor: #efe8dc;
-      --run1: #4f8a78;
-      --run2: #0f766e;
-      --run3: #0284c7;
-      --run4: #c2410c;
-      --run5: #be123c;
-      --run6: #4d7c0f;
+      --leg-1: #635bff;
+      --leg-2: #059669;
+      --leg-3: #ea580c;
+      --leg-4: #9333ea;
+      --leg-5: #e11d48;
+      --leg-6: #0284c8;
       --white: #fffcf8;
       --ok: #0f766e;
       --feito: #1a1b1a;
@@ -40,8 +40,8 @@
     html, body {
       margin: 0;
       height: 100%;
-      background: #07090d;
-      color: var(--white);
+      background: #e3e1da;
+      color: var(--ink);
       font: 16px/1.3 "SF Pro Text", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
       -webkit-text-size-adjust: 100%;
     }
@@ -59,7 +59,7 @@
       max-height: 844px;
       margin: 0 auto;
       overflow: hidden;
-      background: var(--night);
+      background: var(--floor);
       isolation: isolate;
     }
 
@@ -80,14 +80,6 @@
       position: absolute;
       inset: 0;
       background:
-        radial-gradient(120% 80% at 50% 18%, rgba(79, 138, 120, 0.28), transparent 56%),
-        radial-gradient(80% 50% at 50% 100%, rgba(8, 10, 14, 0.35), transparent 70%),
-        #243044;
-      transition: background 2.2s ease;
-    }
-
-    .stage.is-lit .floor {
-      background:
         radial-gradient(120% 70% at 50% 0%, rgba(255, 252, 248, 0.7), transparent 58%),
         var(--floor);
     }
@@ -105,15 +97,12 @@
     }
 
     .aisle {
-      fill: #4a5568;
-      transition: fill 2.2s ease;
+      fill: #e3e1da;
     }
-
-    .stage.is-lit .aisle { fill: #e3e1da; }
 
     .hop-case {
       fill: none;
-      stroke: rgba(8, 12, 18, 0.45);
+      stroke: #fffcf8;
       stroke-linecap: round;
       stroke-linejoin: round;
       stroke-width: 14;
@@ -123,21 +112,18 @@
       fill: none;
       stroke-linecap: round;
       stroke-linejoin: round;
-      stroke-dasharray: 12 16;
-      stroke-dashoffset: 0;
-      animation: dash-move 1.15s linear infinite;
     }
 
     .hop.is-future {
-      stroke-width: 7;
-      opacity: 0.28;
+      stroke-width: 10;
+      opacity: 0.78;
     }
 
     .hop.is-now {
       stroke-width: 12;
       opacity: 1;
-      filter: drop-shadow(0 0 10px currentColor);
-      animation-duration: 1.05s;
+      stroke-linecap: butt;
+      stroke-dasharray: 12 16;
     }
 
     .hop.is-done {
@@ -190,11 +176,9 @@
     .stage.is-lit .grain { opacity: 0.04; }
 
     .vignette {
-      background: radial-gradient(70% 60% at 50% 42%, transparent 40%, rgba(0, 0, 0, 0.42) 100%);
-      transition: opacity 2s ease;
+      background: linear-gradient(180deg, rgba(247, 246, 242, 0) 58%, rgba(247, 246, 242, 0.55) 100%);
+      opacity: 0.6;
     }
-
-    .stage.is-lit .vignette { opacity: 0.18; }
 
     .chrome {
       position: absolute;
@@ -211,7 +195,7 @@
       top: calc(14px + var(--safe-top));
       right: 16px;
       margin: 0;
-      color: #8b93a3;
+      color: var(--muted);
       font-size: 13px;
       letter-spacing: 0.01em;
       font-variant-numeric: tabular-nums;
@@ -235,7 +219,7 @@
     .link-card {
       padding: 0 22px calc(28px + var(--safe-bottom));
       text-align: center;
-      background: linear-gradient(180deg, transparent 0%, rgba(8, 10, 16, 0.28) 28%, rgba(8, 10, 16, 0.82) 100%);
+      background: linear-gradient(180deg, rgba(247, 246, 242, 0) 0%, rgba(247, 246, 242, 0.55) 40%, #f7f6f2 100%);
       transition: opacity 0.45s ease, transform 0.7s ease;
     }
 
@@ -250,8 +234,8 @@
       margin: 0 0 16px;
       padding: 5px 10px;
       border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      color: rgba(255, 252, 248, 0.62);
+      border: 1px solid var(--line);
+      color: var(--muted);
       font-size: 11px;
       letter-spacing: 0.04em;
     }
@@ -349,7 +333,7 @@
       padding: 0 8px;
       border: 0;
       border-radius: 50%;
-      background: var(--feito);
+      background: var(--accent);
       color: #fff;
       font: 650 13px/1.15 "SF Pro Text", system-ui, sans-serif;
       letter-spacing: -0.03em;
@@ -375,7 +359,7 @@
       justify-content: flex-end;
       min-height: 38%;
       padding: 0 24px calc(28px + var(--safe-bottom));
-      background: linear-gradient(180deg, transparent 0%, rgba(12, 16, 22, 0.08) 24%, rgba(12, 16, 22, 0.78) 100%);
+      background: linear-gradient(180deg, rgba(247, 246, 242, 0) 0%, rgba(247, 246, 242, 0.55) 28%, #f7f6f2 100%);
       opacity: 0;
       pointer-events: none;
       transition: opacity 1.1s ease;
@@ -388,7 +372,7 @@
 
     .zen-kicker {
       margin: 0;
-      color: rgba(255, 252, 248, 0.55);
+      color: var(--muted);
       font-size: 12px;
       letter-spacing: 0.16em;
       text-transform: uppercase;
@@ -404,7 +388,7 @@
 
     .zen-meta {
       margin: 12px 0 0;
-      color: rgba(255, 252, 248, 0.62);
+      color: var(--muted);
       font-size: 15px;
     }
 
@@ -432,7 +416,7 @@
       justify-content: flex-end;
       min-height: 42%;
       padding: 0 24px calc(48px + var(--safe-bottom));
-      background: linear-gradient(180deg, transparent 0%, rgba(8, 10, 16, 0.2) 30%, rgba(8, 10, 16, 0.88) 100%);
+      background: linear-gradient(180deg, rgba(247, 246, 242, 0) 0%, rgba(247, 246, 242, 0.55) 36%, #f7f6f2 100%);
       text-align: center;
       opacity: 0;
     }
@@ -474,8 +458,8 @@
       clip: rect(0, 0, 0, 0);
     }
 
-    @keyframes dash-move {
-      to { stroke-dashoffset: -28; }
+    @keyframes walk-dash {
+      to { stroke-dashoffset: var(--walk-cycle, -28); }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -542,7 +526,11 @@
   <script>
     (function () {
       const NS = "http://www.w3.org/2000/svg";
-      const COLORS = ["#4f8a78", "#0f766e", "#0284c7", "#c2410c", "#be123c", "#4d7c0f"];
+      const TOUR_PALETTE = ["#635bff", "#059669", "#ea580c", "#9333ea", "#e11d48", "#0284c8"];
+      const COLORS = TOUR_PALETTE;
+      const WALK_PX_PER_MS = 0.26;
+      const WAVE_GAP_MS = 800;
+      const WAVE_LOOP_PAUSE_MS = 1000;
       const AISLE_X = { A: 40, B: 88, C: 136, D: 184, E: 232, F: 280, G: 328, H: 372 };
       const BACK_Y = 86;
       const FRONT_Y = 628;
@@ -644,8 +632,8 @@
         let minY = Math.min.apply(null, ys) - pad;
         let maxY = Math.max.apply(null, ys) + pad;
         const aspect = 390 / 844;
-        let w = Math.max(168, maxX - minX);
-        let h = Math.max(290, maxY - minY);
+        let w = Math.max(248, Math.min(308, maxX - minX));
+        let h = Math.max(430, Math.min(560, maxY - minY));
         if (w / h > aspect) h = w / aspect;
         else w = h * aspect;
         const cx = (minX + maxX) / 2;
@@ -695,7 +683,20 @@
       const log = [];
 
       function hopColor() {
+        if (mode === "link") return TOUR_PALETTE[0];
         return COLORS[runTint % COLORS.length];
+      }
+
+      function pathLengthPx(node) {
+        let len = 0;
+        try { len = node.getTotalLength() || 0; } catch (err) { return 0; }
+        const ctm = node.getScreenCTM && node.getScreenCTM();
+        if (ctm) return len * ((Math.hypot(ctm.a, ctm.b) + Math.hypot(ctm.c, ctm.d)) / 2);
+        return len;
+      }
+
+      function walkDurationMs(node) {
+        return Math.max(WAVE_GAP_MS, pathLengthPx(node) / WALK_PX_PER_MS);
       }
       let svg = null;
       let viewEl = null;
@@ -804,6 +805,13 @@
 
         map.appendChild(svg);
         viewEl = svg;
+        if (mode === "run" && !reduce) {
+          svg.querySelectorAll(".hop.is-now").forEach(function (node) {
+            node.style.strokeLinecap = "butt";
+            node.style.setProperty("--walk-cycle", "-28");
+            node.style.animation = "walk-dash " + (walkDurationMs(node) + WAVE_LOOP_PAUSE_MS) + "ms linear infinite";
+          });
+        }
       }
 
       function setCamera(box) {

@@ -24,13 +24,13 @@
       --ok: #0f766e;
       --feito: #1a1b1a;
       --white: #fffcf8;
-      --run: #4f8a78;
-      --run1: #4f8a78;
-      --run2: #0f766e;
-      --run3: #0284c7;
-      --run4: #c2410c;
-      --run5: #be123c;
-      --run6: #4d7c0f;
+      --run: #635bff;
+      --leg-1: #635bff;
+      --leg-2: #059669;
+      --leg-3: #ea580c;
+      --leg-4: #9333ea;
+      --leg-5: #e11d48;
+      --leg-6: #0284c8;
       --shadow: 0 12px 28px rgba(26, 27, 26, 0.12);
     }
 
@@ -106,7 +106,6 @@
     .path-play.is-draw {
       stroke-dasharray: var(--len);
       stroke-dashoffset: var(--len);
-      animation: draw-leg 0.9s cubic-bezier(0.22, 0.7, 0.2, 1) forwards;
     }
 
     .path-ahead,
@@ -234,7 +233,7 @@
       height: 80px;
       border: 0;
       border-radius: 50%;
-      background: var(--feito);
+      background: var(--accent);
       color: #fff;
       font: 650 15px/1 "SF Pro Text", system-ui, sans-serif;
       letter-spacing: -0.03em;
@@ -244,7 +243,7 @@
     .go {
       width: 96px;
       height: 96px;
-      background: var(--run);
+      background: var(--accent);
       font-size: 16px;
     }
 
@@ -379,8 +378,8 @@
 
     .hidden { display: none !important; }
 
-    @keyframes draw-leg {
-      to { stroke-dashoffset: 0; }
+    @keyframes walk-dash {
+      to { stroke-dashoffset: var(--walk-cycle, -1); }
     }
 
     @keyframes here-pulse {
@@ -389,7 +388,8 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .path-play.is-draw { animation: none; stroke-dashoffset: 0; }
+      .path-ahead { animation: none; }
+      .path-play.is-draw { transition: none; stroke-dashoffset: 0; }
       .node-here.is-live { animation: none; }
     }
   </style>
@@ -435,7 +435,11 @@
   </main>
   <script>
     (function () {
-      const COLORS = ["#4f8a78", "#0f766e", "#0284c7", "#c2410c", "#be123c", "#4d7c0f"];
+      const TOUR_PALETTE = ["#635bff", "#059669", "#ea580c", "#9333ea", "#e11d48", "#0284c8"];
+      const COLORS = TOUR_PALETTE;
+      const WALK_PX_PER_MS = 0.26;
+      const WAVE_GAP_MS = 800;
+      const WAVE_LOOP_PAUSE_MS = 1000;
       const AISLE_X = { A: 0.78, B: 1.92, C: 3.06, D: 4.2, E: 5.34, F: 6.48, G: 7.62, H: 8.76 };
       const Y0 = 1.55;
       const Y1 = 15.85;
@@ -443,7 +447,7 @@
       const BOT = 16.65;
       const NS = "http://www.w3.org/2000/svg";
       const STORE = "pisoly-onda14-claimed";
-      const FULL_VB = [-0.15, -0.2, 9.85, 17.9];
+      const FULL_VB = [-1.45, -1.85, 12.35, 21.4];
 
       const RUNS = [
         {
@@ -662,49 +666,91 @@
         return n.toFixed(digits).replace(".", ",");
       }
 
-      const marching = [];
-      let marchNodes = [];
-
-      function queueMarch(node, dash, gap) {
-        if (node) marching.push({ node: node, dash: dash, gap: gap });
+      function tourHue(i) {
+        return TOUR_PALETTE[((i % 6) + 6) % 6];
       }
 
-      function startMarch() {
-        marchNodes.forEach(function (node) {
-          if (node._march) cancelAnimationFrame(node._march);
-        });
-        marchNodes = [];
-        marching.splice(0).forEach(function (item) {
-          const node = item.node;
-          const period = item.dash + item.gap;
-          node.setAttribute("stroke-dasharray", item.dash + " " + item.gap);
-          node.setAttribute("stroke-dashoffset", "0");
-          node.style.strokeLinecap = "butt";
-          if (node._march) cancelAnimationFrame(node._march);
-          let offset = 0;
-          function tick() {
-            offset -= period / 7;
-            if (offset <= -period) offset += period;
-            node.setAttribute("stroke-dashoffset", String(offset));
-            node._march = requestAnimationFrame(tick);
-          }
-          node._march = requestAnimationFrame(tick);
-          marchNodes.push(node);
+      function startedOnce() {
+        return claimed.length > 0;
+      }
+
+      function overviewStroke(i) {
+        return startedOnce() ? tourHue(i) : TOUR_PALETTE[0];
+      }
+
+      function pathLengthPx(node) {
+        let len = 0;
+        try { len = node.getTotalLength() || 0; } catch (err) { return 0; }
+        const ctm = node.getScreenCTM && node.getScreenCTM();
+        if (ctm) return len * ((Math.hypot(ctm.a, ctm.b) + Math.hypot(ctm.c, ctm.d)) / 2);
+        const svg = node.ownerSVGElement;
+        if (svg && svg.viewBox && svg.viewBox.baseVal && svg.viewBox.baseVal.width) {
+          const vb = svg.viewBox.baseVal;
+          return len * ((svg.clientWidth / vb.width + svg.clientHeight / vb.height) / 2);
+        }
+        return len;
+      }
+
+      function walkDurationMs(node) {
+        return Math.max(WAVE_GAP_MS, pathLengthPx(node) / WALK_PX_PER_MS);
+      }
+
+      function playWalkDash(node, dash, gap) {
+        if (!node) return;
+        const period = dash + gap;
+        node.setAttribute("stroke-dasharray", dash + " " + gap);
+        node.setAttribute("stroke-dashoffset", "0");
+        node.style.strokeLinecap = "butt";
+        if (reduce) return;
+        const dur = walkDurationMs(node) + WAVE_LOOP_PAUSE_MS;
+        node.style.setProperty("--walk-cycle", String(-period));
+        node.style.animation = "walk-dash " + dur + "ms linear infinite";
+      }
+
+      function playWalkDraw(node) {
+        if (!node) return;
+        let len = 1;
+        try { len = node.getTotalLength() || 1; } catch (err) { len = 1; }
+        node.style.strokeDasharray = String(len);
+        node.style.strokeDashoffset = String(len);
+        node.style.setProperty("--len", String(len));
+        if (reduce) {
+          node.style.strokeDashoffset = "0";
+          return;
+        }
+        const dur = walkDurationMs(node);
+        node.getBoundingClientRect();
+        requestAnimationFrame(function () {
+          node.style.transition = "stroke-dashoffset " + dur + "ms linear";
+          node.style.strokeDashoffset = "0";
         });
       }
 
-      function activeViewBox() {
+      function pickAreaBox() {
         const tour = currentTour();
         const geo = tour.geo;
-        const a = geo.points[here];
+        const a = geo.points[Math.min(here, geo.points.length - 1)];
         const b = geo.points[Math.min(here + 1, geo.points.length - 1)];
-        const xs = [a.x, b.x];
-        const ys = [a.y, b.y];
-        const minX = Math.min.apply(null, xs) - 1.15;
-        const maxX = Math.max.apply(null, xs) + 1.15;
-        const minY = Math.min.apply(null, ys) - 1.35;
-        const maxY = Math.max.apply(null, ys) + 1.55;
-        return [minX, minY, Math.max(3.35, maxX - minX), Math.max(4.2, maxY - minY)];
+        const hop = geo.hops[Math.min(here, Math.max(0, geo.hops.length - 1))] || [a, b];
+        const xs = hop.map(function (p) { return p.x; }).concat([a.x, b.x]);
+        const ys = hop.map(function (p) { return p.y; }).concat([a.y, b.y]);
+        const minX = Math.min.apply(null, xs) - 2.15;
+        const maxX = Math.max.apply(null, xs) + 2.45;
+        const minY = Math.min.apply(null, ys) - 2.05;
+        const maxY = Math.max.apply(null, ys) + 4.15;
+        let w = Math.min(7.5, Math.max(6.05, maxX - minX));
+        let h = Math.min(12.1, Math.max(9.8, maxY - minY));
+        const aspect = 390 / 844;
+        if (w / h > aspect) h = w / aspect;
+        else w = h * aspect;
+        if (w > 7.7) {
+          const s = 7.7 / w;
+          w *= s;
+          h *= s;
+        }
+        const cx = (minX + maxX) / 2;
+        const cy = (minY + maxY) / 2 + 0.35;
+        return [cx - w / 2, cy - h / 2, w, h];
       }
 
       function applyViewBox(svg, dest, animate) {
@@ -727,11 +773,10 @@
       }
 
       function paintMap(fromIdx, toIdx, fly) {
-        marching.length = 0;
         map.replaceChildren();
         const svg = el("svg", {
           viewBox: viewBox.join(" "),
-          preserveAspectRatio: "xMidYMid slice",
+          preserveAspectRatio: "xMidYMid meet",
           "aria-hidden": "true"
         });
         svg.appendChild(el("rect", { class: "floor", x: -4, y: -4, width: 18, height: 26 }));
@@ -747,30 +792,32 @@
           }));
         });
 
-        if (mode === "overview" || mode === "empty") {
+        if (mode === "overview" || mode === "empty" || mode === "zen") {
           const nextFree = freeIndexes()[0];
-          setRun(COLORS[nextFree] || COLORS[0]);
+          setRun(startedOnce() ? tourHue(nextFree >= 0 ? nextFree : 0) : TOUR_PALETTE[0]);
           tours.forEach(function (tour, i) {
             if (tour.geo.fullPath.length < 2) return;
             const taken = claimed.indexOf(i) !== -1;
-            const line = el("polyline", {
+            const hue = overviewStroke(i);
+            svg.appendChild(el("polyline", {
               class: taken ? "path-rest" : "path-wave",
               points: pts(tour.geo.fullPath),
-              stroke: tour.color,
-              opacity: taken ? "0.28" : "0.9"
-            });
-            svg.appendChild(line);
-            if (!taken) queueMarch(line, 0.72, 0.58);
+              stroke: hue,
+              opacity: taken ? "0.22" : (startedOnce() ? "0.92" : "0.78")
+            }));
             tour.geo.points.forEach(function (p) {
               svg.appendChild(el("circle", {
                 cx: p.x,
                 cy: p.y,
-                r: 0.13,
-                fill: tour.color,
-                opacity: taken ? "0.35" : "1"
+                r: 0.12,
+                fill: hue,
+                opacity: taken ? "0.28" : "0.85"
               }));
             });
           });
+          map.appendChild(svg);
+          applyViewBox(svg, FULL_VB, fly);
+          return;
         }
 
         if (mode === "pick") {
@@ -815,24 +862,13 @@
             }));
           });
           map.appendChild(svg);
-          applyViewBox(svg, activeViewBox(), fly);
-          if (aheadNode) queueMarch(aheadNode, 0.36, 0.3);
-          startMarch();
-          if (playNode && !reduce) {
-            try {
-              const len = playNode.getTotalLength();
-              playNode.style.setProperty("--len", String(len));
-              playNode.classList.add("is-draw");
-            } catch (err) {
-              playNode.classList.remove("is-draw");
-            }
+          applyViewBox(svg, pickAreaBox(), fly);
+          if (aheadNode) playWalkDash(aheadNode, 0.36, 0.3);
+          if (playNode) {
+            playNode.classList.add("is-draw");
+            playWalkDraw(playNode);
           }
-          return;
         }
-
-        map.appendChild(svg);
-        applyViewBox(svg, FULL_VB, fly);
-        startMarch();
       }
 
       function paintSpeak() {
@@ -862,7 +898,7 @@
         document.getElementById("hud").classList.toggle("is-start", mode === "overview" || mode === "empty");
 
         if (mode === "overview") {
-          setRun(COLORS[free[0]] || COLORS[0]);
+          setRun(startedOnce() ? (COLORS[free[0]] || COLORS[0]) : TOUR_PALETTE[0]);
           countEl.textContent = "";
         }
 
