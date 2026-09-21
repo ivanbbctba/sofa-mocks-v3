@@ -631,7 +631,7 @@
             svg.appendChild(el("path", {
               class: "path-rest",
               d: dOf(seg),
-              stroke: mode === "claim" && freeRuns === 2 ? TOUR_PALETTE[0] : lane()
+              stroke: mode === "claim" ? TOUR_PALETTE[0] : lane()
             }));
           });
         }

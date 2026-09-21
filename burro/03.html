@@ -660,12 +660,8 @@
         });
       }
 
-      function startedOnce() {
-        return claimed.length > 0;
-      }
-
-      function overviewStroke(i) {
-        return startedOnce() ? COLORS[i] : TOUR_PALETTE[0];
+      function overviewStroke() {
+        return TOUR_PALETTE[0];
       }
 
       function activeLegBox() {
@@ -736,7 +732,7 @@
           tours.forEach(function (tour, i) {
             if (tour.geo.fullPath.length < 2) return;
             var taken = claimed.indexOf(i) !== -1;
-            var hue = overviewStroke(i);
+            var hue = overviewStroke();
             svg.appendChild(el("polyline", {
               class: taken ? "path-claimed" : "path-ghost",
               points: pts(tour.geo.fullPath),
@@ -820,7 +816,7 @@
       function paintHud() {
         var free = freeIndexes();
         if (fase === "overview") {
-          setColor(startedOnce() ? (COLORS[free[0]] || COLORS[0]) : TOUR_PALETTE[0]);
+          setColor(TOUR_PALETTE[0]);
           return;
         }
         if (fase === "taken") {

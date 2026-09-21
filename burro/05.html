@@ -588,9 +588,7 @@
       }
 
       function applyRunColor() {
-        var hue = (mode === "open" && free.filter(function (ok) { return !ok; }).length === 0)
-          ? TOUR_PALETTE[0]
-          : WAVES[wave].color;
+        var hue = mode === "open" ? TOUR_PALETTE[0] : WAVES[wave].color;
         document.documentElement.style.setProperty("--run", hue);
       }
 

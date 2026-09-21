@@ -635,12 +635,8 @@
         return n.toFixed(digits).replace(".", ",");
       }
 
-      function startedOnce() {
-        return claimed.length > 0;
-      }
-
-      function overviewStroke(i) {
-        return startedOnce() ? COLORS[i] : TOUR_PALETTE[0];
+      function overviewStroke() {
+        return TOUR_PALETTE[0];
       }
 
       function pathLengthPx(node) {
@@ -764,7 +760,7 @@
           tours.forEach(function (tour, i) {
             if (tour.geo.fullPath.length < 2) return;
             var taken = claimed.indexOf(i) !== -1;
-            var hue = overviewStroke(i);
+            var hue = overviewStroke();
             svg.appendChild(el("polyline", { class: "path-case", points: pts(tour.geo.fullPath) }));
             svg.appendChild(el("polyline", {
               class: taken ? "path-claimed" : "path-ghost",
@@ -863,7 +859,7 @@
         hide(btnAgain, !(mode === "zen" && free.length > 0));
 
         if (mode === "overview") {
-          setRun(startedOnce() ? (COLORS[free[0]] || COLORS[0]) : TOUR_PALETTE[0]);
+          setRun(TOUR_PALETTE[0]);
           countPill.textContent = free.length + (free.length === 1 ? " livre" : " livres");
         }
 

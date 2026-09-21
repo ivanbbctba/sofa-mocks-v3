@@ -671,16 +671,8 @@
         return n.toFixed(digits).replace(".", ",");
       }
 
-      function tourHue(i) {
-        return TOUR_PALETTE[((i % 6) + 6) % 6];
-      }
-
-      function startedOnce() {
-        return claimed.length > 0;
-      }
-
-      function overviewStroke(i) {
-        return startedOnce() ? tourHue(i) : TOUR_PALETTE[0];
+      function overviewStroke() {
+        return TOUR_PALETTE[0];
       }
 
       function pathLengthPx(node) {
@@ -804,17 +796,16 @@
         });
 
         if (mode === "overview" || mode === "empty" || mode === "zen") {
-          const nextFree = freeIndexes()[0];
-          setRun(startedOnce() ? tourHue(nextFree >= 0 ? nextFree : 0) : TOUR_PALETTE[0]);
+          setRun(TOUR_PALETTE[0]);
           tours.forEach(function (tour, i) {
             if (tour.geo.fullPath.length < 2) return;
             const taken = claimed.indexOf(i) !== -1;
-            const hue = overviewStroke(i);
+            const hue = overviewStroke();
             svg.appendChild(el("polyline", {
               class: taken ? "path-rest" : "path-wave",
               points: pts(tour.geo.fullPath),
               stroke: hue,
-              opacity: taken ? "0.22" : (startedOnce() ? "0.92" : "0.78")
+              opacity: taken ? "0.22" : "0.78"
             }));
             tour.geo.points.forEach(function (p) {
               svg.appendChild(el("circle", {
@@ -909,7 +900,7 @@
         document.getElementById("hud").classList.toggle("is-start", mode === "overview" || mode === "empty");
 
         if (mode === "overview") {
-          setRun(startedOnce() ? (COLORS[free[0]] || COLORS[0]) : TOUR_PALETTE[0]);
+          setRun(TOUR_PALETTE[0]);
           countEl.textContent = "";
         }
 

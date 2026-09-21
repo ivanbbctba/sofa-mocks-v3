@@ -585,12 +585,8 @@
         return n.toFixed(digits).replace(".", ",");
       }
 
-      function startedOnce() {
-        return claimed.length > 0;
-      }
-
-      function overviewStroke(i) {
-        return startedOnce() ? COLORS[i] : TOUR_PALETTE[0];
+      function overviewStroke() {
+        return TOUR_PALETTE[0];
       }
 
       function pathLengthPx(node) {
@@ -723,7 +719,7 @@
           item.hops.forEach(function (hop, i) {
             var cls = "hop";
             var width = 8;
-            var hue = phase === "link" ? overviewStroke(t) : item.color;
+            var hue = phase === "link" ? overviewStroke() : item.color;
             if (phase === "run" && t === runIndex) {
               if (i < index) {
                 cls += " is-done";
