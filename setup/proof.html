@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f7f6f2" />
+  <meta name="author" content="Ivan Beira" />
+  <title>Pisoly · configurar</title>
+  <style>
+    :root {
+      --paper: #f7f6f2;
+      --surface: #fffcf8;
+      --ink: #1a1b1a;
+      --muted: #6d706c;
+      --faint: #9a9c98;
+      --line: #e3e1da;
+      --accent: #4f8a78;
+      --accent-soft: #dce8e3;
+      --go: #0f766e;
+      --warn: #b45309;
+      --floor: #efe8dc;
+      --run-1: #635bff;
+      --run-2: #059669;
+      --run-3: #ea580c;
+      --run-4: #9333ea;
+      --run-5: #e11d48;
+      --run-6: #0284c8;
+      --shelf: #8a7a62;
+      --shelf-edge: #6f624e;
+      --wall: #2c3138;
+      --safe-t: env(safe-area-inset-top, 0px);
+      --safe-b: env(safe-area-inset-bottom, 0px);
+      --header-h: 56px;
+      --strip-h: 58px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html {
+      -webkit-text-size-adjust: 100%;
+      height: 100%;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      color: var(--ink);
+      background: var(--paper);
+      font: 15px/1.4 "SF Pro Text", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+      letter-spacing: -0.011em;
+    }
+
+    button {
+      font: inherit;
+      color: inherit;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    [hidden] { display: none !important; }
+
+    .phone {
+      position: relative;
+      width: 100%;
+      max-width: 390px;
+      height: 100dvh;
+      max-height: 844px;
+      margin: 0 auto;
+      overflow: hidden;
+      background: transparent;
+    }
+
+    @media (min-height: 900px) {
+      body { display: grid; place-items: center; }
+      .phone {
+        height: 844px;
+        border-radius: 28px;
+        box-shadow: 0 24px 64px rgba(26, 27, 26, 0.16);
+        background: var(--paper);
+      }
+    }
+
+    .top {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      z-index: 20;
+      height: calc(var(--header-h) + var(--safe-t));
+      padding: var(--safe-t) 12px 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      background: transparent;
+    }
+
+    .brand {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 620;
+      letter-spacing: -0.03em;
+    }
+
+    .mark {
+      font-size: 11px;
+      font-weight: 520;
+      color: var(--faint);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 0 0 auto;
+    }
+
+    .bling,
+    .ghost,
+    .cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      height: 32px;
+      min-height: 32px;
+      padding: 0 11px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .bling .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--faint);
+    }
+
+    .bling.is-on {
+      background: var(--accent-soft);
+      border-color: transparent;
+      color: var(--accent);
+    }
+
+    .bling.is-on .dot {
+      background: var(--go);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.16);
+    }
+
+    .bling strong,
+    .ghost,
+    .cta {
+      font-size: 12px;
+      font-weight: 560;
+    }
+
+    .ghost {
+      color: var(--muted);
+    }
+
+    .ghost:hover { color: var(--ink); }
+
+    .cta {
+      background: var(--accent);
+      border-color: transparent;
+      color: #fff;
+    }
+
+    .cta:active { transform: scale(0.98); }
+
+    .stage {
+      position: absolute;
+      inset: 0;
+    }
+
+    .map-well {
+      position: absolute;
+      inset: calc(var(--header-h) + var(--safe-t)) 0 calc(var(--strip-h) + var(--safe-b)) 0;
+      background: var(--floor);
+      overflow: hidden;
+    }
+
+    .map-well svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .grid-dot { fill: rgba(26, 27, 26, 0.07); }
+    .wall { fill: none; stroke: var(--wall); stroke-width: 2.4; stroke-linecap: square; }
+    .rack {
+      fill: var(--shelf);
+      stroke: var(--shelf-edge);
+      stroke-width: 0.6;
+    }
+    .rack.is-sel {
+      stroke: var(--accent);
+      stroke-width: 1.4;
+    }
+    .aisle-tag {
+      fill: var(--muted);
+      font: 600 7px "SF Pro Text", system-ui, sans-serif;
+    }
+    .portal {
+      fill: var(--go);
+    }
+    .portal-out { fill: var(--warn); }
+
+    .tour {
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .tour-faint { stroke-width: 2.4; opacity: 0.28; }
+    .tour-play { stroke-width: 3.2; opacity: 0.96; }
+    .map-well.is-focus .tour-faint.is-dim { opacity: 0.14; }
+    .map-well.is-focus .tour-play:not(.is-active) { opacity: 0; }
+    .map-well.is-focus .tour-faint.is-active { opacity: 0.22; }
+    .map-well.is-focus .tour-play.is-active { opacity: 1; stroke-width: 3.6; }
+
+    .walker {
+      fill: #fff;
+      stroke-width: 1.4;
+    }
+
+    .map-tools {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 4;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 4px;
+      border-radius: 16px;
+      background: transparent;
+    }
+
+    .map-tool {
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      border: 0;
+      border-radius: 11px;
+      background: var(--surface);
+      color: var(--ink);
+      display: grid;
+      place-items: center;
+    }
+
+    .map-tool svg { width: 18px; height: 18px; display: block; }
+    .map-tool.is-on {
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+    .map-tool-in { color: var(--go); }
+    .map-tool-out { color: var(--warn); }
+
+    .run-strip {
+      position: absolute;
+      left: 50%;
+      bottom: 118px;
+      transform: translateX(-50%);
+      z-index: 5;
+      display: flex;
+      gap: 4px;
+      padding: 4px;
+      border-radius: 999px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+    }
+
+    .run-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      height: 28px;
+      padding: 0 8px 0 6px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 620;
+    }
+
+    .run-chip .swatch {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--run);
+    }
+
+    .run-chip.is-on {
+      background: var(--accent-soft);
+      color: var(--ink);
+    }
+
+    .hex-readout {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 5;
+      margin: 0;
+      padding: 6px 8px;
+      border-radius: 12px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font: 600 10px/1.35 ui-monospace, "SF Mono", Menlo, monospace;
+    }
+
+    .hex-readout b {
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    .hex-readout span {
+      display: block;
+    }
+
+    .hex-readout i {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      margin-right: 5px;
+      border-radius: 50%;
+      vertical-align: 0;
+    }
+
+    .sheet {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: calc(var(--strip-h) + var(--safe-b) + 10px);
+      z-index: 12;
+      padding: 8px 12px 12px;
+      border-radius: 18px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      box-shadow: 0 12px 32px rgba(26, 27, 26, 0.08);
+    }
+
+    .sheet .handle {
+      width: 36px;
+      height: 4px;
+      margin: 0 auto 8px;
+      border-radius: 99px;
+      background: var(--line);
+    }
+
+    .sheet-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .sheet-head strong { font-size: 14px; }
+    .sheet-head .len { color: var(--faint); font-size: 12px; }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin: 10px 0 8px;
+      padding: 3px;
+      border-radius: 12px;
+      background: transparent;
+      border: 1px solid var(--line);
+    }
+
+    .tab {
+      flex: 1;
+      height: 30px;
+      border: 0;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 560;
+    }
+
+    .tab.is-on {
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .n-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+    }
+
+    .tiny {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      font-size: 10px;
+      font-weight: 650;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--faint);
+    }
+
+    .tiny input {
+      width: 52px;
+      height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: transparent;
+      color: var(--ink);
+      font: 600 14px "SF Pro Text", system-ui, sans-serif;
+      text-align: center;
+    }
+
+    .side-toggle {
+      display: inline-flex;
+      height: 34px;
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+      background: transparent;
+    }
+
+    .side-toggle span {
+      display: grid;
+      place-items: center;
+      padding: 0 9px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    .side-toggle[data-side="left"] [data-pick="left"],
+    .side-toggle[data-side="right"] [data-pick="right"] {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .pronto {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      z-index: 16;
+      height: calc(var(--strip-h) + var(--safe-b));
+      padding: 0 12px var(--safe-b);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: transparent;
+    }
+
+    .pronto-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 28px;
+      padding: 0 9px 0 8px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--go);
+      font-size: 12px;
+      font-weight: 620;
+    }
+
+    .pronto-pill .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--go);
+    }
+
+    .fleet {
+      display: flex;
+      gap: 4px;
+      padding: 4px;
+      margin-left: auto;
+      border-radius: 999px;
+      background: transparent;
+      border: 1px solid var(--line);
+    }
+
+    .cart-card {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 32px;
+      padding: 0 9px 0 7px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--muted);
+    }
+
+    .cart-card svg { width: 20px; height: 14px; display: block; }
+    .cart-card strong { font-size: 11px; font-weight: 560; }
+    .cart-card.is-on {
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .scrim {
+      position: absolute;
+      inset: 0;
+      z-index: 30;
+      background: rgba(26, 27, 26, 0.28);
+    }
+
+    .drawer {
+      position: absolute;
+      top: 0; right: 0; bottom: 0;
+      z-index: 31;
+      width: min(320px, 88%);
+      overflow: auto;
+      padding: 16px 16px 28px;
+      background: var(--surface);
+      border-left: 1px solid var(--line);
+    }
+
+    .drawer-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .drawer h2 {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: -0.03em;
+    }
+
+    .drawer h3 {
+      margin: 18px 0 8px;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--faint);
+    }
+
+    .drawer .lede {
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .drawer .cta {
+      width: 100%;
+      height: 44px;
+      border-radius: 14px;
+    }
+
+    .rule {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .rule strong { display: block; font-size: 13px; }
+    .rule p { margin: 2px 0 0; font-size: 11px; color: var(--faint); }
+
+    .sw {
+      width: 40px;
+      min-width: 40px;
+      height: 24px;
+      padding: 0;
+      border: 0;
+      border-radius: 999px;
+      background: var(--line);
+      position: relative;
+    }
+
+    .sw::after {
+      content: "";
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--surface);
+    }
+
+    .sw.is-on { background: var(--accent); }
+    .sw.is-on::after { transform: translateX(16px); }
+  </style>
+</head>
+<body>
+  <div class="phone" id="app">
+    <header class="top">
+      <div class="brand">
+        <h1>Pisoly</h1>
+        <span class="mark">configurar</span>
+      </div>
+      <div class="header-actions">
+        <button type="button" class="bling is-on" id="bling" aria-pressed="true" title="Bling · Conectado">
+          <span class="dot" aria-hidden="true"></span>
+          <strong>Bling</strong>
+        </button>
+        <button type="button" class="cta" id="run-wave-top">Gerar onda</button>
+        <button type="button" class="ghost" id="open-cfg">Cfg</button>
+      </div>
+    </header>
+
+    <div class="stage">
+      <section class="map-well" id="map-well" aria-label="Mapa do galpão em metros">
+        <svg viewBox="0 0 220 300" preserveAspectRatio="xMidYMid meet">
+          <g id="grid"></g>
+          <path class="wall" d="M10 22 H210 V278 H10 Z" />
+          <g id="racks"></g>
+          <circle class="portal" cx="110" cy="278" r="3.4" />
+          <circle class="portal-out" cx="196" cy="22" r="3.2" />
+          <g id="tours"></g>
+          <g id="walkers"></g>
+        </svg>
+        <div class="map-tools" role="toolbar" aria-label="Ferramentas do mapa">
+          <button type="button" class="map-tool is-on" data-tool="shelf" aria-label="Adicionar prateleira">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="3.5" width="12" height="17" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M6 8h12M6 12h12M6 16h12" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+          </button>
+          <button type="button" class="map-tool" data-tool="wall" aria-label="Criar parede">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4" width="17" height="16" rx="1" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M3.5 12h17M12 4v16" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+          </button>
+          <button type="button" class="map-tool map-tool-in" data-tool="in" aria-label="Marcar entrada">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 20V7l6-3 6 3v13" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M10 20v-7h4v7" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>
+          </button>
+          <button type="button" class="map-tool map-tool-out" data-tool="out" aria-label="Marcar saída">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 20V7l6-3 6 3v13" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M12 16V11M10.5 12.5 12 11l1.5 1.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+        <p class="hex-readout" id="hex-readout" aria-label="Cores das trilhas"></p>
+        <div class="run-strip" id="run-strip" role="tablist" aria-label="Trilhas da onda"></div>
+      </section>
+
+      <aside class="sheet" id="sheet">
+        <div class="handle" aria-hidden="true"></div>
+        <div class="sheet-head">
+          <strong id="sheet-title">Prateleira A</strong>
+          <span class="len">12,4 m · 12 posições</span>
+        </div>
+        <div class="tabs" role="tablist">
+          <button type="button" class="tab" data-tab="shelf">Prateleira</button>
+          <button type="button" class="tab is-on" data-tab="wave">Onda</button>
+        </div>
+        <div id="tab-shelf" hidden>
+          <div class="n-row">
+            <label class="tiny">posições
+              <input id="slot-count" type="number" min="1" value="12" />
+            </label>
+            <label class="tiny">prefixo
+              <input id="slot-prefix" type="text" value="A" maxlength="6" />
+            </label>
+            <div class="tiny">lado
+              <button type="button" class="side-toggle" id="side" data-side="left">
+                <span data-pick="left">esquerdo</span>
+                <span data-pick="right">direito</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div id="tab-wave">
+          <button type="button" class="cta" id="run-wave" style="width:100%;margin-top:4px;height:40px;border-radius:12px">Gerar onda manual</button>
+        </div>
+      </aside>
+
+      <footer class="pronto">
+        <span class="pronto-pill"><span class="dot" aria-hidden="true"></span>Pronto</span>
+        <div class="fleet" role="listbox" aria-label="Carrinho">
+          <button type="button" class="cart-card" data-cart="hands" role="option">
+            <svg viewBox="0 0 28 16" aria-hidden="true"><path d="M7 12c0-4 3-7 7-7s7 3 7 7" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="9" y="2" width="10" height="6" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+            <strong>Nas mãos</strong>
+          </button>
+          <button type="button" class="cart-card" data-cart="hand_truck" role="option">
+            <svg viewBox="0 0 28 16" aria-hidden="true"><path d="M7 2v12l11-4V2" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="7" cy="14" r="1.6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+            <strong>Mão</strong>
+          </button>
+          <button type="button" class="cart-card is-on" data-cart="picking" role="option" aria-selected="true">
+            <svg viewBox="0 0 28 16" aria-hidden="true"><rect x="4" y="2" width="18" height="9" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6 5.5h14M6 8h14" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="8" cy="14" r="1.4" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="18" cy="14" r="1.4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+            <strong>Picking</strong>
+          </button>
+        </div>
+      </footer>
+    </div>
+
+    <div class="scrim" id="scrim" hidden></div>
+    <aside class="drawer" id="drawer" hidden>
+      <div class="drawer-head">
+        <h2>Configuração</h2>
+        <button type="button" class="ghost" id="close-cfg">Fechar</button>
+      </div>
+      <p class="lede">Gerar uma onda agora, escolher lote e passeio, e dizer quando as ondas disparam sozinhas.</p>
+      <button type="button" class="cta" id="run-wave-drawer">Gerar onda agora</button>
+      <h3>Regras de onda automática</h3>
+      <div class="rule">
+        <div>
+          <strong>Quantidade de pedidos</strong>
+          <p>Dispara quando o pendente passa do limiar.</p>
+        </div>
+        <button type="button" class="sw is-on" data-wave="orders" aria-pressed="true"></button>
+      </div>
+      <div class="rule">
+        <div>
+          <strong>Horários</strong>
+          <p>Relógio do dia.</p>
+        </div>
+        <button type="button" class="sw" data-wave="schedule" aria-pressed="false"></button>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    /**
+     * Setup SoT path hues — copy exact from pick-walk-labour-lab
+     * src/pickwalk/web/builder.js TOUR_PALETTE. Do not mint-recolor.
+     */
+    const TOUR_PALETTE = [
+      { hex: "#635bff", stroke: "rgba(99, 91, 255, 0.9)", glow: "rgba(99, 91, 255, 0.42)", faint: "rgba(99, 91, 255, 0.28)", led: "rgba(165, 160, 255, 0.95)" },
+      { hex: "#059669", stroke: "rgba(5, 150, 105, 0.92)", glow: "rgba(5, 150, 105, 0.42)", faint: "rgba(5, 150, 105, 0.28)", led: "rgba(52, 211, 153, 0.95)" },
+      { hex: "#ea580c", stroke: "rgba(234, 88, 12, 0.92)", glow: "rgba(234, 88, 12, 0.42)", faint: "rgba(234, 88, 12, 0.28)", led: "rgba(251, 146, 60, 0.95)" },
+      { hex: "#9333ea", stroke: "rgba(147, 51, 234, 0.92)", glow: "rgba(147, 51, 234, 0.42)", faint: "rgba(147, 51, 234, 0.28)", led: "rgba(192, 132, 252, 0.95)" },
+      { hex: "#e11d48", stroke: "rgba(225, 29, 72, 0.92)", glow: "rgba(225, 29, 72, 0.42)", faint: "rgba(225, 29, 72, 0.28)", led: "rgba(251, 113, 133, 0.95)" },
+      { hex: "#0284c8", stroke: "rgba(2, 132, 199, 0.92)", glow: "rgba(2, 132, 199, 0.42)", faint: "rgba(2, 132, 199, 0.28)", led: "rgba(56, 189, 248, 0.95)" },
+    ];
+    const WALK_PX_PER_MS = 0.26;
+    const WAVE_GAP_MS = 800;
+    const WAVE_LOOP_PAUSE_MS = 1000;
+
+    const LANES = [38, 72, 106, 140, 174];
+    const TOP = 42;
+    const MID = 154;
+    const BOT = 262;
+    const ENTER = [110, 274];
+
+    const TOURS = [
+      [ENTER, [LANES[0], BOT], [LANES[0], TOP], [LANES[1], TOP], [LANES[1], BOT]],
+      [ENTER, [LANES[1], BOT], [LANES[1], TOP], [LANES[2], TOP], [LANES[2], 230]],
+      [ENTER, [LANES[2], BOT], [LANES[2], TOP], [LANES[3], TOP], [LANES[3], BOT]],
+      [ENTER, [LANES[3], BOT], [LANES[3], MID], [LANES[4], MID], [LANES[4], TOP]],
+      [ENTER, [LANES[4], BOT], [LANES[4], TOP], [198, TOP]],
+      [ENTER, [LANES[0], BOT], [LANES[0], MID], [LANES[2], MID], [LANES[2], TOP], [198, TOP]],
+    ];
+
+    const RACKS = [
+      { x: 20, label: "A" },
+      { x: 54, label: "B" },
+      { x: 88, label: "C" },
+      { x: 122, label: "D" },
+      { x: 156, label: "E" },
+      { x: 190, label: "F" },
+    ];
+
+    const svgNS = "http://www.w3.org/2000/svg";
+    const $ = (id) => document.getElementById(id);
+    const params = new URLSearchParams(location.search);
+    let active = params.has("active") ? Number(params.get("active")) : null;
+    if (Number.isNaN(active) || active < 1 || active > 6) active = null;
+    let t0 = performance.now();
+    const pathLens = [];
+
+    function el(name, attrs, parent) {
+      const node = document.createElementNS(svgNS, name);
+      for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, value);
+      if (parent) parent.appendChild(node);
+      return node;
+    }
+
+    function poly(pts) {
+      return pts.map((p, i) => (i ? "L" : "M") + p[0] + " " + p[1]).join(" ");
+    }
+
+    function offset(pts, px) {
+      return pts.map((point, i) => {
+        let dx;
+        let dy;
+        if (i === 0) {
+          dx = pts[1][0] - point[0];
+          dy = pts[1][1] - point[1];
+        } else if (i === pts.length - 1) {
+          dx = point[0] - pts[i - 1][0];
+          dy = point[1] - pts[i - 1][1];
+        } else {
+          dx = pts[i + 1][0] - pts[i - 1][0];
+          dy = pts[i + 1][1] - pts[i - 1][1];
+        }
+        const len = Math.hypot(dx, dy) || 1;
+        return [point[0] - (dy / len) * px, point[1] + (dx / len) * px];
+      });
+    }
+
+    function buildGrid() {
+      const g = $("grid");
+      for (let x = 16; x <= 204; x += 12) {
+        for (let y = 28; y <= 270; y += 12) {
+          el("circle", { class: "grid-dot", cx: String(x), cy: String(y), r: "0.55" }, g);
+        }
+      }
+    }
+
+    function buildRacks() {
+      const g = $("racks");
+      RACKS.forEach((rack, i) => {
+        const body = el("rect", {
+          class: i === 0 ? "rack is-sel" : "rack",
+          x: String(rack.x),
+          y: "36",
+          width: "10",
+          height: "216",
+          rx: "1.2",
+          "data-aisle": rack.label,
+        }, g);
+        el("text", { class: "aisle-tag", x: String(rack.x + 1.6), y: "32" }, g).textContent = rack.label;
+        body.addEventListener("click", () => {
+          g.querySelectorAll(".rack").forEach((n) => n.classList.remove("is-sel"));
+          body.classList.add("is-sel");
+          $("sheet-title").textContent = "Prateleira " + rack.label;
+          $("slot-prefix").value = rack.label;
+          $("sheet").hidden = false;
+        });
+      });
+    }
+
+    function buildTours() {
+      const g = $("tours");
+      const walkers = $("walkers");
+      const gap = 2.4;
+      TOURS.forEach((raw, i) => {
+        const pts = offset(raw, (i - 2.5) * gap);
+        const d = poly(pts);
+        const color = TOUR_PALETTE[i];
+        el("path", {
+          class: "tour tour-faint",
+          d,
+          stroke: color.hex,
+          "data-run": String(i + 1),
+          "data-hex": color.hex,
+        }, g);
+        const play = el("path", {
+          class: "tour tour-play",
+          d,
+          stroke: color.hex,
+          "data-run": String(i + 1),
+          "data-hex": color.hex,
+        }, g);
+        el("circle", {
+          class: "walker",
+          r: "3.1",
+          stroke: color.hex,
+          "data-run": String(i + 1),
+        }, walkers);
+        pathLens[i] = play.getTotalLength();
+        play.style.strokeDasharray = "0 " + pathLens[i];
+      });
+    }
+
+    function buildChrome() {
+      const strip = $("run-strip");
+      const readout = $("hex-readout");
+      readout.innerHTML = TOUR_PALETTE.map((c, i) =>
+        `<span><i style="background:${c.hex}"></i><b>${i + 1}</b> ${c.hex}</span>`
+      ).join("");
+      TOUR_PALETTE.forEach((c, i) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "run-chip" + (active === i + 1 ? " is-on" : "");
+        btn.style.setProperty("--run", c.hex);
+        btn.dataset.run = String(i + 1);
+        btn.innerHTML = `<span class="swatch"></span>${i + 1}`;
+        btn.addEventListener("click", () => setActive(active === i + 1 ? null : i + 1));
+        strip.appendChild(btn);
+      });
+    }
+
+    function setActive(n) {
+      active = n;
+      $("map-well").classList.toggle("is-focus", n != null);
+      document.querySelectorAll(".run-chip").forEach((btn) => {
+        btn.classList.toggle("is-on", Number(btn.dataset.run) === n);
+      });
+      document.querySelectorAll(".tour").forEach((node) => {
+        const mine = Number(node.dataset.run) === n;
+        node.classList.toggle("is-active", mine);
+        node.classList.toggle("is-dim", n != null && !mine);
+      });
+      t0 = performance.now();
+    }
+
+    function pointAlong(path, dist) {
+      return path.getPointAtLength(Math.max(0, Math.min(path.getTotalLength(), dist)));
+    }
+
+    function tick(now) {
+      const plays = [...document.querySelectorAll(".tour-play")];
+      const walkers = [...document.querySelectorAll(".walker")];
+      const starts = pathLens.map((_, i) => i * WAVE_GAP_MS);
+      const durs = pathLens.map((len) => (len < 1e-6 ? 0 : len / WALK_PX_PER_MS));
+      const lastDone = Math.max(...starts.map((start, i) => start + durs[i]));
+      const cycle = lastDone + WAVE_LOOP_PAUSE_MS;
+      const t = (now - t0) % cycle;
+      plays.forEach((path, i) => {
+        if (active != null && i !== active - 1) {
+          path.style.strokeDasharray = "0 " + pathLens[i];
+          walkers[i].setAttribute("visibility", "hidden");
+          return;
+        }
+        const local = t - starts[i];
+        const traveled = local <= 0 ? 0 : Math.min(pathLens[i], local * WALK_PX_PER_MS);
+        path.style.strokeDasharray = traveled + " " + pathLens[i];
+        const at = pointAlong(path, traveled);
+        walkers[i].setAttribute("cx", String(at.x));
+        walkers[i].setAttribute("cy", String(at.y));
+        walkers[i].setAttribute("visibility", traveled > 0 && traveled < pathLens[i] ? "visible" : "hidden");
+      });
+      requestAnimationFrame(tick);
+    }
+
+    function replay() {
+      t0 = performance.now();
+    }
+
+    buildGrid();
+    buildRacks();
+    buildTours();
+    buildChrome();
+    if (active != null) setActive(active);
+    requestAnimationFrame(tick);
+
+    $("bling").addEventListener("click", () => {
+      const on = $("bling").classList.toggle("is-on");
+      $("bling").setAttribute("aria-pressed", String(on));
+      $("bling").querySelector("strong").textContent = on ? "Bling" : "Conectar";
+      $("bling").title = on ? "Bling · Conectado" : "Conectar Bling";
+    });
+
+    document.querySelectorAll(".cart-card").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".cart-card").forEach((n) => {
+          n.classList.remove("is-on");
+          n.setAttribute("aria-selected", "false");
+        });
+        btn.classList.add("is-on");
+        btn.setAttribute("aria-selected", "true");
+      });
+    });
+
+    document.querySelectorAll(".tab").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach((n) => n.classList.remove("is-on"));
+        tab.classList.add("is-on");
+        $("tab-shelf").hidden = tab.dataset.tab !== "shelf";
+        $("tab-wave").hidden = tab.dataset.tab !== "wave";
+      });
+    });
+
+    $("side").addEventListener("click", () => {
+      const next = $("side").dataset.side === "left" ? "right" : "left";
+      $("side").dataset.side = next;
+    });
+
+    document.querySelectorAll(".map-tool").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".map-tool").forEach((n) => n.classList.remove("is-on"));
+        btn.classList.add("is-on");
+      });
+    });
+
+    $("run-wave").addEventListener("click", replay);
+    $("run-wave-top").addEventListener("click", replay);
+    $("run-wave-drawer").addEventListener("click", () => {
+      $("drawer").hidden = true;
+      $("scrim").hidden = true;
+      replay();
+    });
+
+    $("open-cfg").addEventListener("click", () => {
+      $("drawer").hidden = false;
+      $("scrim").hidden = false;
+    });
+    $("close-cfg").addEventListener("click", () => {
+      $("drawer").hidden = true;
+      $("scrim").hidden = true;
+    });
+    $("scrim").addEventListener("click", () => {
+      $("drawer").hidden = true;
+      $("scrim").hidden = true;
+    });
+
+    document.querySelectorAll(".sw").forEach((sw) => {
+      sw.addEventListener("click", () => {
+        const on = sw.classList.toggle("is-on");
+        sw.setAttribute("aria-pressed", String(on));
+      });
+    });
+  </script>
+</body>
+</html>
