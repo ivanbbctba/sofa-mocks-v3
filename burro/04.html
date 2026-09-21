@@ -99,6 +99,9 @@
     .aisle {
       fill: #e3e1da;
     }
+    .l-main { fill: #f3efe6; }
+    .l-wing { fill: #ebe4d6; }
+    .office { fill: #e8dcc8; }
 
     .hop-case {
       fill: none;
@@ -531,9 +534,9 @@
       const WALK_PX_PER_MS = 0.26;
       const WAVE_GAP_MS = 800;
       const WAVE_LOOP_PAUSE_MS = 1000;
-      const AISLE_X = { A: 40, B: 88, C: 136, D: 184, E: 232, F: 280, G: 328, H: 372 };
-      const BACK_Y = 86;
-      const FRONT_Y = 628;
+      const AISLE_X = { A: 38, B: 78, C: 118, D: 158, E: 228, F: 276, G: 324, H: 370 };
+      const BACK_Y = 96;
+      const FRONT_Y = 600;
       const ONES = ["zero", "um", "dois", "três", "quatro", "cinco", "seis", "sete", "oito", "nove", "dez", "onze", "doze", "treze", "quatorze", "quinze", "dezesseis", "dezessete", "dezoito", "dezenove"];
       const TENS = ["", "", "vinte", "trinta", "quarenta"];
 
@@ -647,7 +650,9 @@
 
       const hops = STOPS.slice(1).map((stop, i) => hopPts(STOPS[i].code, stop.code));
       const allPts = hops.reduce((acc, seg) => acc.concat(seg), []);
-      const FULL_BOX = boxOf(allPts.concat(STOPS.map((s) => xy(s.code))), 36, 0);
+      const FULL_BOX = boxOf(allPts.concat(STOPS.map((s) => xy(s.code))).concat([
+        { x: 14, y: 48 }, { x: 378, y: 48 }, { x: 14, y: 760 }, { x: 186, y: 760 }
+      ]), 48, 0);
 
       function legBox(index) {
         const here = xy(STOPS[Math.min(index, STOPS.length - 1)].code);
@@ -736,15 +741,18 @@
           preserveAspectRatio: "xMidYMid slice",
           "aria-hidden": "true"
         });
+        svg.appendChild(el("rect", { class: "l-main", x: 14, y: 48, width: 364, height: 572, rx: 22 }));
+        svg.appendChild(el("rect", { class: "l-wing", x: 14, y: 612, width: 172, height: 148, rx: 22 }));
+        svg.appendChild(el("rect", { class: "office", x: 286, y: 58, width: 80, height: 36, rx: 10 }));
         Object.keys(AISLE_X).forEach((letter) => {
           const x = AISLE_X[letter];
           svg.appendChild(el("rect", {
             class: "aisle",
-            x: x - 11,
-            y: 8,
-            width: 22,
-            height: 720,
-            rx: 11
+            x: x - 10,
+            y: 88,
+            width: 20,
+            height: 520,
+            rx: 10
           }));
         });
 

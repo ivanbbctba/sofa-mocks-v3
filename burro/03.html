@@ -85,6 +85,9 @@
     }
 
     .aisle { fill: #e3e1da; }
+    .u-arm { fill: #f3efe6; }
+    .u-cross { fill: #ebe4d6; }
+    .yard-void { fill: #efe8dc; }
 
     .path-rest {
       fill: none;
@@ -440,13 +443,13 @@
       var WALK_PX_PER_MS = 0.26;
       var WAVE_GAP_MS = 800;
       var WAVE_LOOP_PAUSE_MS = 1000;
-      var AISLE_X = { A: 0.78, B: 1.92, C: 3.06, D: 4.2, E: 5.34, F: 6.48, G: 7.62, H: 8.76 };
-      var Y0 = 1.55;
-      var Y1 = 15.85;
-      var TOP = 0.85;
-      var BOT = 16.65;
+      var AISLE_X = { A: 0.92, B: 1.88, C: 2.84, D: 3.80, E: 5.70, F: 6.66, G: 7.62, H: 8.58 };
+      var Y0 = 2.35;
+      var Y1 = 13.15;
+      var TOP = 1.35;
+      var BOT = 14.15;
       var NS = "http://www.w3.org/2000/svg";
-      var FULL_VB = [-1.4, -1.7, 12.3, 21.2];
+      var FULL_VB = [-1.6, -1.4, 12.7, 18.6];
       var RUNS = [
         [
           { loc: "A-01", qty: 10, sku: "TOALHA-220", kg: 4.8, m3: 0.09, speek: "Dez toalhas 220 no A-01." },
@@ -713,15 +716,19 @@
           "aria-hidden": "true"
         });
 
+        svg.appendChild(el("rect", { class: "u-arm", x: 0.28, y: 0.7, width: 3.95, height: 13.9, rx: 0.28 }));
+        svg.appendChild(el("rect", { class: "u-arm", x: 5.28, y: 0.7, width: 3.95, height: 13.9, rx: 0.28 }));
+        svg.appendChild(el("rect", { class: "u-cross", x: 0.28, y: 0.7, width: 8.95, height: 2.15, rx: 0.28 }));
+        svg.appendChild(el("rect", { class: "yard-void", x: 3.9, y: 8.4, width: 1.7, height: 7.6, rx: 0.2 }));
         Object.keys(AISLE_X).forEach(function (letter) {
           var x = AISLE_X[letter];
           svg.appendChild(el("rect", {
             class: "aisle",
-            x: x - 0.28,
-            y: 0.45,
-            width: 0.56,
-            height: 16.5,
-            rx: 0.28
+            x: x - 0.26,
+            y: 1.55,
+            width: 0.52,
+            height: 12.2,
+            rx: 0.26
           }));
         });
 

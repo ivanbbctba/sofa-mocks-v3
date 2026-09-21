@@ -75,6 +75,9 @@
     }
 
     .aisle-pill { fill: var(--aisle); }
+    .island { fill: #f3efe6; }
+    .lot { fill: #efe8dc; }
+    .office { fill: #e8dcc8; }
 
     .path-run,
     .path-done,
@@ -433,10 +436,10 @@
       var WALK_PX_PER_MS = 0.26;
       var WAVE_GAP_MS = 800;
       var WAVE_LOOP_PAUSE_MS = 1000;
-      var AISLE_X = { A: 40, B: 88, C: 136, D: 184, E: 232, F: 280, G: 328, H: 372 };
-      var BACK_Y = 78;
-      var FRONT_Y = 620;
-      var WIDE = [-52, -70, 494, 984];
+      var AISLE_X = { A: 92, B: 124, C: 156, D: 188, E: 220, F: 252, G: 284, H: 316 };
+      var BACK_Y = 198;
+      var FRONT_Y = 548;
+      var WIDE = [-40, -50, 470, 944];
       var PHASES = { open: "open", pick: "pick", zen: "zen", empty: "empty" };
       var ASPECT = 390 / 844;
 
@@ -585,10 +588,14 @@
       var depoisEl = document.getElementById("depois");
       var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-      aisleEl.innerHTML = Object.keys(AISLE_X).map(function (key) {
-        var x = AISLE_X[key];
-        return '<rect class="aisle-pill" x="' + (x - 13).toFixed(1) + '" y="36" width="26" height="628" rx="13"></rect>';
-      }).join("");
+      aisleEl.innerHTML =
+        '<rect class="lot" x="-80" y="-80" width="550" height="1000"></rect>' +
+        '<rect class="island" x="72" y="168" width="260" height="420" rx="28"></rect>' +
+        '<rect class="office" x="84" y="178" width="70" height="28" rx="8"></rect>' +
+        Object.keys(AISLE_X).map(function (key) {
+          var x = AISLE_X[key];
+          return '<rect class="aisle-pill" x="' + (x - 9).toFixed(1) + '" y="196" width="18" height="360" rx="9"></rect>';
+        }).join("");
 
       var phase = PHASES.open;
       var claimed = [];

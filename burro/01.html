@@ -77,6 +77,11 @@
       fill: #e3e1da;
     }
 
+    .dock-slab { fill: #e3e1da; }
+    .dock-door { fill: #d5d2c8; }
+    .office { fill: #e8dcc8; }
+    .yard-pad { fill: #f3efe6; }
+
     .path-rest {
       fill: none;
       stroke: var(--run);
@@ -440,7 +445,7 @@
       const WALK_PX_PER_MS = 0.26;
       const WAVE_GAP_MS = 800;
       const WAVE_LOOP_PAUSE_MS = 1000;
-      const AISLE_X = { A: 0.78, B: 1.92, C: 3.06, D: 4.2, E: 5.34, F: 6.48, G: 7.62, H: 8.76 };
+      const AISLE_X = { A: 0.72, B: 1.76, C: 2.80, D: 3.84, E: 5.36, F: 6.48, G: 7.60, H: 8.72 };
       const Y0 = 1.55;
       const Y1 = 15.85;
       const TOP = 0.85;
@@ -780,15 +785,21 @@
           "aria-hidden": "true"
         });
         svg.appendChild(el("rect", { class: "floor", x: -4, y: -4, width: 18, height: 26 }));
+        svg.appendChild(el("rect", { class: "yard-pad", x: 0.08, y: 0.12, width: 9.4, height: 16.7, rx: 0.18 }));
+        svg.appendChild(el("rect", { class: "office", x: 0.18, y: 0.2, width: 1.7, height: 0.95, rx: 0.12 }));
+        svg.appendChild(el("rect", { class: "dock-slab", x: 0.2, y: 17.05, width: 9.15, height: 1.55, rx: 0.14 }));
+        [1.4, 4.55, 7.7].forEach(function (x) {
+          svg.appendChild(el("rect", { class: "dock-door", x: x, y: 17.28, width: 1.35, height: 1.05, rx: 0.08 }));
+        });
         Object.keys(AISLE_X).forEach(function (letter) {
           const x = AISLE_X[letter];
           svg.appendChild(el("rect", {
             class: "aisle",
-            x: x - 0.24,
-            y: 0.45,
-            width: 0.48,
-            height: 16.5,
-            rx: 0.24
+            x: x - 0.22,
+            y: 1.22,
+            width: 0.44,
+            height: 15.5,
+            rx: 0.22
           }));
         });
 

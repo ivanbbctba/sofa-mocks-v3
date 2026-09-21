@@ -75,6 +75,9 @@
     }
 
     .aisle { fill: var(--aisle); }
+    .dock-apron { fill: #e7e2d6; }
+    .bay-door { fill: #d5d0c4; }
+    .pick-hall { fill: #f3efe6; }
 
     .path-rest {
       fill: none;
@@ -408,12 +411,12 @@
   </main>
   <script>
     (function () {
-      const AISLE_X = { A: 0.78, B: 1.92, C: 3.06, D: 4.2, E: 5.34, F: 6.48, G: 7.62, H: 8.76 };
-      const Y0 = 1.55;
-      const Y1 = 15.85;
-      const TOP = 0.85;
-      const BOT = 16.65;
-      const FULL = { x: -1.4, y: -1.7, w: 12.3, h: 21.2 };
+      const AISLE_X = { A: 0.70, B: 1.82, C: 2.94, D: 4.06, E: 5.18, F: 6.30, G: 7.42, H: 8.54 };
+      const Y0 = 1.35;
+      const Y1 = 10.55;
+      const TOP = 0.65;
+      const BOT = 11.15;
+      const FULL = { x: -1.5, y: -1.4, w: 12.5, h: 21.0 };
       const NS = "http://www.w3.org/2000/svg";
       const WORDS = {
         1: "Um", 2: "Dois", 3: "Três", 4: "Quatro", 5: "Cinco",
@@ -623,15 +626,20 @@
           "aria-hidden": "true"
         });
 
+        svg.appendChild(el("rect", { class: "pick-hall", x: 0.16, y: 0.2, width: 9.2, height: 11.15, rx: 0.2 }));
+        svg.appendChild(el("rect", { class: "dock-apron", x: 0.16, y: 11.45, width: 9.2, height: 6.2, rx: 0.2 }));
+        [1.1, 3.5, 5.9, 8.3].forEach(function (x) {
+          svg.appendChild(el("rect", { class: "bay-door", x: x, y: 11.55, width: 1.15, height: 0.7, rx: 0.08 }));
+        });
         Object.keys(AISLE_X).forEach(function (letter) {
           const x = AISLE_X[letter];
           svg.appendChild(el("rect", {
             class: "aisle",
-            x: x - 0.24,
-            y: 0.45,
-            width: 0.48,
-            height: 16.5,
-            rx: 0.24
+            x: x - 0.22,
+            y: 0.55,
+            width: 0.44,
+            height: 10.35,
+            rx: 0.22
           }));
         });
 

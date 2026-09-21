@@ -78,6 +78,9 @@
     }
 
     .aisle { fill: #e3e1da; }
+    .t-head { fill: #ebe4d6; }
+    .t-stem { fill: #f3efe6; }
+    .office { fill: #e8dcc8; }
 
     .path-done,
     .path-play {
@@ -374,13 +377,13 @@
 
   <script>
     (function () {
-      const AISLE_X = { A: 0.78, B: 1.92, C: 3.06, D: 4.2, E: 5.34, F: 6.48, G: 7.62, H: 8.76 };
-      const Y0 = 1.55;
-      const Y1 = 15.85;
-      const TOP = 0.85;
-      const BOT = 16.65;
+      const AISLE_X = { A: 1.05, B: 2.05, C: 3.05, D: 4.05, E: 5.45, F: 6.45, G: 7.45, H: 8.45 };
+      const Y0 = 3.35;
+      const Y1 = 13.55;
+      const TOP = 2.35;
+      const BOT = 14.45;
       const NS = "http://www.w3.org/2000/svg";
-      const FULL_VIEW = "-1.4 -1.7 12.3 21.2";
+      const FULL_VIEW = "-1.6 -1.5 12.7 19.4";
       const TOUR_PALETTE = ["#635bff", "#059669", "#ea580c", "#9333ea", "#e11d48", "#0284c8"];
       const LANES = TOUR_PALETTE;
       const WALK_PX_PER_MS = 0.26;
@@ -609,14 +612,17 @@
 
       function paintMap(drawPlay) {
         svg.replaceChildren();
+        svg.appendChild(el("rect", { class: "t-head", x: 0.2, y: 0.25, width: 9.15, height: 2.55, rx: 0.22 }));
+        svg.appendChild(el("rect", { class: "t-stem", x: 0.7, y: 2.55, width: 8.15, height: 12.35, rx: 0.22 }));
+        svg.appendChild(el("rect", { class: "office", x: 7.55, y: 0.4, width: 1.6, height: 0.95, rx: 0.12 }));
         Object.keys(AISLE_X).forEach(function (letter) {
           svg.appendChild(el("rect", {
             class: "aisle",
-            x: AISLE_X[letter] - 0.22,
-            y: 0.45,
-            width: 0.44,
-            height: 16.5,
-            rx: 0.22
+            x: AISLE_X[letter] - 0.24,
+            y: 2.75,
+            width: 0.48,
+            height: 11.3,
+            rx: 0.24
           }));
         });
 

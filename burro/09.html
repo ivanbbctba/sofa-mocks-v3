@@ -92,6 +92,7 @@
 
     .floor-wash { fill: #efe8dc; }
     .yard { fill: #f7f6f2; }
+    .yard-round { fill: #f3efe6; }
     .rack {
       fill: var(--rack);
       stroke: var(--rack-edge);
@@ -435,13 +436,13 @@
       var WALK_PX_PER_MS = 0.26;
       var WAVE_GAP_MS = 800;
       var WAVE_LOOP_PAUSE_MS = 1000;
-      var AISLE_X = { A: 0.78, B: 1.92, C: 3.06, D: 4.2, E: 5.34, F: 6.48, G: 7.62, H: 8.76 };
-      var Y0 = 1.55;
-      var Y1 = 15.85;
-      var TOP = 0.85;
-      var BOT = 16.65;
+      var AISLE_X = { A: 0.68, B: 1.88, C: 3.08, D: 4.28, E: 5.48, F: 6.68, G: 7.88, H: 9.08 };
+      var Y0 = 1.85;
+      var Y1 = 15.45;
+      var TOP = 1.05;
+      var BOT = 16.35;
       var NS = "http://www.w3.org/2000/svg";
-      var FULL_VB = [-1.4, -1.8, 12.3, 21.4];
+      var FULL_VB = [-1.7, -1.9, 13.0, 21.6];
       var WAVE_SHARE = "Onda 14 no Pisoly";
 
       var RUNS = [
@@ -730,16 +731,20 @@
       }
 
       function drawFloor(svg) {
-        svg.appendChild(el("rect", { class: "floor-wash", x: -2, y: -2, width: 14, height: 22 }));
-        svg.appendChild(el("rect", { class: "yard", x: 0.1, y: 0.08, width: 9.35, height: 17.35, rx: 0.28 }));
-        svg.appendChild(el("line", { class: "road-cross", x1: 0.4, y1: TOP, x2: 9.15, y2: TOP }));
-        svg.appendChild(el("line", { class: "road-cross", x1: 0.4, y1: BOT, x2: 9.15, y2: BOT }));
-        Object.keys(AISLE_X).forEach(function (letter) {
+        svg.appendChild(el("rect", { class: "floor-wash", x: -2, y: -2, width: 15, height: 22 }));
+        svg.appendChild(el("rect", { class: "yard-round", x: -0.2, y: -0.15, width: 10.5, height: 17.8, rx: 1.4 }));
+        svg.appendChild(el("rect", { class: "yard", x: 0.15, y: 0.22, width: 9.85, height: 16.95, rx: 0.95 }));
+        svg.appendChild(el("line", { class: "road-cross", x1: 0.5, y1: TOP, x2: 9.35, y2: TOP }));
+        svg.appendChild(el("line", { class: "road-cross", x1: 0.5, y1: BOT, x2: 9.35, y2: BOT }));
+        Object.keys(AISLE_X).forEach(function (letter, i) {
           var x = AISLE_X[letter];
-          svg.appendChild(el("line", { class: "road", x1: x, y1: 0.45, x2: x, y2: 16.9 }));
-          svg.appendChild(el("rect", { class: "rack", x: x - 0.46, y: 1.2, width: 0.28, height: 15.05, rx: 0.07 }));
-          svg.appendChild(el("rect", { class: "rack", x: x + 0.18, y: 1.2, width: 0.28, height: 15.05, rx: 0.07 }));
-          var tag = el("text", { class: "aisle-tag", x: x, y: 0.52, "text-anchor": "middle" });
+          var stagger = i % 2 === 1;
+          var y0 = stagger ? 3.05 : 1.15;
+          var h = stagger ? 12.35 : 14.55;
+          svg.appendChild(el("line", { class: "road", x1: x, y1: y0, x2: x, y2: y0 + h }));
+          svg.appendChild(el("rect", { class: "rack", x: x - 0.48, y: y0, width: 0.28, height: h, rx: 0.08 }));
+          svg.appendChild(el("rect", { class: "rack", x: x + 0.20, y: y0, width: 0.28, height: h, rx: 0.08 }));
+          var tag = el("text", { class: "aisle-tag", x: x, y: stagger ? 2.85 : 0.72, "text-anchor": "middle" });
           tag.textContent = letter;
           svg.appendChild(tag);
         });
