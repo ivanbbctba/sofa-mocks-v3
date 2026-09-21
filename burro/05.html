@@ -18,13 +18,13 @@
       --go: #0f766e;
       --warn: #b45309;
       --floor: #efe8dc;
-      --run: #4f8a78;
-      --run1: #4f8a78;
-      --run2: #0f766e;
-      --run3: #0284c7;
-      --run4: #c2410c;
-      --run5: #be123c;
-      --run6: #4d7c0f;
+      --run: #635bff;
+      --leg-1: #635bff;
+      --leg-2: #059669;
+      --leg-3: #ea580c;
+      --leg-4: #9333ea;
+      --leg-5: #e11d48;
+      --leg-6: #0284c8;
       --here: #0f766e;
       --aisle: #e3e1da;
       --white: #fffcf8;
@@ -75,6 +75,9 @@
     }
 
     .aisle { fill: var(--aisle); }
+    .dock-apron { fill: #e7e2d6; }
+    .bay-door { fill: #d5d0c4; }
+    .pick-hall { fill: #f3efe6; }
 
     .path-rest {
       fill: none;
@@ -98,16 +101,16 @@
       fill: none;
       stroke: var(--run);
       stroke-width: 0.42;
-      stroke-linecap: round;
+      stroke-linecap: butt;
       stroke-linejoin: round;
       stroke-dasharray: 0.78 0.52;
-      animation: march 0.9s linear infinite;
     }
 
     .path-dash.is-full {
-      stroke-width: 0.26;
-      stroke-dasharray: 0.55 0.42;
-      opacity: 0.92;
+      stroke-width: 0.3;
+      stroke-dasharray: none;
+      stroke-linecap: round;
+      opacity: 0.78;
     }
 
     .node-done { fill: #9a9c98; }
@@ -223,7 +226,7 @@
       min-height: 58px;
       border: 0;
       border-radius: 18px;
-      background: var(--run);
+      background: var(--accent);
       color: #fff;
       font: 700 18px/1 "SF Pro Text", system-ui, sans-serif;
       letter-spacing: -0.03em;
@@ -306,7 +309,7 @@
       width: 84px;
       height: 84px;
       border-radius: 50%;
-      background: var(--feito);
+      background: var(--accent);
       color: #fff;
       font: 700 15px/1 "SF Pro Text", system-ui, sans-serif;
       letter-spacing: -0.03em;
@@ -369,15 +372,15 @@
       width: 100%;
       min-height: 54px;
       border-radius: 16px;
-      background: var(--run);
+      background: var(--accent);
       color: #fff;
       font: 700 16px/1 "SF Pro Text", system-ui, sans-serif;
     }
 
     .phone.is-empty .share { visibility: hidden; }
 
-    @keyframes march {
-      to { stroke-dashoffset: -1.16; }
+    @keyframes walk-dash {
+      to { stroke-dashoffset: var(--walk-cycle, -1.16); }
     }
 
     @keyframes pulse {
@@ -408,19 +411,23 @@
   </main>
   <script>
     (function () {
-      const AISLE_X = { A: 0.78, B: 1.92, C: 3.06, D: 4.2, E: 5.34, F: 6.48, G: 7.62, H: 8.76 };
-      const Y0 = 1.55;
-      const Y1 = 15.85;
-      const TOP = 0.85;
-      const BOT = 16.65;
-      const FULL = { x: 0, y: 0, w: 9.55, h: 18.2 };
+      const AISLE_X = { A: 0.70, B: 1.82, C: 2.94, D: 4.06, E: 5.18, F: 6.30, G: 7.42, H: 8.54 };
+      const Y0 = 1.35;
+      const Y1 = 10.55;
+      const TOP = 0.65;
+      const BOT = 11.15;
+      const FULL = { x: -1.5, y: -1.4, w: 12.5, h: 21.0 };
       const NS = "http://www.w3.org/2000/svg";
       const WORDS = {
         1: "Um", 2: "Dois", 3: "Três", 4: "Quatro", 5: "Cinco",
         6: "Seis", 7: "Sete", 8: "Oito", 9: "Nove", 10: "Dez",
         11: "Onze", 12: "Doze", 15: "Quinze", 42: "Quarenta e dois"
       };
-      const COLORS = ["#4f8a78", "#0f766e", "#0284c7", "#c2410c", "#be123c", "#4d7c0f"];
+      const TOUR_PALETTE = ["#635bff", "#059669", "#ea580c", "#9333ea", "#e11d48", "#0284c8"];
+      const COLORS = TOUR_PALETTE;
+      const WALK_PX_PER_MS = 0.26;
+      const WAVE_GAP_MS = 800;
+      const WAVE_LOOP_PAUSE_MS = 1000;
       const WAVES = COLORS.map(function (color, i) {
         return { id: String(14 + i), name: "Onda " + (14 + i), color: color };
       });
@@ -542,13 +549,13 @@
           maxX = Math.max(maxX, p.x);
           maxY = Math.max(maxY, p.y);
         });
-        const padX = 1.15;
-        const padY = 1.35;
+        const padX = 2.2;
+        const padY = 2.4;
         return {
           x: minX - padX,
           y: minY - padY,
-          w: Math.max(3.4, maxX - minX + padX * 2),
-          h: Math.max(4.2, maxY - minY + padY * 2)
+          w: Math.min(7.5, Math.max(6.0, maxX - minX + padX * 2)),
+          h: Math.min(12.0, Math.max(9.8, maxY - minY + padY * 2))
         };
       }
 
@@ -581,7 +588,20 @@
       }
 
       function applyRunColor() {
-        document.documentElement.style.setProperty("--run", WAVES[wave].color);
+        var hue = mode === "open" ? TOUR_PALETTE[0] : WAVES[wave].color;
+        document.documentElement.style.setProperty("--run", hue);
+      }
+
+      function pathLengthPx(node) {
+        var len = 0;
+        try { len = node.getTotalLength() || 0; } catch (err) { return 0; }
+        var ctm = node.getScreenCTM && node.getScreenCTM();
+        if (ctm) return len * ((Math.hypot(ctm.a, ctm.b) + Math.hypot(ctm.c, ctm.d)) / 2);
+        return len;
+      }
+
+      function walkDurationMs(node) {
+        return Math.max(WAVE_GAP_MS, pathLengthPx(node) / WALK_PX_PER_MS);
       }
 
       function targetView() {
@@ -604,15 +624,20 @@
           "aria-hidden": "true"
         });
 
+        svg.appendChild(el("rect", { class: "pick-hall", x: 0.16, y: 0.2, width: 9.2, height: 11.15, rx: 0.2 }));
+        svg.appendChild(el("rect", { class: "dock-apron", x: 0.16, y: 11.45, width: 9.2, height: 6.2, rx: 0.2 }));
+        [1.1, 3.5, 5.9, 8.3].forEach(function (x) {
+          svg.appendChild(el("rect", { class: "bay-door", x: x, y: 11.55, width: 1.15, height: 0.7, rx: 0.08 }));
+        });
         Object.keys(AISLE_X).forEach(function (letter) {
           const x = AISLE_X[letter];
           svg.appendChild(el("rect", {
             class: "aisle",
-            x: x - 0.24,
-            y: 0.45,
-            width: 0.48,
-            height: 16.5,
-            rx: 0.24
+            x: x - 0.22,
+            y: 0.55,
+            width: 0.44,
+            height: 10.35,
+            rx: 0.22
           }));
         });
 
@@ -629,9 +654,9 @@
         if (mode === "open") {
           svg.appendChild(el("polyline", { class: "path-dash is-full", points: pts(fullPath) }));
         } else if (mode === "run") {
-          const leg = activeLeg(here);
-          if (leg.length > 1) {
-            svg.appendChild(el("polyline", { class: "path-dash", points: pts(leg) }));
+          const ahead = slicePath(here, STOPS.length);
+          if (ahead.length > 1) {
+            svg.appendChild(el("polyline", { class: "path-dash", points: pts(ahead) }));
           }
         }
 
@@ -664,6 +689,13 @@
         });
 
         map.appendChild(svg);
+        if (mode === "run") {
+          var dash = svg.querySelector(".path-dash:not(.is-full)");
+          if (dash && !reduce) {
+            dash.style.setProperty("--walk-cycle", "-1.3");
+            dash.style.animation = "walk-dash " + (walkDurationMs(dash) + WAVE_LOOP_PAUSE_MS) + "ms linear infinite";
+          }
+        }
       }
 
       function lerpView(next) {
@@ -674,6 +706,10 @@
         }
         const start = Object.assign({}, view);
         const t0 = performance.now();
+        function applyBox() {
+          var svg = map.querySelector("svg");
+          if (svg) svg.setAttribute("viewBox", view.x + " " + view.y + " " + view.w + " " + view.h);
+        }
         function frame(now) {
           const t = Math.min(1, (now - t0) / 640);
           const e = 1 - Math.pow(1 - t, 3);
@@ -683,9 +719,10 @@
             w: start.w + (next.w - start.w) * e,
             h: start.h + (next.h - start.h) * e
           };
-          paintMap();
+          applyBox();
           if (t < 1) requestAnimationFrame(frame);
         }
+        paintMap();
         requestAnimationFrame(frame);
       }
 
