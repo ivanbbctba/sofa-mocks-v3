@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" translate="no">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#f7f6f2" />
   <meta name="author" content="Ivan Beira" />
+  <meta name="google" content="notranslate" />
   <title>Pisoly · configurar</title>
   <style>
     :root {
@@ -30,8 +31,8 @@
       --wall: #2c3138;
       --safe-t: env(safe-area-inset-top, 0px);
       --safe-b: env(safe-area-inset-bottom, 0px);
-      --header-h: 56px;
-      --strip-h: 58px;
+      --header-h: 52px;
+      --strip-h: 56px;
     }
 
     *, *::before, *::after { box-sizing: border-box; }
@@ -206,7 +207,7 @@
     }
     .aisle-tag {
       fill: var(--muted);
-      font: 600 7px "SF Pro Text", system-ui, sans-serif;
+      font: 700 8px "SF Pro Text", system-ui, sans-serif;
     }
     .portal {
       fill: var(--go);
@@ -219,12 +220,26 @@
       stroke-linejoin: round;
     }
 
-    .tour-faint { stroke-width: 2.4; opacity: 0.28; }
-    .tour-play { stroke-width: 3.2; opacity: 0.96; }
-    .map-well.is-focus .tour-faint.is-dim { opacity: 0.14; }
+    .road {
+      fill: none;
+      stroke: #f7f1e6;
+      stroke-width: 9;
+      stroke-linecap: square;
+    }
+    .tour-case {
+      fill: none;
+      stroke: #fffcf8;
+      stroke-width: 6.4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .tour-faint { stroke-width: 3.6; opacity: 0.34; }
+    .tour-play { stroke-width: 4.8; opacity: 1; }
+    .map-well.is-focus .tour-faint.is-dim,
+    .map-well.is-focus .tour-case.is-dim { opacity: 0.1; }
     .map-well.is-focus .tour-play:not(.is-active) { opacity: 0; }
-    .map-well.is-focus .tour-faint.is-active { opacity: 0.22; }
-    .map-well.is-focus .tour-play.is-active { opacity: 1; stroke-width: 3.6; }
+    .map-well.is-focus .tour-faint.is-active { opacity: 0.28; }
+    .map-well.is-focus .tour-play.is-active { opacity: 1; stroke-width: 5.4; }
 
     .walker {
       fill: #fff;
@@ -266,11 +281,13 @@
 
     .run-strip {
       position: absolute;
-      left: 50%;
-      bottom: 118px;
-      transform: translateX(-50%);
+      left: 10px;
+      right: 10px;
+      bottom: 8px;
+      transform: none;
       z-index: 5;
       display: flex;
+      justify-content: space-between;
       gap: 4px;
       padding: 4px;
       border-radius: 999px;
@@ -310,30 +327,26 @@
       right: 10px;
       z-index: 5;
       margin: 0;
-      padding: 6px 8px;
-      border-radius: 12px;
+      padding: 8px 9px;
+      border-radius: 14px;
       background: var(--surface);
       border: 1px solid var(--line);
-      color: var(--muted);
-      font: 600 10px/1.35 ui-monospace, "SF Mono", Menlo, monospace;
-    }
-
-    .hex-readout b {
       color: var(--ink);
-      font-weight: 700;
+      font: 700 11px/1.45 ui-monospace, "SF Mono", Menlo, monospace;
     }
 
     .hex-readout span {
-      display: block;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
     .hex-readout i {
       display: inline-block;
-      width: 7px;
-      height: 7px;
-      margin-right: 5px;
-      border-radius: 50%;
-      vertical-align: 0;
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+      flex: 0 0 auto;
     }
 
     .sheet {
@@ -342,7 +355,7 @@
       right: 12px;
       bottom: calc(var(--strip-h) + var(--safe-b) + 10px);
       z-index: 12;
-      padding: 8px 12px 12px;
+      padding: 8px 12px 10px;
       border-radius: 18px;
       background: var(--surface);
       border: 1px solid var(--line);
@@ -615,12 +628,12 @@
 
     <div class="stage">
       <section class="map-well" id="map-well" aria-label="Mapa do galpão em metros">
-        <svg viewBox="0 0 220 300" preserveAspectRatio="xMidYMid meet">
+          <svg viewBox="0 0 220 248" preserveAspectRatio="xMidYMid meet">
           <g id="grid"></g>
-          <path class="wall" d="M10 22 H210 V278 H10 Z" />
+          <path class="wall" d="M10 22 H210 V240 H10 Z" />
           <g id="racks"></g>
-          <circle class="portal" cx="110" cy="278" r="3.4" />
-          <circle class="portal-out" cx="196" cy="22" r="3.2" />
+          <circle class="portal" cx="104" cy="238" r="3.6" />
+          <circle class="portal-out" cx="198" cy="24" r="3.2" />
           <g id="tours"></g>
           <g id="walkers"></g>
         </svg>
@@ -638,8 +651,7 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 20V7l6-3 6 3v13" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M12 16V11M10.5 12.5 12 11l1.5 1.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
           </button>
         </div>
-        <p class="hex-readout" id="hex-readout" aria-label="Cores das trilhas"></p>
-        <div class="run-strip" id="run-strip" role="tablist" aria-label="Trilhas da onda"></div>
+        <p class="hex-readout" id="hex-readout" aria-label="Cores das trilhas" translate="no"></p>
       </section>
 
       <aside class="sheet" id="sheet">
@@ -670,6 +682,7 @@
         </div>
         <div id="tab-wave">
           <button type="button" class="cta" id="run-wave" style="width:100%;margin-top:4px;height:40px;border-radius:12px">Gerar onda manual</button>
+          <div class="run-strip" id="run-strip" role="tablist" aria-label="Trilhas da onda" style="position:static;transform:none;margin-top:8px;left:auto;right:auto;bottom:auto"></div>
         </div>
       </aside>
 
@@ -735,28 +748,28 @@
     const WAVE_GAP_MS = 800;
     const WAVE_LOOP_PAUSE_MS = 1000;
 
-    const LANES = [38, 72, 106, 140, 174];
-    const TOP = 42;
-    const MID = 154;
-    const BOT = 262;
-    const ENTER = [110, 274];
+    const LANES = [36, 70, 104, 138, 172];
+    const TOP = 48;
+    const MID = 132;
+    const LOW = 214;
+    const ENTER = [104, 236];
 
     const TOURS = [
-      [ENTER, [LANES[0], BOT], [LANES[0], TOP], [LANES[1], TOP], [LANES[1], BOT]],
-      [ENTER, [LANES[1], BOT], [LANES[1], TOP], [LANES[2], TOP], [LANES[2], 230]],
-      [ENTER, [LANES[2], BOT], [LANES[2], TOP], [LANES[3], TOP], [LANES[3], BOT]],
-      [ENTER, [LANES[3], BOT], [LANES[3], MID], [LANES[4], MID], [LANES[4], TOP]],
-      [ENTER, [LANES[4], BOT], [LANES[4], TOP], [198, TOP]],
-      [ENTER, [LANES[0], BOT], [LANES[0], MID], [LANES[2], MID], [LANES[2], TOP], [198, TOP]],
+      [ENTER, [LANES[0], LOW], [LANES[0], TOP], [LANES[1], TOP], [LANES[1], LOW]],
+      [ENTER, [LANES[1], LOW], [LANES[1], TOP], [LANES[2], TOP], [LANES[2], 188]],
+      [ENTER, [LANES[2], LOW], [LANES[2], TOP], [LANES[3], TOP], [LANES[3], LOW]],
+      [ENTER, [LANES[3], LOW], [LANES[3], MID], [LANES[4], MID], [LANES[4], TOP]],
+      [ENTER, [LANES[4], LOW], [LANES[4], TOP], [198, TOP]],
+      [ENTER, [LANES[0], LOW], [LANES[0], MID], [LANES[2], MID], [LANES[2], TOP], [198, TOP]],
     ];
 
     const RACKS = [
-      { x: 20, label: "A" },
-      { x: 54, label: "B" },
-      { x: 88, label: "C" },
-      { x: 122, label: "D" },
-      { x: 156, label: "E" },
-      { x: 190, label: "F" },
+      { x: 18, label: "A" },
+      { x: 52, label: "B" },
+      { x: 86, label: "C" },
+      { x: 120, label: "D" },
+      { x: 154, label: "E" },
+      { x: 188, label: "F" },
     ];
 
     const svgNS = "http://www.w3.org/2000/svg";
@@ -764,7 +777,8 @@
     const params = new URLSearchParams(location.search);
     let active = params.has("active") ? Number(params.get("active")) : null;
     if (Number.isNaN(active) || active < 1 || active > 6) active = null;
-    let t0 = performance.now();
+    const freezeAt = params.has("pause") ? Number(params.get("pause")) : null;
+    let t0 = performance.now() - (Number.isFinite(freezeAt) ? 0 : 2600);
     const pathLens = [];
 
     function el(name, attrs, parent) {
@@ -799,9 +813,15 @@
 
     function buildGrid() {
       const g = $("grid");
-      for (let x = 16; x <= 204; x += 12) {
-        for (let y = 28; y <= 270; y += 12) {
-          el("circle", { class: "grid-dot", cx: String(x), cy: String(y), r: "0.55" }, g);
+      LANES.forEach((x) => {
+        el("path", { class: "road", d: `M${x} 40 V220` }, g);
+      });
+      el("path", { class: "road", d: "M36 48 H198" }, g);
+      el("path", { class: "road", d: "M36 132 H172" }, g);
+      el("path", { class: "road", d: "M36 214 H172" }, g);
+      for (let x = 16; x <= 204; x += 14) {
+        for (let y = 28; y <= 236; y += 14) {
+          el("circle", { class: "grid-dot", cx: String(x), cy: String(y), r: "0.6" }, g);
         }
       }
     }
@@ -812,13 +832,22 @@
         const body = el("rect", {
           class: i === 0 ? "rack is-sel" : "rack",
           x: String(rack.x),
-          y: "36",
-          width: "10",
-          height: "216",
-          rx: "1.2",
+          y: "40",
+          width: "12",
+          height: "176",
+          rx: "1.4",
           "data-aisle": rack.label,
         }, g);
-        el("text", { class: "aisle-tag", x: String(rack.x + 1.6), y: "32" }, g).textContent = rack.label;
+        el("rect", {
+          class: "rack",
+          x: String(rack.x + 0.8),
+          y: "42",
+          width: "10.4",
+          height: "172",
+          rx: "1",
+          opacity: "0.35",
+        }, g);
+        el("text", { class: "aisle-tag", x: String(rack.x + 2.4), y: "36" }, g).textContent = rack.label;
         body.addEventListener("click", () => {
           g.querySelectorAll(".rack").forEach((n) => n.classList.remove("is-sel"));
           body.classList.add("is-sel");
@@ -832,11 +861,16 @@
     function buildTours() {
       const g = $("tours");
       const walkers = $("walkers");
-      const gap = 2.4;
+      const gap = 2.8;
       TOURS.forEach((raw, i) => {
         const pts = offset(raw, (i - 2.5) * gap);
         const d = poly(pts);
         const color = TOUR_PALETTE[i];
+        el("path", {
+          class: "tour tour-case",
+          d,
+          "data-run": String(i + 1),
+        }, g);
         el("path", {
           class: "tour tour-faint",
           d,
@@ -853,7 +887,7 @@
         }, g);
         el("circle", {
           class: "walker",
-          r: "3.1",
+          r: "3.6",
           stroke: color.hex,
           "data-run": String(i + 1),
         }, walkers);
@@ -866,7 +900,7 @@
       const strip = $("run-strip");
       const readout = $("hex-readout");
       readout.innerHTML = TOUR_PALETTE.map((c, i) =>
-        `<span><i style="background:${c.hex}"></i><b>${i + 1}</b> ${c.hex}</span>`
+        `<span translate="no"><i style="background:${c.hex}"></i>${i + 1}&nbsp;${c.hex.toUpperCase()}</span>`
       ).join("");
       TOUR_PALETTE.forEach((c, i) => {
         const btn = document.createElement("button");
@@ -905,7 +939,7 @@
       const durs = pathLens.map((len) => (len < 1e-6 ? 0 : len / WALK_PX_PER_MS));
       const lastDone = Math.max(...starts.map((start, i) => start + durs[i]));
       const cycle = lastDone + WAVE_LOOP_PAUSE_MS;
-      const t = (now - t0) % cycle;
+      const t = Number.isFinite(freezeAt) ? freezeAt : (now - t0) % cycle;
       plays.forEach((path, i) => {
         if (active != null && i !== active - 1) {
           path.style.strokeDasharray = "0 " + pathLens[i];
@@ -920,7 +954,7 @@
         walkers[i].setAttribute("cy", String(at.y));
         walkers[i].setAttribute("visibility", traveled > 0 && traveled < pathLens[i] ? "visible" : "hidden");
       });
-      requestAnimationFrame(tick);
+      if (!Number.isFinite(freezeAt)) requestAnimationFrame(tick);
     }
 
     function replay() {
