@@ -25,13 +25,13 @@
       --floor: #efe8dc;
       --feito: #1a1b1a;
       --white: #fffcf8;
-      --run: #4f8a78;
-      --run1: #4f8a78;
-      --run2: #0f766e;
-      --run3: #0284c7;
-      --run4: #c2410c;
-      --run5: #be123c;
-      --run6: #4d7c0f;
+      --run: #635bff;
+      --run1: #635bff;
+      --run2: #059669;
+      --run3: #ea580c;
+      --run4: #9333ea;
+      --run5: #e11d48;
+      --run6: #0284c8;
       --safe-t: env(safe-area-inset-top, 0px);
       --safe-b: env(safe-area-inset-bottom, 0px);
     }
@@ -133,18 +133,6 @@
 
     .path-ghost {
       stroke-width: 0.34;
-      stroke-dasharray: 0.42 0.3;
-      animation: march 1.05s linear infinite;
-    }
-
-    .path-ghost.is-next {
-      stroke-width: 0.42;
-    }
-
-    .path-ghost.is-wait {
-      stroke-width: 0.26;
-      opacity: 0.3;
-      animation: none;
     }
 
     .path-taken {
@@ -178,7 +166,7 @@
     .path-play.is-draw {
       stroke-dasharray: var(--len);
       stroke-dashoffset: var(--len);
-      animation: draw-leg 0.9s cubic-bezier(0.22, 0.7, 0.2, 1) forwards;
+      animation: draw-leg var(--walk-ms, 900ms) linear forwards;
     }
 
     .path-ahead {
@@ -187,7 +175,6 @@
       stroke-linecap: butt;
       stroke-dasharray: 0.38 0.26;
       opacity: 0.92;
-      animation: march 0.82s linear infinite;
     }
 
     .node-done { fill: #9a9c98; }
@@ -504,10 +491,6 @@
 
     .phone.is-empty .share { visibility: hidden; }
 
-    @keyframes march {
-      to { stroke-dashoffset: -0.72; }
-    }
-
     @keyframes draw-leg {
       to { stroke-dashoffset: 0; }
     }
@@ -518,8 +501,6 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .path-ghost,
-      .path-ahead,
       .path-play.is-draw,
       .node-here.is-live {
         animation: none !important;
@@ -580,14 +561,18 @@
   </main>
   <script>
     (function () {
-      var COLORS = ["#4f8a78", "#0f766e", "#0284c7", "#c2410c", "#be123c", "#4d7c0f"];
+      var TOUR_PALETTE = ["#635bff", "#059669", "#ea580c", "#9333ea", "#e11d48", "#0284c8"];
+      var WALK_PX_PER_MS = 0.26;
+      var WAVE_GAP_MS = 800;
+      var WAVE_LOOP_PAUSE_MS = 1000;
       var AISLE_X = { A: 0.78, B: 1.92, C: 3.06, D: 4.2, E: 5.34, F: 6.48, G: 7.62, H: 8.76 };
       var Y0 = 1.55;
       var Y1 = 15.85;
       var TOP = 0.85;
       var BOT = 16.65;
       var NS = "http://www.w3.org/2000/svg";
-      var FULL_VB = [-0.15, -0.55, 9.85, 19.6];
+      var PHONE_ASPECT = 390 / 844;
+      var FULL_VB = [-1.68, -2.2, 12.85, 27.81];
       var WAVE_SHARE = "Onda 14 no Pisoly";
 
       var RUNS = [
@@ -702,7 +687,7 @@
       }
 
       var tours = RUNS.map(function (run, i) {
-        return { color: COLORS[i], stops: run.stops, geo: geometryFor(run.stops) };
+        return { color: TOUR_PALETTE[i % TOUR_PALETTE.length], stops: run.stops, geo: geometryFor(run.stops) };
       });
 
       function slicePath(geo, fromIdx, toIdx) {
@@ -791,26 +776,52 @@
         }, 1600);
       }
 
-      function activeViewBox() {
-        var tour = currentTour();
-        var geo = tour.geo;
-        var a = geo.points[here];
-        var b = geo.points[Math.min(here + 1, geo.points.length - 1)];
-        var hopPts = (geo.hops[here] || [a, b]).slice();
-        var xs = hopPts.map(function (p) { return p.x; }).concat([a.x, b.x]);
-        var ys = hopPts.map(function (p) { return p.y; }).concat([a.y, b.y]);
-        var minX = Math.min.apply(null, xs) - 1.05;
-        var maxX = Math.max.apply(null, xs) + 1.05;
-        var minY = Math.min.apply(null, ys) - 1.15;
-        var maxY = Math.max.apply(null, ys) + 2.8;
-        var w = Math.max(3.8, maxX - minX);
-        var h = Math.max(6.2, maxY - minY);
-        var aspect = 390 / 844;
-        if (w / h > aspect) h = w / aspect;
-        else w = h * aspect;
-        var cx = (minX + maxX) / 2;
-        var cy = (minY + maxY) / 2 - 0.55;
+      function fitBox(xs, ys, padX, padY, minW, minH, biasX, biasY) {
+        var minX = Math.min.apply(null, xs) - padX;
+        var maxX = Math.max.apply(null, xs) + padX;
+        var minY = Math.min.apply(null, ys) - padY;
+        var maxY = Math.max.apply(null, ys) + padY + 2.4;
+        var w = Math.max(minW, maxX - minX);
+        var h = Math.max(minH, maxY - minY);
+        if (w / h > PHONE_ASPECT) h = w / PHONE_ASPECT;
+        else w = h * PHONE_ASPECT;
+        var cx = (minX + maxX) / 2 + (biasX || 0);
+        var cy = (minY + maxY) / 2 + (biasY || 0);
         return [cx - w / 2, cy - h / 2, w, h];
+      }
+
+      function routeViewBox(tour) {
+        var geo = tour.geo;
+        var pts = geo.fullPath.length >= 2 ? geo.fullPath : geo.points;
+        var xs = pts.map(function (p) { return p.x; });
+        var ys = pts.map(function (p) { return p.y; });
+        var start = geo.points[0];
+        var midX = (Math.min.apply(null, xs) + Math.max.apply(null, xs)) / 2;
+        var midY = (Math.min.apply(null, ys) + Math.max.apply(null, ys)) / 2;
+        return fitBox(
+          xs,
+          ys,
+          1.9,
+          2.15,
+          8.15,
+          16.4,
+          (start.x - midX) * 0.16,
+          (start.y - midY) * 0.1
+        );
+      }
+
+      function walkDurationMs(node, destBox) {
+        var userLen = 0;
+        try {
+          userLen = node.getTotalLength();
+        } catch (err) {
+          return 0;
+        }
+        if (userLen < 1e-6) return 0;
+        var svg = node.ownerSVGElement;
+        var vbW = destBox && destBox[2] ? destBox[2] : (svg && svg.viewBox.baseVal.width) || viewBox[2];
+        var pxW = (svg && svg.clientWidth) || 390;
+        return (userLen * (pxW / vbW)) / WALK_PX_PER_MS;
       }
 
       function applyViewBox(svg, dest, animate) {
@@ -833,7 +844,7 @@
       }
 
       function drawFloor(svg) {
-        svg.appendChild(el("rect", { class: "floor-wash", x: -2, y: -2, width: 14, height: 22 }));
+        svg.appendChild(el("rect", { class: "floor-wash", x: -8, y: -8, width: 28, height: 42 }));
         svg.appendChild(el("rect", { class: "yard", x: 0.12, y: 0.1, width: 9.3, height: 17.3, rx: 0.28 }));
         svg.appendChild(el("line", { class: "road-cross", x1: 0.4, y1: TOP, x2: 9.15, y2: TOP }));
         svg.appendChild(el("line", { class: "road-cross", x1: 0.4, y1: BOT, x2: 9.15, y2: BOT }));
@@ -852,7 +863,7 @@
         map.replaceChildren();
         var svg = el("svg", {
           viewBox: viewBox.join(" "),
-          preserveAspectRatio: mode === "pick" ? "xMidYMid slice" : "xMidYMid meet",
+          preserveAspectRatio: "xMidYMid meet",
           "aria-hidden": "true"
         });
         drawFloor(svg);
@@ -876,31 +887,21 @@
         }
 
         if (mode === "open" || mode === "zen") {
-          var nextFree = freeIndexes()[0];
-          var order = tours.map(function (tour, i) { return i; }).sort(function (a, b) {
-            var at = claimed.indexOf(a) !== -1 ? 0 : 1;
-            var bt = claimed.indexOf(b) !== -1 ? 0 : 1;
-            if (at !== bt) return at - bt;
-            if (a === nextFree) return 1;
-            if (b === nextFree) return -1;
-            return a - b;
-          });
-          order.forEach(function (i) {
-            var tour = tours[i];
+          var multi = mode === "zen" || claimed.length > 0;
+          tours.forEach(function (tour) {
             if (tour.geo.fullPath.length < 2) return;
             var taken = claimed.indexOf(i) !== -1;
-            var isNext = !taken && i === nextFree;
-            var klass = taken ? "path-taken" : (isNext ? "path-ghost is-next" : "path-ghost is-wait");
-            strokePath(klass, tour.geo.fullPath, tour.color, isNext);
+            var stroke = multi ? tour.color : TOUR_PALETTE[0];
+            strokePath(taken ? "path-taken" : "path-ghost", tour.geo.fullPath, stroke, !taken);
             tour.geo.points.forEach(function (p) {
               svg.appendChild(el("circle", {
                 cx: p.x,
                 cy: p.y,
-                r: taken ? 0.12 : (isNext ? 0.18 : 0.13),
-                fill: tour.color,
+                r: taken ? 0.11 : 0.13,
+                fill: stroke,
                 stroke: "#fffcf8",
                 "stroke-width": 0.05,
-                opacity: taken ? "0.42" : (isNext ? "1" : "0.32"),
+                opacity: taken ? "0.36" : (multi ? "0.88" : "0.7"),
                 "data-run-mark": "1"
               }));
             });
@@ -944,11 +945,14 @@
           svg.appendChild(el("circle", { class: "node-future", cx: p.x, cy: p.y, r: 0.08 }));
         });
         map.appendChild(svg);
-        applyViewBox(svg, activeViewBox(), fly);
+        var destBox = routeViewBox(tour);
+        applyViewBox(svg, destBox, fly);
         if (playNode && !reduce) {
           try {
             var len = playNode.getTotalLength();
+            var walkMs = walkDurationMs(playNode, destBox);
             playNode.style.setProperty("--len", String(len));
+            playNode.style.setProperty("--walk-ms", String(Math.max(1, walkMs)) + "ms");
             playNode.classList.add("is-draw");
           } catch (err) {
             playNode.classList.remove("is-draw");
@@ -963,14 +967,14 @@
         feitoEl.hidden = false;
 
         if (mode === "open") {
-          setRun(COLORS[free[0]] || COLORS[0]);
+          setRun(TOUR_PALETTE[0]);
           countEl.textContent = free.length + (free.length === 1 ? " livre" : " livres");
           document.title = "Onda 14 · folio";
           return;
         }
 
         if (mode === "empty") {
-          setRun(COLORS[0]);
+          setRun(TOUR_PALETTE[0]);
           countEl.textContent = "0 livres";
           document.title = "Todos pegos · Onda 14";
           return;
@@ -1139,7 +1143,7 @@
         pickStartedAt = Date.now();
         acceptMs = 800;
         paintChrome();
-        viewBox = activeViewBox();
+        viewBox = routeViewBox(currentTour());
         paintMap(Math.max(0, here - 1), here, false);
       } else {
         paintChrome();
