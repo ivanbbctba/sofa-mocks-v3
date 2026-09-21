@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <meta name="theme-color" content="#f7f6f2"/>
+  <title>Onda 14 · folio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@500;600;700&family=Newsreader:opsz,wght@6..72,560;6..72,650;6..72,720&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --paper: #f7f6f2;
+      --surface: #fffcf8;
+      --ink: #1a1b1a;
+      --ink-2: #3c3e3c;
+      --muted: #6d706c;
+      --mute: #6d706c;
+      --faint: #9a9c98;
+      --line: #e3e1da;
+      --accent: #4f8a78;
+      --accent-soft: #dce8e3;
+      --go: #0f766e;
+      --warn: #b45309;
+      --floor: #efe8dc;
+      --feito: #1a1b1a;
+      --white: #fffcf8;
+      --run: #635bff;
+      --run1: #635bff;
+      --run2: #059669;
+      --run3: #ea580c;
+      --run4: #9333ea;
+      --run5: #e11d48;
+      --run6: #0284c8;
+      --safe-t: env(safe-area-inset-top, 0px);
+      --safe-b: env(safe-area-inset-bottom, 0px);
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      -webkit-text-size-adjust: 100%;
+    }
+
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: #e3e1da;
+      color: var(--ink);
+      font: 500 16px/1.3 "IBM Plex Sans", "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+    }
+
+    body {
+      min-height: 100dvh;
+    }
+
+    .phone {
+      position: relative;
+      width: 100%;
+      max-width: 390px;
+      height: 100dvh;
+      max-height: 844px;
+      margin: 0 auto;
+      overflow: hidden;
+      background:
+        radial-gradient(120% 64% at 50% 0%, rgba(220, 232, 227, 0.88), transparent 58%),
+        var(--floor);
+    }
+
+    @media (min-height: 900px) {
+      body {
+        display: grid;
+        place-items: center;
+      }
+      .phone {
+        height: 844px;
+        border-radius: 28px;
+        box-shadow: 0 24px 64px rgba(26, 27, 26, 0.18);
+      }
+    }
+
+    .map {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+    }
+
+    .map svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .floor-wash { fill: #efe8dc; }
+    .yard { fill: #f7f6f2; }
+    .rack {
+      fill: #e8dcc8;
+      stroke: #d4c4a8;
+      stroke-width: 0.03;
+    }
+    .road {
+      fill: none;
+      stroke: #fffcf8;
+      stroke-width: 0.72;
+      stroke-linecap: round;
+    }
+    .road-cross {
+      fill: none;
+      stroke: #fffcf8;
+      stroke-width: 0.62;
+      stroke-linecap: round;
+    }
+    .aisle-tag {
+      fill: #6d706c;
+      font: 700 0.38px "IBM Plex Sans", system-ui, sans-serif;
+    }
+
+    .path-case,
+    .path-ghost,
+    .path-done,
+    .path-play,
+    .path-ahead,
+    .path-taken {
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .path-case {
+      stroke: #fffcf8;
+      stroke-width: 0.52;
+    }
+
+    .path-ghost {
+      stroke-width: 0.46;
+    }
+
+    .path-taken {
+      stroke-width: 0.22;
+      opacity: 0.28;
+    }
+
+    .phone.is-empty .path-case,
+    .phone.is-empty .path-ghost,
+    .phone.is-empty .path-taken,
+    .phone.is-empty .path-done,
+    .phone.is-empty .path-play,
+    .phone.is-empty .path-ahead {
+      stroke: var(--floor);
+      opacity: 0.08;
+      animation: none;
+    }
+
+    .phone.is-empty .map [data-run-mark] {
+      opacity: 0.08;
+      fill: var(--floor);
+      stroke: var(--floor);
+    }
+
+    .path-done,
+    .path-play {
+      stroke: var(--run);
+      stroke-width: 0.46;
+    }
+
+    .path-play.is-draw {
+      stroke-dasharray: var(--len);
+      stroke-dashoffset: var(--len);
+      animation: draw-leg var(--walk-ms, 900ms) linear forwards;
+    }
+
+    .path-ahead {
+      stroke: var(--run);
+      stroke-width: 0.4;
+      stroke-linecap: butt;
+      stroke-dasharray: 0.38 0.26;
+      opacity: 0.92;
+    }
+
+    .node-done { fill: #9a9c98; }
+    .node-miss {
+      fill: var(--surface);
+      stroke: var(--warn);
+      stroke-width: 0.07;
+    }
+    .node-future { fill: #e3e1da; }
+    .node-next {
+      fill: var(--white);
+      stroke: var(--run);
+      stroke-width: 0.08;
+    }
+    .node-here { fill: var(--go); }
+    .node-halo {
+      fill: none;
+      stroke: var(--go);
+      stroke-width: 0.07;
+      opacity: 0.42;
+    }
+    .node-here.is-live {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: here-pulse 2.2s ease-in-out infinite;
+    }
+
+    .grain {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      opacity: 0.05;
+      mix-blend-mode: multiply;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
+    }
+
+    .chrome {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    .chrome button { pointer-events: auto; }
+
+    .top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: calc(12px + var(--safe-t)) 16px 0;
+    }
+
+    .share,
+    .count {
+      margin: 0;
+      border: 0;
+      background: rgba(255, 252, 248, 0.86);
+      color: var(--ink-2);
+      border-radius: 999px;
+      box-shadow: 0 8px 20px rgba(26, 27, 26, 0.08);
+      font: 600 12px/1 "IBM Plex Sans", system-ui, sans-serif;
+      padding: 8px 12px;
+    }
+
+    .share { cursor: pointer; }
+    .share:active { transform: scale(0.97); }
+    .count { font-variant-numeric: tabular-nums; cursor: default; }
+
+    .folio {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 6;
+      padding: 0 14px calc(16px + var(--safe-b));
+      background: linear-gradient(
+        180deg,
+        rgba(247, 246, 242, 0) 0%,
+        rgba(247, 246, 242, 0.62) 22%,
+        #f7f6f2 78%
+      );
+      pointer-events: none;
+    }
+
+    .phone.is-open .folio,
+    .phone.is-empty .folio {
+      background: linear-gradient(
+        180deg,
+        rgba(247, 246, 242, 0) 0%,
+        rgba(247, 246, 242, 0.28) 46%,
+        rgba(247, 246, 242, 0.88) 100%
+      );
+    }
+
+    .card {
+      pointer-events: auto;
+      position: relative;
+      width: min(28rem, 100%);
+      margin: 0 auto;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      box-shadow: 0 16px 36px rgba(26, 27, 26, 0.1);
+      padding: 18px 18px 16px;
+    }
+
+    .phone.is-open .card,
+    .phone.is-empty .card {
+      background: transparent;
+      border: 0;
+      box-shadow: none;
+      padding: 8px 4px 6px;
+    }
+
+    .open-wrap,
+    .empty-wrap,
+    .zen-wrap {
+      display: none;
+      text-align: center;
+    }
+
+    .phone.is-open .open-wrap,
+    .phone.is-empty .empty-wrap,
+    .phone.is-zen .zen-wrap { display: block; }
+
+    .phone.is-pick .card { padding-top: 18px; }
+
+    .pick-wrap {
+      display: none;
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      gap: 12px;
+    }
+
+    .phone.is-pick .pick-wrap { display: grid; }
+
+    .kicker {
+      margin: 0 0 10px;
+      color: var(--mute);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .iniciar {
+      width: 104px;
+      height: 104px;
+      margin: 4px auto 2px;
+      border: 0;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font: 700 17px/1 "IBM Plex Sans", system-ui, sans-serif;
+      letter-spacing: -0.03em;
+      cursor: pointer;
+      box-shadow: 0 14px 28px rgba(79, 138, 120, 0.32);
+    }
+
+    .qty {
+      margin: 0;
+      font-family: Newsreader, "Times New Roman", serif;
+      font-size: 84px;
+      font-weight: 650;
+      letter-spacing: -0.06em;
+      line-height: 0.8;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .slot {
+      margin: 10px 0 0;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    .depois {
+      margin: 4px 0 0;
+      color: var(--mute);
+      font-size: 14px;
+    }
+
+    .speak {
+      margin: 12px 0 0;
+      max-width: 16rem;
+      color: var(--ink-2);
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .actions {
+      display: grid;
+      justify-items: center;
+      gap: 8px;
+      padding-bottom: 2px;
+    }
+
+    .feito {
+      width: 82px;
+      height: 82px;
+      border: 0;
+      border-radius: 50%;
+      background: var(--feito);
+      color: #fff;
+      font: 700 14px/1 "IBM Plex Sans", system-ui, sans-serif;
+      letter-spacing: -0.03em;
+      cursor: pointer;
+      box-shadow: 0 12px 24px rgba(26, 27, 26, 0.2);
+    }
+
+    .skip {
+      border: 0;
+      background: transparent;
+      color: var(--mute);
+      font: 600 13px/1 "IBM Plex Sans", system-ui, sans-serif;
+      cursor: pointer;
+      padding: 6px 2px;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .empty-copy {
+      margin: 8px 0 6px;
+      font-family: Newsreader, "Times New Roman", serif;
+      font-size: 42px;
+      font-weight: 650;
+      letter-spacing: -0.05em;
+      line-height: 0.95;
+    }
+
+    .zen-title {
+      margin: 0;
+      font-family: Newsreader, "Times New Roman", serif;
+      font-size: 34px;
+      font-weight: 650;
+      letter-spacing: -0.04em;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 16px 0 4px;
+      text-align: left;
+    }
+
+    .metric {
+      background: var(--floor);
+      border-radius: 14px;
+      padding: 10px 12px;
+    }
+
+    .metric b {
+      display: block;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .metric span {
+      color: var(--mute);
+      font-size: 12px;
+    }
+
+    .aceite {
+      margin: 10px 0 0;
+      color: var(--mute);
+      font-size: 13px;
+    }
+
+    .again {
+      display: none;
+      width: 100%;
+      margin-top: 14px;
+      min-height: 52px;
+      border: 0;
+      border-radius: 999px;
+      background: var(--accent);
+      color: #fff;
+      font: 700 16px/1 "IBM Plex Sans", system-ui, sans-serif;
+      cursor: pointer;
+    }
+
+    .again.is-on { display: block; }
+
+    .iniciar:active,
+    .feito:active,
+    .again:active { transform: scale(0.97); }
+
+    .whisper {
+      position: absolute;
+      left: 50%;
+      top: calc(58px + var(--safe-t));
+      z-index: 8;
+      transform: translateX(-50%);
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: var(--ink);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .whisper.is-on { opacity: 1; }
+
+    .phone.is-empty .share { visibility: hidden; }
+
+    @keyframes draw-leg {
+      to { stroke-dashoffset: 0; }
+    }
+
+    @keyframes here-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.55; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .path-play.is-draw,
+      .node-here.is-live {
+        animation: none !important;
+      }
+      .path-play.is-draw { stroke-dashoffset: 0; }
+    }
+  </style>
+</head>
+<body>
+  <main class="phone is-open" id="phone">
+    <div class="map" id="map" role="img" aria-label="Mapa da onda"></div>
+    <div class="grain" aria-hidden="true"></div>
+    <div class="chrome">
+      <div class="top">
+        <button type="button" class="share" id="share">Onda 14 · 1 link</button>
+        <p class="count" id="count">6 livres</p>
+      </div>
+    </div>
+    <p class="whisper" id="whisper" role="status"></p>
+    <div class="folio">
+      <section class="card">
+        <div class="open-wrap" id="open-wrap">
+          <p class="kicker">WhatsApp · onda 14</p>
+          <button type="button" class="iniciar" id="iniciar">Iniciar</button>
+        </div>
+
+        <div class="pick-wrap" id="pick-wrap">
+          <div>
+            <p class="qty" id="qty">10</p>
+            <p class="slot" id="slot">A-01</p>
+            <p class="depois" id="depois">depois C-02</p>
+            <p class="speak" id="speak">Dez toalhas 220 no A-01.</p>
+          </div>
+          <div class="actions">
+            <button type="button" class="feito" id="feito">Feito</button>
+            <button type="button" class="skip" id="skip">Não achei</button>
+          </div>
+        </div>
+
+        <div class="empty-wrap" id="empty-wrap">
+          <p class="empty-copy">Todos pegos</p>
+        </div>
+
+        <div class="zen-wrap" id="zen-wrap">
+          <p class="kicker">Corrida encerrada</p>
+          <h2 class="zen-title">Onda feita.</h2>
+          <div class="metrics">
+            <p class="metric"><b id="zen-time">0:00</b><span>tempo</span></p>
+            <p class="metric"><b id="zen-qty">0 un.</b><span>quantidade</span></p>
+            <p class="metric"><b id="zen-kg">0 kg</b><span>peso</span></p>
+            <p class="metric"><b id="zen-m3">0 m³</b><span>volume</span></p>
+          </div>
+          <p class="aceite" id="zen-aceite">aceite 0,0 s</p>
+          <button type="button" class="again" id="again">Começar de novo</button>
+        </div>
+      </section>
+    </div>
+  </main>
+  <script>
+    (function () {
+      var TOUR_PALETTE = ["#635bff", "#059669", "#ea580c", "#9333ea", "#e11d48", "#0284c8"];
+      var WALK_PX_PER_MS = 0.26;
+      var WAVE_GAP_MS = 800;
+      var WAVE_LOOP_PAUSE_MS = 1000;
+      var AISLE_X = { A: 0.78, B: 1.92, C: 3.06, D: 4.2, E: 5.34, F: 6.48, G: 7.62, H: 8.76 };
+      var Y0 = 1.55;
+      var Y1 = 15.85;
+      var TOP = 0.85;
+      var BOT = 16.65;
+      var NS = "http://www.w3.org/2000/svg";
+      var PHONE_ASPECT = 390 / 844;
+      var FULL_VB = [-1.68, -2.2, 12.85, 27.81];
+      var WAVE_SHARE = "Onda 14 no Pisoly";
+
+      var RUNS = [
+        {
+          stops: [
+            { code: "A-01", qty: 10, sku: "TOALHA-220", kg: 4.8, m3: 0.09, speak: "Dez toalhas 220 no A-01." },
+            { code: "C-02", qty: 8, sku: "JOGO-LENCOL", kg: 6.1, m3: 0.12, speak: "Oito jogos de lençol no C-02." },
+            { code: "E-01", qty: 10, sku: "FRONHA-PAR", kg: 2.4, m3: 0.05, speak: "Dez pares de fronha no E-01." },
+            { code: "E-10", qty: 6, sku: "COBERTOR-CAS", kg: 7.2, m3: 0.16, speak: "Seis cobertores casal no E-10." }
+          ]
+        },
+        {
+          stops: [
+            { code: "F-02", qty: 42, sku: "KIT-HIGIENE", kg: 9.4, m3: 0.11, speak: "Quarenta e dois kits higiene no F-02." },
+            { code: "H-09", qty: 3, sku: "SABONETE", kg: 0.9, m3: 0.02, speak: "Três sabonetes no H-09." },
+            { code: "H-03", qty: 12, sku: "SHAMPOO-400", kg: 5.1, m3: 0.07, speak: "Doze shampoos 400 no H-03." },
+            { code: "G-01", qty: 7, sku: "CREME-HID", kg: 3.3, m3: 0.04, speak: "Sete cremes hidratantes no G-01." }
+          ]
+        },
+        {
+          stops: [
+            { code: "B-09", qty: 5, sku: "ESC-DENTES", kg: 0.6, m3: 0.01, speak: "Cinco escovas de dente no B-09." },
+            { code: "C-08", qty: 6, sku: "PILLOW-TOP", kg: 8.8, m3: 0.22, speak: "Seis pillow tops no C-08." },
+            { code: "F-10", qty: 9, sku: "TAPETE-BAN", kg: 6.4, m3: 0.14, speak: "Nove tapetes de banho no F-10." },
+            { code: "D-04", qty: 2, sku: "CORTINA-180", kg: 3.9, m3: 0.1, speak: "Duas cortinas 180 no D-04." }
+          ]
+        },
+        {
+          stops: [
+            { code: "D-09", qty: 15, sku: "TOALHA-MAO", kg: 3.1, m3: 0.06, speak: "Quinze toalhas de mão no D-09." },
+            { code: "A-08", qty: 1, sku: "ROUPAO-M", kg: 0.8, m3: 0.03, speak: "Um roupão M no A-08." },
+            { code: "B-02", qty: 11, sku: "SACO-LIXO", kg: 2.2, m3: 0.05, speak: "Onze sacos de lixo no B-02." },
+            { code: "H-01", qty: 8, sku: "PAPEL-HIG", kg: 4.0, m3: 0.08, speak: "Oito papéis higiênicos no H-01." }
+          ]
+        },
+        {
+          stops: [
+            { code: "G-05", qty: 3, sku: "AMACIANTE", kg: 3.6, m3: 0.04, speak: "Três amaciantes no G-05." },
+            { code: "G-08", qty: 4, sku: "ALGODAO", kg: 0.5, m3: 0.02, speak: "Quatro pacotes de algodão no G-08." },
+            { code: "E-05", qty: 14, sku: "LENCOL-SOLT", kg: 5.7, m3: 0.13, speak: "Quatorze lençóis solteiro no E-05." },
+            { code: "C-04", qty: 9, sku: "CAPA-TRV", kg: 2.8, m3: 0.07, speak: "Nove capas de travesseiro no C-04." }
+          ]
+        },
+        {
+          stops: [
+            { code: "A-05", qty: 16, sku: "TOALHA-PISO", kg: 6.8, m3: 0.15, speak: "Dezesseis toalhas de piso no A-05." },
+            { code: "B-06", qty: 4, sku: "KIT-BANHO", kg: 4.5, m3: 0.09, speak: "Quatro kits banho no B-06." },
+            { code: "D-02", qty: 7, sku: "EDREDOM", kg: 8.1, m3: 0.19, speak: "Sete edredons no D-02." },
+            { code: "F-06", qty: 5, sku: "PORTA-TRV", kg: 1.7, m3: 0.04, speak: "Cinco porta-travesseiros no F-06." }
+          ]
+        }
+      ];
+
+      function slotY(n) {
+        return Y0 + ((n - 1) * (Y1 - Y0)) / 9;
+      }
+
+      function parseCode(code) {
+        return { aisle: code.charAt(0), n: Number(code.slice(2)) };
+      }
+
+      function xy(code) {
+        var parsed = parseCode(code);
+        return { x: AISLE_X[parsed.aisle], y: slotY(parsed.n), aisle: parsed.aisle, n: parsed.n };
+      }
+
+      function hop(a, b) {
+        if (a.aisle === b.aisle) return [a, { x: a.x, y: b.y }];
+        var mid = (Y0 + Y1) / 2;
+        var sameTop = a.y <= mid && b.y <= mid;
+        var sameBot = a.y >= mid && b.y >= mid;
+        var end;
+        if (sameTop) end = Math.min(a.y, b.y) - 0.7;
+        else if (sameBot) end = Math.max(a.y, b.y) + 0.7;
+        else {
+          var viaTop = Math.abs(a.y - TOP) + Math.abs(b.y - TOP);
+          var viaBot = Math.abs(a.y - BOT) + Math.abs(b.y - BOT);
+          end = viaTop <= viaBot ? TOP : BOT;
+        }
+        end = Math.max(TOP, Math.min(BOT, end));
+        return [a, { x: a.x, y: end }, { x: b.x, y: end }, { x: b.x, y: b.y }];
+      }
+
+      function samePoint(p, q) {
+        return Math.abs(p.x - q.x) < 0.001 && Math.abs(p.y - q.y) < 0.001;
+      }
+
+      function joinHops(hops) {
+        var out = [];
+        hops.forEach(function (seg) {
+          seg.forEach(function (p, i) {
+            if (i === 0 && out.length && samePoint(out[out.length - 1], p)) return;
+            out.push(p);
+          });
+        });
+        return out;
+      }
+
+      function geometryFor(stops) {
+        var points = stops.map(function (stop) { return xy(stop.code); });
+        var hops = points.slice(1).map(function (pt, i) { return hop(points[i], pt); });
+        var fullPath = hops.length ? joinHops(hops) : points.slice();
+        var hopSpans = [];
+        var cursor = 0;
+        hops.forEach(function (seg) {
+          var extra = cursor === 0 ? seg.length : seg.length - 1;
+          var start = cursor;
+          cursor += extra;
+          hopSpans.push({ from: start, to: cursor });
+        });
+        return { points: points, hops: hops, fullPath: fullPath, hopSpans: hopSpans };
+      }
+
+      var tours = RUNS.map(function (run, i) {
+        return { color: TOUR_PALETTE[i % TOUR_PALETTE.length], stops: run.stops, geo: geometryFor(run.stops) };
+      });
+
+      function slicePath(geo, fromIdx, toIdx) {
+        if (!geo.hopSpans.length || toIdx <= fromIdx) return [];
+        var last = geo.hopSpans.length - 1;
+        if (fromIdx > last) return [];
+        var startHop = Math.max(0, Math.min(fromIdx, last));
+        var endHop = Math.max(0, Math.min(toIdx - 1, last));
+        if (endHop < startHop) return [];
+        return geo.fullPath.slice(geo.hopSpans[startHop].from, geo.hopSpans[endHop].to + 1);
+      }
+
+      function pts(list) {
+        return list.map(function (p) { return p.x + " " + p.y; }).join(" ");
+      }
+
+      function el(name, attrs) {
+        var node = document.createElementNS(NS, name);
+        Object.keys(attrs || {}).forEach(function (key) {
+          node.setAttribute(key, String(attrs[key]));
+        });
+        return node;
+      }
+
+      function fmtTime(ms) {
+        var total = Math.max(0, Math.round(ms / 1000));
+        return Math.floor(total / 60) + ":" + String(total % 60).padStart(2, "0");
+      }
+
+      function fmtNum(n, digits) {
+        return n.toFixed(digits).replace(".", ",");
+      }
+
+      function fmtLat(ms) {
+        return (Math.max(0, ms) / 1000).toFixed(1).replace(".", ",") + " s";
+      }
+
+      var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      var phone = document.getElementById("phone");
+      var map = document.getElementById("map");
+      var shareEl = document.getElementById("share");
+      var countEl = document.getElementById("count");
+      var qtyEl = document.getElementById("qty");
+      var slotEl = document.getElementById("slot");
+      var depoisEl = document.getElementById("depois");
+      var speakEl = document.getElementById("speak");
+      var feitoEl = document.getElementById("feito");
+      var skipEl = document.getElementById("skip");
+      var iniciarEl = document.getElementById("iniciar");
+      var againEl = document.getElementById("again");
+      var whisperEl = document.getElementById("whisper");
+      var params = new URLSearchParams(window.location.search);
+
+      var mode = "open";
+      var claimed = [];
+      var runIndex = -1;
+      var here = 0;
+      var missed = {};
+      var openedAt = Date.now();
+      var acceptMs = 0;
+      var pickStartedAt = 0;
+      var viewBox = FULL_VB.slice();
+      var vbTimer = 0;
+      var whisperTid = 0;
+
+      function freeIndexes() {
+        return tours.map(function (_, i) { return i; }).filter(function (i) {
+          return claimed.indexOf(i) === -1;
+        });
+      }
+
+      function currentTour() {
+        return runIndex >= 0 ? tours[runIndex] : null;
+      }
+
+      function nextTourIndex() {
+        var free = freeIndexes();
+        return free.length ? free[0] : -1;
+      }
+
+      function nextTour() {
+        var i = nextTourIndex();
+        return i >= 0 ? tours[i] : null;
+      }
+
+      function setRun(color) {
+        document.documentElement.style.setProperty("--run", color);
+      }
+
+      function whisper(text) {
+        whisperEl.textContent = text;
+        whisperEl.classList.add("is-on");
+        window.clearTimeout(whisperTid);
+        whisperTid = window.setTimeout(function () {
+          whisperEl.classList.remove("is-on");
+        }, 1600);
+      }
+
+      function fitBox(xs, ys, padX, padY, minW, minH, biasX, biasY) {
+        var minX = Math.min.apply(null, xs) - padX;
+        var maxX = Math.max.apply(null, xs) + padX;
+        var minY = Math.min.apply(null, ys) - padY;
+        var maxY = Math.max.apply(null, ys) + padY + 2.4;
+        var w = Math.max(minW, maxX - minX);
+        var h = Math.max(minH, maxY - minY);
+        if (w / h > PHONE_ASPECT) h = w / PHONE_ASPECT;
+        else w = h * PHONE_ASPECT;
+        var cx = (minX + maxX) / 2 + (biasX || 0);
+        var cy = (minY + maxY) / 2 + (biasY || 0);
+        return [cx - w / 2, cy - h / 2, w, h];
+      }
+
+      function runViewBox(tour, kind) {
+        var geo = tour.geo;
+        var pts = geo.fullPath.length >= 2 ? geo.fullPath : geo.points;
+        var xs = pts.map(function (p) { return p.x; });
+        var ys = pts.map(function (p) { return p.y; });
+        var start = geo.points[0];
+        var midX = (Math.min.apply(null, xs) + Math.max.apply(null, xs)) / 2;
+        var midY = (Math.min.apply(null, ys) + Math.max.apply(null, ys)) / 2;
+        var floor = kind === "floor";
+        var bias = floor ? 0.05 : 0.28;
+        return fitBox(
+          xs,
+          ys,
+          floor ? 2.7 : 1.65,
+          floor ? 2.9 : 1.85,
+          floor ? 9.5 : 7.4,
+          floor ? 19.4 : 15.0,
+          (start.x - midX) * bias,
+          (start.y - midY) * (floor ? 0.04 : 0.16)
+        );
+      }
+
+      function walkDurationMs(node, destBox) {
+        var userLen = 0;
+        try {
+          userLen = node.getTotalLength();
+        } catch (err) {
+          return 0;
+        }
+        if (userLen < 1e-6) return 0;
+        var svg = node.ownerSVGElement;
+        var vbW = destBox && destBox[2] ? destBox[2] : (svg && svg.viewBox.baseVal.width) || viewBox[2];
+        var pxW = (svg && svg.clientWidth) || 390;
+        return (userLen * (pxW / vbW)) / WALK_PX_PER_MS;
+      }
+
+      function applyViewBox(svg, dest, animate) {
+        if (!animate || reduce) {
+          viewBox = dest.slice();
+          svg.setAttribute("viewBox", viewBox.join(" "));
+          return;
+        }
+        var from = viewBox.slice();
+        var t0 = performance.now();
+        if (vbTimer) cancelAnimationFrame(vbTimer);
+        function frame(now) {
+          var u = Math.min(1, (now - t0) / 720);
+          var e = 1 - Math.pow(1 - u, 3);
+          viewBox = from.map(function (v, i) { return v + (dest[i] - v) * e; });
+          svg.setAttribute("viewBox", viewBox.join(" "));
+          if (u < 1) vbTimer = requestAnimationFrame(frame);
+        }
+        vbTimer = requestAnimationFrame(frame);
+      }
+
+      function drawFloor(svg) {
+        svg.appendChild(el("rect", { class: "floor-wash", x: -8, y: -8, width: 28, height: 42 }));
+        svg.appendChild(el("rect", { class: "yard", x: 0.12, y: 0.1, width: 9.3, height: 17.3, rx: 0.28 }));
+        svg.appendChild(el("line", { class: "road-cross", x1: 0.4, y1: TOP, x2: 9.15, y2: TOP }));
+        svg.appendChild(el("line", { class: "road-cross", x1: 0.4, y1: BOT, x2: 9.15, y2: BOT }));
+        Object.keys(AISLE_X).forEach(function (letter) {
+          var x = AISLE_X[letter];
+          svg.appendChild(el("line", { class: "road", x1: x, y1: 0.45, x2: x, y2: 16.9 }));
+          svg.appendChild(el("rect", { class: "rack", x: x - 0.46, y: 1.2, width: 0.28, height: 15.05, rx: 0.07 }));
+          svg.appendChild(el("rect", { class: "rack", x: x + 0.18, y: 1.2, width: 0.28, height: 15.05, rx: 0.07 }));
+          var tag = el("text", { class: "aisle-tag", x: x, y: 0.52, "text-anchor": "middle" });
+          tag.textContent = letter;
+          svg.appendChild(tag);
+        });
+      }
+
+      function paintMap(fromIdx, toIdx, fly) {
+        map.replaceChildren();
+        var svg = el("svg", {
+          viewBox: viewBox.join(" "),
+          preserveAspectRatio: "xMidYMid meet",
+          "aria-hidden": "true"
+        });
+        drawFloor(svg);
+
+        function strokePath(klass, points, stroke, withCase) {
+          if (!points || points.length < 2) return null;
+          var d = pts(points);
+          if (withCase !== false) {
+            svg.appendChild(el("polyline", { class: "path-case", points: d }));
+          }
+          var line = el("polyline", { class: klass, points: d });
+          if (stroke) line.setAttribute("stroke", stroke);
+          svg.appendChild(line);
+          return line;
+        }
+
+        if (mode === "empty") {
+          map.appendChild(svg);
+          applyViewBox(svg, FULL_VB.slice(), fly);
+          return;
+        }
+
+        if (mode === "open") {
+          var preview = nextTour();
+          if (preview && preview.geo.fullPath.length >= 2) {
+            strokePath("path-ghost", preview.geo.fullPath, preview.color, true);
+            preview.geo.points.forEach(function (p) {
+              svg.appendChild(el("circle", {
+                cx: p.x,
+                cy: p.y,
+                r: 0.12,
+                fill: preview.color,
+                stroke: "#fffcf8",
+                "stroke-width": 0.05,
+                opacity: "0.78",
+                "data-run-mark": "1"
+              }));
+            });
+          }
+          map.appendChild(svg);
+          applyViewBox(svg, preview ? runViewBox(preview, "floor") : FULL_VB.slice(), fly);
+          return;
+        }
+
+        if (mode === "zen") {
+          tours.forEach(function (tour, i) {
+            if (tour.geo.fullPath.length < 2) return;
+            var taken = claimed.indexOf(i) !== -1;
+            strokePath(taken ? "path-taken" : "path-ghost", tour.geo.fullPath, tour.color, !taken);
+            tour.geo.points.forEach(function (p) {
+              svg.appendChild(el("circle", {
+                cx: p.x,
+                cy: p.y,
+                r: taken ? 0.11 : 0.13,
+                fill: tour.color,
+                stroke: "#fffcf8",
+                "stroke-width": 0.05,
+                opacity: taken ? "0.36" : "0.88",
+                "data-run-mark": "1"
+              }));
+            });
+          });
+          map.appendChild(svg);
+          applyViewBox(svg, FULL_VB.slice(), fly);
+          return;
+        }
+
+        var tour = currentTour();
+        var geo = tour.geo;
+        var doneSeg = slicePath(geo, 0, toIdx);
+        strokePath("path-done", doneSeg);
+        var aheadSeg = slicePath(geo, toIdx, geo.points.length);
+        strokePath("path-ahead", aheadSeg);
+        var playNode = null;
+        if (toIdx > 0) {
+          playNode = strokePath("path-play", slicePath(geo, fromIdx, toIdx));
+        }
+        geo.points.forEach(function (p, i) {
+          if (i === toIdx) {
+            svg.appendChild(el("circle", { class: "node-halo", cx: p.x, cy: p.y, r: 0.46 }));
+            var hereNode = el("circle", { class: "node-here", cx: p.x, cy: p.y, r: 0.22 });
+            svg.appendChild(hereNode);
+            if (!reduce) hereNode.classList.add("is-live");
+            return;
+          }
+          if (i === toIdx + 1) {
+            svg.appendChild(el("circle", { class: "node-next", cx: p.x, cy: p.y, r: 0.16 }));
+            return;
+          }
+          if (i < toIdx) {
+            svg.appendChild(el("circle", {
+              class: missed[i] ? "node-miss" : "node-done",
+              cx: p.x,
+              cy: p.y,
+              r: 0.1
+            }));
+            return;
+          }
+          svg.appendChild(el("circle", { class: "node-future", cx: p.x, cy: p.y, r: 0.08 }));
+        });
+        map.appendChild(svg);
+        var destBox = runViewBox(tour, "start");
+        applyViewBox(svg, destBox, fly);
+        if (playNode && !reduce) {
+          try {
+            var len = playNode.getTotalLength();
+            var walkMs = walkDurationMs(playNode, destBox);
+            playNode.style.setProperty("--len", String(len));
+            playNode.style.setProperty("--walk-ms", String(Math.max(1, walkMs)) + "ms");
+            playNode.classList.add("is-draw");
+          } catch (err) {
+            playNode.classList.remove("is-draw");
+          }
+        }
+      }
+
+      function paintChrome() {
+        var free = freeIndexes();
+        phone.className = "phone is-" + mode;
+        feitoEl.disabled = false;
+        feitoEl.hidden = false;
+
+        if (mode === "open") {
+          var preview = nextTour();
+          setRun(preview ? preview.color : TOUR_PALETTE[0]);
+          countEl.textContent = free.length + (free.length === 1 ? " livre" : " livres");
+          document.title = "Onda 14 · folio";
+          return;
+        }
+
+        if (mode === "empty") {
+          setRun(TOUR_PALETTE[0]);
+          countEl.textContent = "0 livres";
+          document.title = "Todos pegos · Onda 14";
+          return;
+        }
+
+        if (mode === "pick") {
+          var tour = currentTour();
+          var stop = tour.stops[here];
+          var next = tour.stops[here + 1];
+          setRun(tour.color);
+          qtyEl.textContent = String(stop.qty);
+          slotEl.textContent = stop.code;
+          depoisEl.textContent = next ? "depois " + next.code : "última parada";
+          speakEl.textContent = stop.speak;
+          countEl.textContent = here + " de " + tour.stops.length;
+          document.title = "Corrida · Onda 14";
+          return;
+        }
+
+        if (mode === "zen") {
+          var done = currentTour();
+          setRun(done.color);
+          countEl.textContent = done.stops.length + " de " + done.stops.length;
+          againEl.classList.toggle("is-on", free.length > 0);
+          againEl.hidden = free.length <= 0;
+          document.title = "Onda feita · Onda 14";
+        }
+      }
+
+      function enterPick(index, fly) {
+        runIndex = index;
+        here = 0;
+        missed = {};
+        mode = "pick";
+        pickStartedAt = Date.now();
+        paintChrome();
+        paintMap(0, 0, fly);
+      }
+
+      function claimFree() {
+        var free = freeIndexes();
+        if (!free.length) {
+          mode = "empty";
+          paintChrome();
+          paintMap(0, 0, false);
+          return;
+        }
+        acceptMs = Date.now() - openedAt;
+        claimed.push(free[0]);
+        enterPick(free[0], true);
+      }
+
+      function finishRun() {
+        var tour = currentTour();
+        var qty = 0;
+        var kg = 0;
+        var m3 = 0;
+        tour.stops.forEach(function (stop, i) {
+          if (missed[i]) return;
+          qty += stop.qty;
+          kg += stop.kg;
+          m3 += stop.m3;
+        });
+        document.getElementById("zen-time").textContent = fmtTime(Date.now() - pickStartedAt);
+        document.getElementById("zen-qty").textContent = qty + " un.";
+        document.getElementById("zen-kg").textContent = fmtNum(kg, 1) + " kg";
+        document.getElementById("zen-m3").textContent = fmtNum(m3, 2) + " m³";
+        document.getElementById("zen-aceite").textContent = "aceite " + fmtLat(acceptMs);
+        if (freeIndexes().length) {
+          mode = "zen";
+        } else {
+          mode = "empty";
+        }
+        paintChrome();
+        paintMap(0, 0, true);
+      }
+
+      function advance() {
+        var tour = currentTour();
+        if (here + 1 >= tour.stops.length) {
+          finishRun();
+          return;
+        }
+        var from = here;
+        here += 1;
+        paintChrome();
+        paintMap(from, here, true);
+      }
+
+      function shareWave() {
+        var shareUrl = new URL(window.location.href);
+        shareUrl.search = "";
+        shareUrl.hash = "";
+        var text = WAVE_SHARE + " " + shareUrl.toString();
+        if (navigator.share) {
+          navigator.share({ title: "Onda 14", text: WAVE_SHARE, url: shareUrl.toString() }).catch(function () {
+            window.location.href = "https://wa.me/?text=" + encodeURIComponent(text);
+          });
+          return;
+        }
+        window.location.href = "https://wa.me/?text=" + encodeURIComponent(text);
+      }
+
+      shareEl.addEventListener("click", shareWave);
+      iniciarEl.addEventListener("click", claimFree);
+      feitoEl.addEventListener("click", function () {
+        if (mode === "pick") advance();
+      });
+      skipEl.addEventListener("click", function () {
+        if (mode !== "pick") return;
+        missed[here] = true;
+        whisper("Seguinte.");
+        advance();
+      });
+      againEl.addEventListener("click", function () {
+        if (!freeIndexes().length) {
+          mode = "empty";
+          paintChrome();
+          paintMap(0, 0, true);
+          return;
+        }
+        runIndex = -1;
+        here = 0;
+        missed = {};
+        mode = "open";
+        paintChrome();
+        paintMap(0, 0, true);
+      });
+
+      var bootLivres = parseInt(params.get("livres") || "6", 10);
+      if (isNaN(bootLivres)) bootLivres = 6;
+      bootLivres = Math.max(0, Math.min(6, bootLivres));
+      if (params.get("vazio") === "1" || params.get("empty") === "1" || params.get("livre") === "0") {
+        bootLivres = 0;
+      }
+      if (bootLivres < 6) {
+        claimed = tours.map(function (_, i) { return i; }).slice(bootLivres);
+      }
+
+      var bootRun = parseInt(params.get("r") || params.get("c") || "0", 10);
+      if (isNaN(bootRun) || bootRun < 0 || bootRun > 5) bootRun = 0;
+      var bootIndex = parseInt(params.get("i") || "0", 10);
+      if (isNaN(bootIndex)) bootIndex = 0;
+
+      if (bootLivres <= 0 && params.get("claimed") !== "1" && params.get("zen") !== "1") {
+        mode = "empty";
+        paintChrome();
+        paintMap(0, 0, false);
+      } else if (params.get("zen") === "1") {
+        runIndex = bootRun;
+        if (claimed.indexOf(bootRun) === -1) claimed.push(bootRun);
+        here = tours[bootRun].stops.length;
+        document.getElementById("zen-time").textContent = "2:14";
+        document.getElementById("zen-qty").textContent = "34 un.";
+        document.getElementById("zen-kg").textContent = "20,5 kg";
+        document.getElementById("zen-m3").textContent = "0,42 m³";
+        document.getElementById("zen-aceite").textContent = "aceite 0,8 s";
+        mode = freeIndexes().length ? "zen" : "empty";
+        paintChrome();
+        paintMap(0, 0, false);
+      } else if (params.get("claimed") === "1") {
+        runIndex = bootRun;
+        if (claimed.indexOf(bootRun) === -1) claimed.push(bootRun);
+        here = Math.max(0, Math.min(tours[bootRun].stops.length - 1, bootIndex));
+        mode = "pick";
+        pickStartedAt = Date.now();
+        acceptMs = 800;
+        paintChrome();
+        viewBox = runViewBox(currentTour(), "start");
+        paintMap(Math.max(0, here - 1), here, false);
+      } else {
+        paintChrome();
+        paintMap(0, 0, false);
+      }
+    })();
+  </script>
+</body>
+</html>
