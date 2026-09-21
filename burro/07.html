@@ -137,9 +137,36 @@
       animation: march 1.05s linear infinite;
     }
 
+    .path-ghost.is-next {
+      stroke-width: 0.42;
+    }
+
+    .path-ghost.is-wait {
+      stroke-width: 0.26;
+      opacity: 0.3;
+      animation: none;
+    }
+
     .path-taken {
       stroke-width: 0.22;
       opacity: 0.28;
+    }
+
+    .phone.is-empty .path-case,
+    .phone.is-empty .path-ghost,
+    .phone.is-empty .path-taken,
+    .phone.is-empty .path-done,
+    .phone.is-empty .path-play,
+    .phone.is-empty .path-ahead {
+      stroke: var(--floor);
+      opacity: 0.08;
+      animation: none;
+    }
+
+    .phone.is-empty .map [data-run-mark] {
+      opacity: 0.08;
+      fill: var(--floor);
+      stroke: var(--floor);
     }
 
     .path-done,
@@ -830,17 +857,25 @@
         });
         drawFloor(svg);
 
-        function strokePath(klass, points, stroke) {
+        function strokePath(klass, points, stroke, withCase) {
           if (!points || points.length < 2) return null;
           var d = pts(points);
-          svg.appendChild(el("polyline", { class: "path-case", points: d }));
+          if (withCase !== false) {
+            svg.appendChild(el("polyline", { class: "path-case", points: d }));
+          }
           var line = el("polyline", { class: klass, points: d });
           if (stroke) line.setAttribute("stroke", stroke);
           svg.appendChild(line);
           return line;
         }
 
-        if (mode === "open" || mode === "empty" || mode === "zen") {
+        if (mode === "empty") {
+          map.appendChild(svg);
+          applyViewBox(svg, FULL_VB.slice(), fly);
+          return;
+        }
+
+        if (mode === "open" || mode === "zen") {
           var nextFree = freeIndexes()[0];
           var order = tours.map(function (tour, i) { return i; }).sort(function (a, b) {
             var at = claimed.indexOf(a) !== -1 ? 0 : 1;
@@ -854,16 +889,19 @@
             var tour = tours[i];
             if (tour.geo.fullPath.length < 2) return;
             var taken = claimed.indexOf(i) !== -1;
-            strokePath(taken ? "path-taken" : "path-ghost", tour.geo.fullPath, tour.color);
+            var isNext = !taken && i === nextFree;
+            var klass = taken ? "path-taken" : (isNext ? "path-ghost is-next" : "path-ghost is-wait");
+            strokePath(klass, tour.geo.fullPath, tour.color, isNext);
             tour.geo.points.forEach(function (p) {
               svg.appendChild(el("circle", {
                 cx: p.x,
                 cy: p.y,
-                r: taken ? 0.12 : 0.17,
+                r: taken ? 0.12 : (isNext ? 0.18 : 0.13),
                 fill: tour.color,
                 stroke: "#fffcf8",
                 "stroke-width": 0.05,
-                opacity: taken ? "0.42" : "1"
+                opacity: taken ? "0.42" : (isNext ? "1" : "0.32"),
+                "data-run-mark": "1"
               }));
             });
           });
