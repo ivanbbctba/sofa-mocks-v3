@@ -99,8 +99,8 @@
     .aisle {
       fill: #e3e1da;
     }
-    .l-main { fill: #f3efe6; }
-    .l-wing { fill: #ebe4d6; }
+    .l-main { fill: #efe6d4; }
+    .l-wing { fill: #ddd2bc; }
     .office { fill: #e8dcc8; }
 
     .hop-case {
@@ -651,7 +651,7 @@
       const hops = STOPS.slice(1).map((stop, i) => hopPts(STOPS[i].code, stop.code));
       const allPts = hops.reduce((acc, seg) => acc.concat(seg), []);
       const FULL_BOX = boxOf(allPts.concat(STOPS.map((s) => xy(s.code))).concat([
-        { x: 14, y: 48 }, { x: 378, y: 48 }, { x: 14, y: 760 }, { x: 186, y: 760 }
+        { x: -8, y: 48 }, { x: 378, y: 48 }, { x: -8, y: 620 }, { x: 378, y: 620 }
       ]), 48, 0);
 
       function legBox(index) {
@@ -741,8 +741,8 @@
           preserveAspectRatio: "xMidYMid slice",
           "aria-hidden": "true"
         });
-        svg.appendChild(el("rect", { class: "l-main", x: 14, y: 48, width: 364, height: 572, rx: 22 }));
-        svg.appendChild(el("rect", { class: "l-wing", x: 14, y: 612, width: 172, height: 148, rx: 22 }));
+        svg.appendChild(el("rect", { class: "l-main", x: 86, y: 48, width: 292, height: 572, rx: 22 }));
+        svg.appendChild(el("rect", { class: "l-wing", x: -8, y: 268, width: 108, height: 248, rx: 22 }));
         svg.appendChild(el("rect", { class: "office", x: 286, y: 58, width: 80, height: 36, rx: 10 }));
         Object.keys(AISLE_X).forEach((letter) => {
           const x = AISLE_X[letter];
