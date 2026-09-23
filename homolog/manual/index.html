@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="theme-color" content="#F7F4EE"/>
+  <meta name="description" content="Manual do Pisoly: conectar o Bling, deixar o mapa pronto, escolher o veículo e escrever o token ${B-03}$."/>
+  <title>Manual do Pisoly</title>
+  <style>
+:root {
+  --canvas: #F7F4EE;
+  --sand: #D4C4A8;
+  --ink: #2B2F33;
+  --muted: rgba(43, 47, 51, 0.62);
+  --line: rgba(43, 47, 51, 0.12);
+  --card: rgba(212, 196, 168, 0.28);
+  --radius: 16px;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  font: 17px/1.55 "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--canvas);
+}
+::selection { background: var(--sand); color: var(--ink); }
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+a { color: var(--ink); text-underline-offset: 0.18em; }
+a:hover { opacity: 0.72; }
+img { max-width: 100%; }
+.site-nav {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1.5rem;
+  background: rgba(247, 244, 238, 0.9);
+  border-bottom: 1px solid var(--line);
+  backdrop-filter: blur(14px);
+}
+.wordmark {
+  font-weight: 560;
+  letter-spacing: -0.03em;
+  font-size: 1.05rem;
+  text-decoration: none;
+  color: var(--ink);
+}
+.site-nav nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.25rem;
+  align-items: center;
+  justify-content: flex-end;
+}
+.site-nav nav a:not(.btn) {
+  text-decoration: none;
+  color: var(--muted);
+  font-size: 0.92rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 999px;
+}
+.site-nav nav a.is-on,
+.site-nav nav a:not(.btn):hover {
+  color: var(--ink);
+  background: rgba(212, 196, 168, 0.4);
+  opacity: 1;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  padding: 0.5rem 1.1rem;
+  border-radius: 999px;
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 560;
+  color: var(--canvas);
+  background: var(--ink);
+  border: 0;
+}
+.btn:hover { opacity: 0.88; color: var(--canvas); }
+.kicker {
+  margin: 0 0 0.55rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+}
+h1 {
+  margin: 0;
+  font-weight: 560;
+  letter-spacing: -0.045em;
+  line-height: 1.05;
+  font-size: clamp(2.15rem, 4vw, 2.85rem);
+}
+.site-foot {
+  padding: 0.5rem 1.5rem 2.75rem;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.site-foot a { color: var(--muted); }
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.86em;
+  padding: 0.08rem 0.32rem;
+  border-radius: 6px;
+  background: rgba(212, 196, 168, 0.55);
+  color: var(--ink);
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+
+    .skip {
+      position: absolute;
+      left: 1rem;
+      top: -4rem;
+      background: var(--ink);
+      color: var(--canvas);
+      padding: 0.45rem 0.75rem;
+      border-radius: 8px;
+      z-index: 40;
+    }
+    .skip:focus { top: 0.6rem; }
+    [id] { scroll-margin-top: 5.25rem; }
+    .layout {
+      display: grid;
+      grid-template-columns: 13.75rem minmax(0, 1fr);
+      gap: 3.25rem;
+      width: min(66rem, calc(100% - 3rem));
+      margin: 0 auto;
+      padding: 2.6rem 0 4.5rem;
+      align-items: start;
+    }
+    .toc {
+      position: sticky;
+      top: 4.75rem;
+      align-self: start;
+      max-height: calc(100vh - 6rem);
+      overflow: auto;
+      font-size: 0.9rem;
+      padding-bottom: 1rem;
+    }
+    .toc .g {
+      margin: 1.15rem 0 0.35rem;
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .toc .g:first-child { margin-top: 0; }
+    .toc a {
+      display: block;
+      color: var(--muted);
+      text-decoration: none;
+      padding: 0.32rem 0.55rem 0.32rem 0.7rem;
+      margin-left: -0.7rem;
+      border-left: 2px solid transparent;
+      border-radius: 0 10px 10px 0;
+      line-height: 1.35;
+    }
+    .toc a:hover { color: var(--ink); opacity: 1; }
+    .toc a.is-here {
+      color: var(--ink);
+      border-left-color: var(--ink);
+      background: rgba(212, 196, 168, 0.42);
+    }
+    .toc a.token-jump { color: var(--ink); font-weight: 600; }
+    .why {
+      display: grid;
+      gap: 1.45rem;
+      margin: 1.85rem 0 2.6rem;
+      padding-left: 1.15rem;
+      border-left: 2px solid var(--sand);
+    }
+    .why h2 {
+      margin: 0 0 0.2rem;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .why p {
+      margin: 0;
+      max-width: 38rem;
+      font-size: 1.12rem;
+      line-height: 1.45;
+    }
+    .stack {
+      margin: 0.7rem 0 0;
+      max-width: 38rem;
+      font-size: 0.98rem;
+      line-height: 1.4;
+      color: var(--ink);
+    }
+    .group {
+      margin: 0.4rem 0 0;
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    details.block { border-top: 1px solid var(--line); padding: 0 0 1.35rem; }
+    details.advanced { border-bottom: 1px solid var(--line); }
+    details.block > summary {
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1.2rem 0 0.35rem;
+    }
+    details.block > summary::-webkit-details-marker { display: none; }
+    details.block > summary:hover .sum-title { opacity: 0.72; }
+    .sum-title {
+      margin: 0;
+      font-size: 1.28rem;
+      font-weight: 560;
+      letter-spacing: -0.03em;
+      line-height: 1.25;
+    }
+    .sum-meta {
+      display: block;
+      margin-top: 0.4rem;
+      color: var(--muted);
+      font-size: 0.95rem;
+      font-weight: 400;
+      letter-spacing: 0;
+      line-height: 1.45;
+      max-width: 38rem;
+    }
+    details.advanced[open] .sum-meta { display: none; }
+    .chev {
+      flex: none;
+      width: 1.65rem;
+      height: 1.65rem;
+      margin-top: 0.1rem;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      position: relative;
+    }
+    .chev::before {
+      content: "";
+      position: absolute;
+      width: 0.38rem;
+      height: 0.38rem;
+      border-top: 1.5px solid var(--ink);
+      border-right: 1.5px solid var(--ink);
+      left: 0.48rem;
+      top: 0.58rem;
+      transform: rotate(45deg);
+    }
+    details[open] > summary .chev { background: var(--sand); border-color: transparent; }
+    details[open] > summary .chev::before { transform: rotate(135deg); top: 0.5rem; }
+    .block p, .block li { max-width: 40rem; }
+    .block p { margin: 0.7rem 0; }
+    .perms { margin: 0.8rem 0 0.2rem; display: grid; gap: 0.85rem; }
+    .perms div { max-width: 40rem; }
+    .perms dt { font-weight: 600; }
+    .perms dd { margin: 0.15rem 0 0; color: var(--muted); }
+    .split {
+      display: grid;
+      grid-template-columns: minmax(0, 0.92fr) minmax(16rem, 1.08fr);
+      gap: 1.25rem 1.75rem;
+      align-items: start;
+      margin-top: 0.4rem;
+    }
+    .split p { margin-top: 0; }
+    .table-scroll { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+      line-height: 1.4;
+    }
+    caption {
+      text-align: left;
+      font-weight: 600;
+      padding: 0 0 0.45rem;
+    }
+    th, td {
+      text-align: left;
+      padding: 0.62rem 0.75rem 0.62rem 0;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+    th {
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    td:first-child { font-weight: 600; width: 38%; }
+    .token-hero { margin: 0.85rem 0 0.35rem; }
+    .token-hero code {
+      font-size: 1.35rem;
+      background: var(--sand);
+      padding: 0.28rem 0.6rem;
+      border-radius: 10px;
+    }
+    .examples {
+      list-style: none;
+      margin: 0.7rem 0 0.2rem;
+      padding: 1rem 1.1rem;
+      background: var(--card);
+      border-radius: var(--radius);
+      display: grid;
+      gap: 0.55rem;
+    }
+    .examples li { max-width: none; }
+    .examples code { background: transparent; padding: 0; font-size: 0.95rem; }
+    .token {
+      background: var(--sand);
+      border-radius: 6px;
+      padding: 0.05rem 0.28rem;
+      font-weight: 650;
+    }
+    .advanced-body { padding: 0.4rem 0 0.6rem; }
+    .advanced-body h2 {
+      margin: 1.8rem 0 0.45rem;
+      font-size: 1.2rem;
+      font-weight: 560;
+      letter-spacing: -0.03em;
+    }
+    .advanced-body h2:first-child { margin-top: 0.6rem; }
+    .advanced-body h3 {
+      margin: 1.25rem 0 0.35rem;
+      font-size: 1.02rem;
+      font-weight: 600;
+    }
+    .advanced-body ol, .advanced-body ul { margin: 0.4rem 0 0.7rem; padding-left: 1.2rem; }
+    .advanced-body li { margin: 0.28rem 0; }
+    .advanced-body li p { margin: 0.2rem 0; }
+    .wide { min-width: 42rem; }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+    @media (max-width: 860px) {
+      [id] { scroll-margin-top: 8.5rem; }
+      .site-nav { padding: 0.6rem 0.75rem; gap: 0.5rem; }
+      .site-nav nav { flex-wrap: nowrap; }
+      .site-nav nav a:not(.btn) { padding: 0.3rem 0.4rem; font-size: 0.86rem; }
+      .btn { min-height: 2.2rem; padding: 0.4rem 0.75rem; font-size: 0.88rem; }
+      .layout {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+        width: min(46rem, calc(100% - 1.75rem));
+        padding-top: 1.25rem;
+      }
+      .toc {
+        position: sticky;
+        top: 3.55rem;
+        z-index: 15;
+        display: flex;
+        gap: 0.4rem;
+        max-height: none;
+        overflow-x: auto;
+        overflow-y: hidden;
+        background: rgba(247, 244, 238, 0.94);
+        backdrop-filter: blur(12px);
+        padding: 0.55rem 0 0.65rem;
+        border-bottom: 1px solid var(--line);
+      }
+      .toc .g { display: none; }
+      .toc a {
+        white-space: nowrap;
+        margin: 0;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(212, 196, 168, 0.28);
+        padding: 0.35rem 0.7rem;
+      }
+      .toc a.is-here { background: var(--sand); }
+      .split { grid-template-columns: 1fr; }
+      .sum-title { font-size: 1.15rem; }
+      h1 { font-size: 2.15rem; }
+      body { font-size: 16.5px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .chev::before { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#conteudo">Ir ao conteúdo</a>
+  <header class="site-nav">
+    <a class="wordmark" href="#topo">Pisoly</a>
+    <nav aria-label="Principal">
+      <a href="https://pisoly.com">Início</a>
+      <a class="is-on" href="#topo" aria-current="page">Manual</a>
+      <a class="btn" href="https://app.pisoly.com">Conectar Bling</a>
+    </nav>
+  </header>
+
+  <div class="layout">
+    <aside class="toc" aria-label="Índice">
+      <div class="g">Básico</div>
+      <a href="#b1">1. Conectar</a>
+      <a href="#b2">2. Mapa</a>
+      <a href="#b3">3. Veículo</a>
+      <a href="#b4" class="token-jump">4. Token <code>${B-03}$</code></a>
+      <a href="#b5">5. Separar</a>
+      <div class="g">Avançado</div>
+      <a href="#mapa">O mapa</a>
+      <a href="#enderecamento">Endereçamento</a>
+      <a href="#estrategias">Estratégias</a>
+      <a href="#lab">Executar no lab</a>
+      <a href="#algoritmos">Algoritmos e fontes</a>
+      <a href="#limites">Limites</a>
+      <a href="#ajuda">Se algo não fecha</a>
+    </aside>
+
+    <main id="conteudo">
+      <p class="kicker" id="topo">Manual</p>
+      <h1>Manual do Pisoly</h1>
+
+      <section class="why" aria-label="Por quê, como e o quê">
+        <div id="porque">
+          <h2>Por quê</h2>
+          <p>Separar pedidos sem mapa claro empurra gente de um corredor a outro. Tempo some no trajeto.</p>
+          <p class="stack">mapa → slot → lote → rota → Run → horas economizadas</p>
+        </div>
+        <div id="como">
+          <h2>Como</h2>
+          <p>O Pisoly usa mapa em metros e matemática clássica de depósito (lote + passeio). O dia a dia fica no Bling.</p>
+        </div>
+        <div id="oque">
+          <h2>O quê</h2>
+          <p>Dois jeitos: <strong>Básico</strong> (conectar, mapa, veículo, <a href="#b4">token</a>, separar) e <strong>Avançado</strong> (desenhar galpão, CSV, lab A/B/C, fontes).</p>
+        </div>
+      </section>
+
+      <p class="group" id="basico">Básico</p>
+
+      <details class="block" open id="b1">
+        <summary>
+          <h2 class="sum-title">1. Conectar a conta Bling</h2>
+          <span class="chev" aria-hidden="true"></span>
+        </summary>
+        <p>Na Central de Extensões, instale o Pisoly e autorize. Não pedimos a senha do Bling. Depois de “conectado”, abra o painel.</p>
+        <p><strong>Permissões (só o necessário)</strong></p>
+        <dl class="perms">
+          <div>
+            <dt>Pedidos de Venda</dt>
+            <dd>Ler pedidos; escrever somente notas de onda se você usar esse recurso.</dd>
+          </div>
+          <div>
+            <dt>Produtos</dt>
+            <dd>Ler localização, peso e dimensões (não alteramos o cadastro).</dd>
+          </div>
+          <div>
+            <dt>Dados básicos da empresa</dt>
+            <dd>Saber qual loja instalou.</dd>
+          </div>
+        </dl>
+      </details>
+
+      <details class="block" open id="b2">
+        <summary>
+          <h2 class="sum-title">2. Deixar o mapa pronto (uma vez)</h2>
+          <span class="chev" aria-hidden="true"></span>
+        </summary>
+        <p>Desenhe o galpão (ou Dev: Carregar demonstração). Marque a entrada. Sem prateleiras+posições+entrada o automático não escreve. Chão em volta das prateleiras já é andável — não desenha corredor.</p>
+      </details>
+
+      <details class="block" open id="b3">
+        <summary>
+          <h2 class="sum-title">3. Dizer como as pessoas carregam</h2>
+          <span class="chev" aria-hidden="true"></span>
+        </summary>
+        <div class="split">
+          <div>
+            <p>À direita, escolha o veículo. Por pedidos conta vendas. Os outros enchem por kg e m³.</p>
+            <p>Esses números são padrões de indústria, não uma marca. Em Ajustar medidas você muda comprimento, largura, altura e peso.</p>
+            <p>Por pedidos enche pela contagem de vendas (capacidade e tamanho da onda). Os veículos enchem só por kg e m³. O Bling já tem peso bruto e dimensões. Se um produto da onda não tem kg ou caixa, o veículo recusa a onda — não inventamos número e não caímos de volta para “N pedidos”.</p>
+            <p>Um único pedido mais pesado ou maior que o carrinho é recusado (não partimos a linha).</p>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <caption class="sr-only">Veículos, um ao lado do outro</caption>
+              <thead>
+                <tr><th>Escolha</th><th>Quando usar</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Por pedidos</td><td>Contagem simples. É o modo antigo: onda = N vendas. Sem kg nem m³.</td></tr>
+                <tr><td>Nas mãos</td><td>Caixa ou tote. ~12 kg · 0,03 m³.</td></tr>
+                <tr><td>Carrinho de mão</td><td>Duas rodas. ~150 kg.</td></tr>
+                <tr><td>Carrinho de picking</td><td>O mais comum no galpão. ~200 kg · 0,56 m³.</td></tr>
+                <tr><td>Gaiola</td><td>Roll cage. ~400 kg.</td></tr>
+                <tr><td>Transpaleteira</td><td>Palete 120×80. ~2000 kg.</td></tr>
+                <tr><td>Empilhadeira</td><td>Mesma planta, mais altura. ~2000 kg.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </details>
+
+      <details class="block" open id="b4">
+        <summary>
+          <h2 class="sum-title">4. Escrever a posição no Bling</h2>
+          <span class="chev" aria-hidden="true"></span>
+        </summary>
+        <p class="token-hero"><code>${B-03}$</code></p>
+        <p>Em cada produto: Estoque → Localização. Pode deixar a nota que você já usa. Em qualquer lugar desse texto, coloque o token com o nome da posição do mapa: <code>${B-03}$</code>.</p>
+        <p>Os três exemplos abaixo viram a mesma posição <code>B-03</code>:</p>
+        <ol class="examples">
+          <li><code>fundo esquerdo, corredor B <span class="token">${B-03}$</span></code></li>
+          <li><code><span class="token">${B-03}$</span> fundo esquerdo, corredor B</code></li>
+          <li><code>fundo esquerdo,<span class="token">${B-03}$</span> corredor B</code></li>
+        </ol>
+        <p>Só B-03 também vale. Se o campo for só <code>B-03</code> (igual ao nome no mapa), também vale. Não adivinhamos “corredor B posição 3” sem o token.</p>
+        <p>Produto sem token (e sem nome exato) não entra no picking. A observação do pedido avisa: <em>SKU-X não foi adicionado ao picking pois falta posição</em>. A linha do cabeçalho já cobre o token. <a href="#enderecamento">Puxar Localização do Bling</a>, manual e CSV ficam em Configuração → Avançado.</p>
+      </details>
+
+      <details class="block" open id="b5">
+        <summary>
+          <h2 class="sum-title">5. Separar</h2>
+          <span class="chev" aria-hidden="true"></span>
+        </summary>
+        <p>Pedidos novos da janela do dia entram numa onda. Lista de caminhada em Observações internas. Separador abre qualquer venda da onda. Não precisa abrir Pisoly todo dia.</p>
+        <p>A mesma lista é escrita em cada pedido da onda, e quem separa vê o caminho completo. Volte ao painel só quando o galpão mudar.</p>
+      </details>
+
+      <p class="group">Avançado</p>
+      <details class="block advanced" id="avancado">
+        <summary>
+          <span>
+            <h2 class="sum-title">Avançado</h2>
+            <span class="sum-meta">O mapa · Endereçamento · Estratégias lab A/B/C · Executar no lab · Limites · Se algo não fecha · Suporte em pisoly.com · app.pisoly.com</span>
+          </span>
+          <span class="chev" aria-hidden="true"></span>
+        </summary>
+        <div class="advanced-body">
+          <h2 id="mapa">O mapa</h2>
+          <p>A linha grossa é a prateleira. Os pontinhos são as posições. Paredes fecham o galpão. A porta é a entrada (e a saída, se você marcar outra).</p>
+
+          <h3>Prateleira</h3>
+          <ol>
+            <li>Adicionar prateleira, clique o começo, clique a direção. O comprimento trava no número de posições × passo.</li>
+            <li>Clique numa prateleira para selecionar. A ficha mostra N, prefixo, passo e o lado (esquerdo/direito) dos produtos.</li>
+            <li>Delete (ou Backspace) apaga só aquela prateleira — e as posições dela.</li>
+            <li>Arraste o corpo para mover; a bolinha da ponta gira sem mudar o comprimento.</li>
+          </ol>
+
+          <h3>Parede</h3>
+          <ol>
+            <li>Desenhar parede: clique, arraste, clique de novo. Continua encadeada a partir da última ponta. <code>Esc</code> cancela.</li>
+            <li>Clique a parede para selecionar. Pode editar os metros no campo sobre o mapa.</li>
+            <li>Delete apaga só aquela parede.</li>
+            <li>Um pedaço curto de parede faz o pilar. Não há ferramenta de pilar.</li>
+          </ol>
+
+          <h3>Porta</h3>
+          <p>Marcar entrada é obrigatório. Saída é opcional: sem ela, a caminhada volta à entrada.</p>
+
+          <h3>Mapa pronto</h3>
+          <p>O mapa grava a cada alteração. Sem escala, sem prateleira ou sem entrada, a onda não roda. Atravessar prateleira ou parede (fora da porta) é recusado. O mapa completo é o que o automático usa.</p>
+          <p>A grade em metros fica no menu ☰ do mapa.</p>
+
+          <h2 id="enderecamento">Endereçamento</h2>
+          <p>A linha calma do cabeçalho é o automático — pedidos leem o token <code>${token}$</code> no Bling. No Avançado, Puxar Localização do Bling lê o cadastro agora. Vincular um a um ou CSV só aparece depois de Forçar manual. Posição que não existe no mapa é recusada (422) e listada. Mesclar guarda o que o arquivo não menciona; substituir trata o arquivo como a verdade. Por pedidos e os outros veículos extra também moram no Avançado.</p>
+          <p>Verificar cobertura mostra SKUs da onda sem posição antes de rodar.</p>
+
+          <h2 id="estrategias">Estratégias (só no lab)</h2>
+          <p>O automático do dia usa o vencedor do confronto (lote + passeio). Sem confronto, usa C e Ratliff ou Held–Karp. O interruptor Torneio de algoritmos só mostra ou esconde o botão e a tabela; o que já foi gravado continua. Empate no mesmo metro: trava pelo nome — clique outra linha da tabela para testar no lab. Os menus lote e passeio listam todas as técnicas clássicas. Fontes: <a href="#algoritmos">Algoritmos e fontes</a>.</p>
+          <div class="table-scroll">
+            <table>
+              <caption class="sr-only">Estratégias A, B e C</caption>
+              <thead>
+                <tr><th></th><th>O que faz</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>A</td><td>Um pedido por saída. Sempre o próximo mais perto.</td></tr>
+                <tr><td>B</td><td>Ondas na ordem do horário, até encher o carrinho.</td></tr>
+                <tr><td>C</td><td>Junta pedidos que ficam perto andando, sem estourar pedidos / kg / m³.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>A caminhada nunca é em linha reta por cima do móvel. Cada saída da origem tem uma cor. Quando dois caminhos passam no mesmo corredor, as linhas abrem para as cores aparecerem.</p>
+
+          <h2 id="lab">Executar no lab</h2>
+          <p>No mapa confirmado: Encher prateleiras e pedidos e Ver o melhor algoritmo usam os produtos do Bling quando eles têm posição no mapa, kg e m³. O confronto desenha os passeios no próprio galpão (lotes, depois rotas) — clique numa linha da tabela para ver aquele traço. O gerador deixa só alguns picks nas pontas dos corredores, para S-shape, retorno e maior-vão não andarem iguais. Sem catálogo (conta nova ou ainda sem cadastro), roda o padrão sintético. Calcular as vendas anda essa onda (ou pedidos reais).</p>
+          <p>O lab mostra horas de caminhada. R$ só com custo mensal + moeda. Sem custo = só hora.</p>
+          <p><code>tamanho da onda</code> acima da capacidade do carrinho é 422, nunca cortado em silêncio.</p>
+          <h3>Cores e PNG</h3>
+          <p>Depois da execução o mapa anima a rota. O PNG embaixo é o mesmo desenho, determinístico: mesma entrada, mesma imagem.</p>
+
+          <h2 id="algoritmos">Algoritmos e fontes</h2>
+          <p>Dois problemas diferentes: quem compartilha o carrinho (lote) e em que ordem se pega (passeio). A, B e C só resolvem o lote. O metro é sempre o chão andável do seu mapa — nunca linha reta por cima da prateleira, nunca o número de um paper de outro galpão.</p>
+          <p>O menu clássico de separação no depósito está no survey de de Koster, Le-Duc e Roodbergen (2007), “Design and control of warehouse order picking: A literature review”, European Journal of Operational Research 182:481–521, e no livro de Bartholdi e Hackman, Warehouse &amp; Distribution Science. O que o Pisoly roda hoje sem confronto está na primeira tabela. O botão Ver o melhor algoritmo mede o catálogo abaixo no seu mapa e trava o vencedor. Até gravar, o dia a dia não muda.</p>
+
+          <h3>Em uso no automático</h3>
+          <div class="table-scroll">
+            <table class="wide">
+              <thead>
+                <tr><th>Papel</th><th>Método</th><th>Fonte</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Metro entre posições</td>
+                  <td>Caminho mais curto na grade andável (Dijkstra)</td>
+                  <td>Dijkstra, E. W. (1959). “A note on two problems in connexion with graphs.” Numerische Mathematik 1:269–271.</td>
+                </tr>
+                <tr>
+                  <td>Lote</td>
+                  <td>C — pares mais próximos andando, sem estourar pedidos / kg / m³</td>
+                  <td>Este produto. Família dos algoritmos seed / savings, não um paper único.</td>
+                </tr>
+                <tr>
+                  <td>Passeio, um bloco paralelo</td>
+                  <td>Ratliff e Rosenthal — ótimo nesse desenho</td>
+                  <td>Ratliff, H. D. e Rosenthal, A. S. (1983). “Order-picking in a rectangular warehouse: a solvable case of the traveling salesman problem.” Operations Research 31(3):507–521.</td>
+                </tr>
+                <tr>
+                  <td>Passeio, prateleiras misturadas</td>
+                  <td>Held e Karp no metro andado. Acima de 16 paradas: vizinho mais próximo + 2-opt</td>
+                  <td>Held, M. e Karp, R. M. (1962). “A dynamic programming approach to sequencing problems.” Journal of the Society for Industrial and Applied Mathematics 10(1):196–210. 2-opt: Croes, G. A. (1958). “A method for solving traveling-salesman problems.” Operations Research 6(6):791–812; Lin, S. (1965). “Computer solutions of the traveling salesman problem.” Bell System Technical Journal 44(10):2245–2269.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>A e B no lab usam o mesmo passeio da tabela. Não há chave para o lojista trocar o passeio no dia a dia.</p>
+
+          <h3>Passeio — padrões da indústria</h3>
+          <p>O que a literatura de depósito e o livro de Bartholdi listam. No confronto, cada um é medido no metro deste mapa.</p>
+          <div class="table-scroll">
+            <table class="wide">
+              <thead>
+                <tr><th>Método</th><th>O que faz</th><th>Fonte</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>S-shape (traversal)</td><td>Entra em todo corredor com picking e atravessa</td><td>Hall (1993); de Koster et al. (2007)</td></tr>
+                <tr><td>Return</td><td>Entra pela frente, pega, volta pelo mesmo corredor</td><td>Hall (1993); de Koster et al. (2007)</td></tr>
+                <tr><td>Midpoint</td><td>Não cruza o meio do corredor</td><td>Hall, R. W. (1993). “Distance approximations for routing manual pickers in a warehouse.” IIE Transactions 25(4):76–87</td></tr>
+                <tr><td>Largest gap</td><td>Pula o maior trecho vazio de cada corredor</td><td>Hall (1993)</td></tr>
+                <tr><td>Combined</td><td>Por corredor: atravessar ou voltar, o que liga melhor</td><td>Roodbergen, K. J. e de Koster, R. (2001). “Routing order pickers in a warehouse with a middle aisle.” EJOR 133:32–43</td></tr>
+                <tr><td>Combined+</td><td>Combined com um passo à frente</td><td>Roodbergen, K. J. e de Koster, R. (2001). “Routing methods for warehouses with multiple cross aisles.” International Journal of Production Research 39(9):1865–1883</td></tr>
+                <tr><td>Ratliff–Rosenthal</td><td>Ótimo num bloco retangular de corredores paralelos</td><td>Ratliff e Rosenthal (1983), acima</td></tr>
+                <tr><td>Dois blocos</td><td>A mesma ideia com corredor do meio</td><td>Roodbergen e de Koster (2001), middle aisle</td></tr>
+                <tr><td>Held–Karp</td><td>TSP exato no metro andado (poucas paradas)</td><td>Held e Karp (1962), acima</td></tr>
+                <tr><td>Christofides</td><td>Aproximação 1,5 do TSP na mesma matriz</td><td>Christofides, N. (1976). “Worst-case analysis of a new heuristic for the travelling salesman problem.” Relatório 388, Carnegie Mellon</td></tr>
+                <tr><td>Lin–Kernighan</td><td>Heurística TSP de produção</td><td>Lin, S. e Kernighan, B. W. (1973). “An effective heuristic algorithm for the traveling-salesman problem.” Operations Research 21(2):498–516</td></tr>
+                <tr><td>2-opt</td><td>Busca local barata a partir de uma construção</td><td>Croes (1958); Lin (1965), acima</td></tr>
+                <tr><td>Clarke–Wright</td><td>Savings — várias saídas da porta</td><td>Clarke, G. e Wright, J. W. (1964). “Scheduling of vehicles from a central depot to a number of delivery points.” Operations Research 12(4):568–581</td></tr>
+                <tr><td>Vizinho mais próximo</td><td>Só baseline — construção fraca; no confronto tem de perder. Não é política de produção aqui</td><td>Construção clássica de TSP</td></tr>
+                <tr><td>OR-Tools TSP</td><td>Solver de roteamento (Google). Extra, não é instalação padrão</td><td>Biblioteca OR-Tools, não um paper</td></tr>
+                <tr><td>DRL Dunn</td><td>Rede treinada no confronto; o motor recalcula os metros</td><td>Dunn, G., Charkhgard, H., Eshragh, A., Mahmoudinazlou, S. e Stojanovski, E. (2024). “Deep Reinforcement Learning for Picker Routing Problem in Warehousing.” arXiv:2402.03525</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Lote — padrões da indústria</h3>
+          <div class="table-scroll">
+            <table class="wide">
+              <thead>
+                <tr><th>Método</th><th>O que faz</th><th>Fonte</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>A</td><td>Um pedido por saída</td><td>Baseline de indústria / lab</td></tr>
+                <tr><td>B</td><td>Onda pelo relógio, até encher o carrinho</td><td>Prática de onda por horário, medida no lab</td></tr>
+                <tr><td>C</td><td>Pares mais próximos andando + capacidade</td><td>Este produto (automático de hoje)</td></tr>
+                <tr><td>Seed</td><td>Começa num pedido longe, cresce o carrinho</td><td>Elsayed, E. A. e Unal, O. I. (1989). “Order batching algorithms and travel-time estimation for automated storage/retrieval systems.” International Journal of Production Research 27(7):1097–1114. Gibson, D. R. e Sharp, G. P. (1992). “Order batching procedures.” EJOR 58:57–67</td></tr>
+                <tr><td>Ho–Su–Shi</td><td>Heurística de lote com dois corredores transversais</td><td>Ho, Y.-C., Su, T.-S. e Shi, Z.-B. (2008). “Order-batching methods for an order-picking warehouse with two cross aisles.” Computers &amp; Industrial Engineering 55(2):321–347</td></tr>
+                <tr><td>Clarke–Wright no lote</td><td>Savings entre pedidos, no metro andado</td><td>Clarke e Wright (1964), acima</td></tr>
+                <tr><td>BTOGCN</td><td>Rede de lote (Cainiao); o motor recalcula os metros</td><td>Duan, L. et al. (2020). “Balanced Order Batching with Task-Oriented Graph Clustering.” KDD 2020. arXiv:2008.09018</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Fora deste produto</h3>
+          <p>Não são solver de passeio neste mapa:</p>
+          <ul>
+            <li>S. Naish e Baker (2004), “Materials handling: Fulfilling the promises” — layout e automação, não caminho.</li>
+            <li>Bartholdi, bucket brigades — organização de gente no corredor, não ordem de paradas.</li>
+            <li>Zone picking como política de layout — não é o motor de uma onda.</li>
+            <li>Endereçamento de SKU — outra tela; não escolhe o passeio.</li>
+          </ul>
+          <p>Não existe algoritmo de picking de “John Naish”. O John clássico da área é o livro de Bartholdi e Hackman.</p>
+
+          <h2 id="limites">Limites</h2>
+          <ul>
+            <li>Sem escala, sem prateleira ou sem entrada, a onda não roda.</li>
+            <li>Atravessar prateleira ou parede, fora da porta, é recusado.</li>
+            <li>Posição que não existe no mapa volta 422 e entra na lista.</li>
+            <li>SKU sem token e sem nome exato fica fora do picking. O pedido avisa. A linha não some em silêncio.</li>
+            <li>Um pedido mais pesado ou maior que o veículo é recusado. A linha não é partida.</li>
+            <li>Onda acima da capacidade responde 422. Ela não é cortada em silêncio.</li>
+            <li>O lab mostra horas de caminhada. R$ só com custo mensal + moeda. Sem custo = só hora.</li>
+            <li>A lista entra como texto em Observações internas. A situação do pedido no Bling fica como está.</li>
+          </ul>
+
+          <h2 id="ajuda">Se algo não fecha</h2>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr><th>Sintoma</th><th>O que checar</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Pedido sem lista</td><td>Mapa confirmado? Localização do produto igual à posição? Conta Bling ainda conectada?</td></tr>
+                <tr><td>R$ recusado, horas ok</td><td>Algum SKU sem posição. Veja <code>excluded_line_count</code>.</td></tr>
+                <tr><td>Carrinho “não pesa”</td><td>Falta peso ou medida em algum produto da onda. Completa no Bling ou use Por pedidos.</td></tr>
+                <tr><td>422 na onda</td><td>Por pedidos: onda maior que a contagem. Veículo: um pedido sozinho maior que kg/m³, ou a onda sem peso/caixa.</td></tr>
+                <tr><td>Caminho “por fora” do galpão</td><td>Feche o envelope com paredes. O chão andável é o de dentro dos móveis, mais a porta.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h2 id="suporte">Suporte</h2>
+          <p>Suporte: <a href="https://pisoly.com">pisoly.com</a> · <a href="https://app.pisoly.com">app.pisoly.com</a></p>
+        </div>
+      </details>
+    </main>
+  </div>
+
+  <footer class="site-foot">
+    <p>Pisoly · Manual · <a href="https://pisoly.com">pisoly.com</a> · <a href="https://app.pisoly.com">app.pisoly.com</a></p>
+  </footer>
+
+  <script>
+    function reveal(id, openSelf) {
+      var target = document.getElementById(id);
+      if (!target) return;
+      var node = openSelf ? target : target.parentElement;
+      while (node) {
+        if (node.tagName === "DETAILS") node.open = true;
+        node = node.parentElement;
+      }
+      target.scrollIntoView();
+    }
+
+    function idFromHash(hash) {
+      return decodeURIComponent((hash || "").replace(/^#/, ""));
+    }
+
+    document.addEventListener("click", function (event) {
+      var link = event.target.closest("a[href^='#']");
+      if (!link) return;
+      var id = idFromHash(link.getAttribute("href"));
+      if (!id || !document.getElementById(id)) return;
+      event.preventDefault();
+      if (history.pushState) history.pushState(null, "", "#" + id);
+      reveal(id, true);
+    });
+
+    window.addEventListener("hashchange", function () {
+      reveal(idFromHash(location.hash), false);
+    });
+
+    if (location.hash) reveal(idFromHash(location.hash), false);
+
+    var tocLinks = Array.prototype.slice.call(document.querySelectorAll(".toc a"));
+    var byId = {};
+    tocLinks.forEach(function (link) {
+      byId[idFromHash(link.getAttribute("href"))] = link;
+    });
+    if ("IntersectionObserver" in window) {
+      var observer = new IntersectionObserver(function (entries) {
+        var current = null;
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) current = entry.target.id;
+        });
+        if (!current || !byId[current]) return;
+        tocLinks.forEach(function (link) {
+          var on = link === byId[current];
+          link.classList.toggle("is-here", on);
+          if (on) link.setAttribute("aria-current", "location");
+          else link.removeAttribute("aria-current");
+        });
+      }, { rootMargin: "-18% 0px -68% 0px", threshold: [0.15, 0.4] });
+      Object.keys(byId).forEach(function (id) {
+        var section = document.getElementById(id);
+        if (section) observer.observe(section);
+      });
+    }
+  </script>
+</body>
+</html>
