@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Pisoly — clareza no chão, nativo no Bling</title>
+  <meta name="description" content="Clareza no chão: mapa → slot → lote → rota → Run → horas economizadas."/>
+  <meta name="theme-color" content="#F7F4EE"/>
+  <link rel="icon" href="favicon.svg"/>
+  <style>
+:root {
+  --canvas: #F7F4EE;
+  --sand: #D4C4A8;
+  --ink: #2B2F33;
+  --muted: rgba(43, 47, 51, 0.62);
+  --line: rgba(43, 47, 51, 0.12);
+  --nav-h: 3.5rem;
+  --measure: 68rem;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: "SF Pro Text", "Segoe UI", Inter, system-ui, sans-serif;
+  font-size: 1.0625rem;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--sand);
+  color: var(--ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+a,
+a:visited {
+  color: var(--ink);
+}
+
+.skip {
+  position: absolute;
+  left: 1rem;
+  top: -4rem;
+  z-index: 40;
+  padding: 0.45rem 0.75rem;
+  border-radius: 8px;
+  background: var(--ink);
+  color: var(--canvas);
+  text-decoration: none;
+}
+
+.skip:focus { top: 0.65rem; }
+
+.wrap {
+  width: min(var(--measure), calc(100% - 3rem));
+  margin-inline: auto;
+}
+
+.site-nav {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  height: var(--nav-h);
+  display: flex;
+  align-items: center;
+  background: rgba(247, 244, 238, 0.88);
+  border-bottom: 1px solid var(--line);
+  backdrop-filter: blur(16px);
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.wordmark {
+  font-weight: 600;
+  letter-spacing: -0.034em;
+  font-size: 1.0625rem;
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.site-nav nav {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.site-nav nav a,
+.site-nav nav a:visited {
+  text-decoration: none;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: -0.011em;
+  padding: 0.4rem 0.7rem;
+  border-radius: 8px;
+}
+
+.site-nav nav a[aria-current="page"],
+.site-nav nav a[aria-current="page"]:visited,
+.site-nav nav a:hover {
+  color: var(--ink);
+}
+
+.why {
+  min-height: calc(100svh - var(--nav-h));
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 4.5rem 0 6.5rem;
+}
+
+h1 {
+  margin: 0;
+  max-width: 11.2em;
+  font-weight: 600;
+  letter-spacing: -0.042em;
+  line-height: 1.02;
+  font-size: clamp(2.45rem, 5.5vw, 4.35rem);
+  text-wrap: balance;
+}
+
+.sub {
+  margin: 1.65rem 0 0;
+  max-width: 44rem;
+  color: var(--muted);
+  font-size: 1.3rem;
+  line-height: 1.45;
+  letter-spacing: -0.014em;
+  text-wrap: pretty;
+}
+
+.stack { display: block; }
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.9rem 1.7rem;
+  margin-top: 2.6rem;
+}
+
+.btn,
+.btn:visited {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.65rem 1.3rem;
+  border: 0;
+  border-radius: 10px;
+  background: var(--ink);
+  color: var(--canvas);
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+}
+
+.btn:hover { background: #2B2F33; color: var(--canvas); }
+
+.link {
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: -0.011em;
+  text-underline-offset: 0.22em;
+}
+
+.link:hover { opacity: 0.72; }
+
+.how {
+  border-top: 1px solid var(--sand);
+  scroll-margin-top: var(--nav-h);
+}
+
+.how-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2.5rem 3rem;
+  padding: 5rem 0 4.25rem;
+}
+
+.how h2 {
+  margin: 0 0 0.7rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: -0.024em;
+  line-height: 1.25;
+  text-wrap: balance;
+}
+
+.how h2::before {
+  content: "";
+  display: block;
+  width: 2rem;
+  height: 2px;
+  margin-bottom: 1rem;
+  background: var(--sand);
+}
+
+.how p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 1.02rem;
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.what {
+  border-top: 1px solid var(--line);
+  padding: 0.5rem 0 6.75rem;
+  scroll-margin-top: var(--nav-h);
+}
+
+.what ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-width: 40rem;
+  counter-reset: step;
+}
+
+.what li {
+  display: grid;
+  grid-template-columns: 2.6rem minmax(0, 1fr);
+  gap: 0.35rem;
+  align-items: baseline;
+  padding: 1.15rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 1.0625rem;
+  line-height: 1.45;
+  letter-spacing: -0.012em;
+  counter-increment: step;
+}
+
+.what li::before {
+  content: counter(step, decimal-leading-zero);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+code {
+  font-family: "Cascadia Mono", "SF Mono", ui-monospace, monospace;
+  font-size: 0.84em;
+  padding: 0.08em 0.38em;
+  border-radius: 5px;
+  background: rgba(212, 196, 168, 0.5);
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.micro {
+  margin: 1.45rem 0 0;
+  max-width: 36rem;
+  color: var(--muted);
+  font-size: 0.98rem;
+  line-height: 1.45;
+}
+
+.site-foot {
+  border-top: 1px solid var(--sand);
+  padding: 2rem 0 7rem;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  letter-spacing: 0.01em;
+  text-align: center;
+}
+
+.site-foot p { margin: 0; }
+
+.site-foot a,
+.site-foot a:visited {
+  color: var(--muted);
+  text-underline-offset: 0.18em;
+}
+
+.site-foot a:hover { color: var(--ink); }
+
+@media (max-width: 720px) {
+  .wrap { width: min(var(--measure), calc(100% - 2.25rem)); }
+
+  .why {
+    min-height: calc(100svh - var(--nav-h));
+    justify-content: center;
+    padding: 2.25rem 0 2.75rem;
+  }
+
+  h1 { font-size: clamp(2.3rem, 10vw, 3rem); }
+
+  .sub { font-size: 1.12rem; margin-top: 1.2rem; }
+
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+
+  .btn { width: 100%; }
+
+  .link { align-self: flex-start; }
+
+  .how-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    padding: 2.75rem 0 2.25rem;
+  }
+
+  .what { padding-bottom: 3.25rem; }
+
+  .what li { padding: 1rem 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+</style>
+</head>
+<body>
+  <a class="skip" href="#conteudo">Ir ao conteúdo</a>
+  <header class="site-nav">
+    <div class="wrap bar">
+      <a class="wordmark" href="index.html">Pisoly</a>
+      <nav aria-label="Principal">
+        <a href="index.html" aria-current="page">Início</a>
+        <a href="https://app.pisoly.com/manual">Manual</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <section class="why" id="conteudo">
+      <div class="wrap">
+        <h1>A caminhada entre prateleiras queima mão de obra.</h1>
+        <p class="sub">Clareza no chão: <span class="stack">mapa → slot → lote → rota → Run&nbsp;→&nbsp;horas economizadas.</span></p>
+        <div class="actions" id="conectar">
+          <a class="btn" href="#conectar">Conectar Bling</a>
+          <a class="link" href="https://app.pisoly.com/manual">Abrir o manual</a>
+        </div>
+      </div>
+    </section>
+    <section class="how" id="como" aria-label="Como">
+      <div class="wrap how-grid">
+        <article>
+          <h2>Mapa de verdade</h2>
+          <p>Prateleiras, paredes e porta em metros. Sem geometria confirmada, o automático não roda.</p>
+        </article>
+        <article>
+          <h2>Matemática clássica de depósito</h2>
+          <p>Caminho no chão andável. Lote e rota determinísticos. Sem cifra inventada.</p>
+        </article>
+        <article>
+          <h2>Dia a dia no Bling</h2>
+          <p>Você continua no ERP. O Pisoly entra no chão; pedidos e cadastro ficam onde você já trabalha.</p>
+        </article>
+      </div>
+    </section>
+    <section class="what" id="passos" aria-label="Passos">
+      <div class="wrap">
+        <ol>
+          <li><span>Conecte o Bling (OAuth — sem senha do Bling).</span></li>
+          <li><span>Deixe o mapa pronto uma vez (prateleiras + entrada).</span></li>
+          <li><span>Coloque <code>${B-03}$</code> em Estoque → Localização no produto.</span></li>
+          <li><span>Pedidos novos ganham a lista de caminhada sozinhos.</span></li>
+        </ol>
+        <p class="micro">SKU sem posição não some em silêncio — o pedido avisa.</p>
+      </div>
+    </section>
+  </main>
+  <footer class="site-foot">
+    <div class="wrap">
+      <p>Pisoly · <a href="https://pisoly.com">pisoly.com</a> · <a href="https://app.pisoly.com">app.pisoly.com</a></p>
+    </div>
+  </footer>
+</body>
+</html>
