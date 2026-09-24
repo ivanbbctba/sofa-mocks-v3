@@ -183,13 +183,44 @@
       justify-content: center;
     }
 
-    .qty {
+    .qty-group {
+      display: flex;
+      align-items: baseline;
+      column-gap: 0.18em;
       margin: 0;
+      min-width: 0;
       font-size: 76px;
       font-weight: 650;
       letter-spacing: -0.07em;
       line-height: 0.84;
       font-variant-numeric: tabular-nums;
+    }
+
+    .qty {
+      margin: 0;
+      flex: 0 0 auto;
+      font-size: 1em;
+      font-weight: inherit;
+      letter-spacing: inherit;
+      line-height: inherit;
+    }
+
+    .qty-mid {
+      flex: 0 0 auto;
+      font-size: 0.52em;
+      font-weight: inherit;
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+
+    .qty-sku {
+      margin: 0;
+      min-width: 0;
+      font-size: 0.48em;
+      font-weight: inherit;
+      letter-spacing: -0.045em;
+      line-height: 0.92;
+      overflow-wrap: anywhere;
     }
 
     .slot {
@@ -473,7 +504,9 @@
       <p class="empty hidden" id="empty">Todos pegos</p>
       <div class="hud-row">
         <div class="hud-copy hidden" id="hud-copy">
-          <p class="qty" id="qty">10</p>
+          <p class="qty-group">
+            <span class="qty" id="qty">10</span><span class="qty-mid" aria-hidden="true">·</span><span class="qty-sku" id="hud-sku">TOALHA-220</span>
+          </p>
           <p class="slot" id="slot">A-01</p>
           <p class="depois" id="depois">depois C-02</p>
         </div>
@@ -660,6 +693,7 @@
       const countEl = document.getElementById("count");
       const hudCopy = document.getElementById("hud-copy");
       const qtyEl = document.getElementById("qty");
+      const hudSkuEl = document.getElementById("hud-sku");
       const slotEl = document.getElementById("slot");
       const depoisEl = document.getElementById("depois");
       const skuCard = document.getElementById("sku-card");
@@ -959,6 +993,7 @@
           const next = tour.stops[here + 1];
           const loc = cleanLoc(stop.code);
           qtyEl.textContent = String(stop.qty);
+          hudSkuEl.textContent = stop.sku;
           slotEl.textContent = loc;
           depoisEl.textContent = next ? "depois " + cleanLoc(next.code) : "última parada";
           countEl.textContent = here + " de " + tour.stops.length;
