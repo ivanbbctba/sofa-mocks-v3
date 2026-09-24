@@ -184,11 +184,12 @@
     }
 
     .qty-group {
-      display: flex;
+      display: inline-flex;
       align-items: baseline;
-      column-gap: 0.16em;
+      column-gap: 0.15em;
+      width: max-content;
+      max-width: 100%;
       margin: 0;
-      min-width: 0;
       font-size: 76px;
       font-weight: 650;
       letter-spacing: -0.07em;
@@ -207,17 +208,16 @@
 
     .qty-sku {
       margin: 0;
-      min-width: 0;
-      font-size: 0.5em;
+      flex: 0 0 auto;
+      font-size: 0.42em;
       font-weight: inherit;
       letter-spacing: -0.05em;
       line-height: 0.92;
-      overflow-wrap: anywhere;
+      white-space: nowrap;
     }
 
     .qty-sku::before {
       content: "·";
-      margin-right: 0.08em;
     }
 
     .slot {
