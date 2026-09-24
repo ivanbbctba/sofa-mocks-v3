@@ -186,7 +186,7 @@
     .qty-group {
       display: flex;
       align-items: baseline;
-      column-gap: 0.18em;
+      column-gap: 0.16em;
       margin: 0;
       min-width: 0;
       font-size: 76px;
@@ -205,22 +205,19 @@
       line-height: inherit;
     }
 
-    .qty-mid {
-      flex: 0 0 auto;
-      font-size: 0.52em;
-      font-weight: inherit;
-      letter-spacing: -0.04em;
-      line-height: 1;
-    }
-
     .qty-sku {
       margin: 0;
       min-width: 0;
-      font-size: 0.48em;
+      font-size: 0.5em;
       font-weight: inherit;
-      letter-spacing: -0.045em;
+      letter-spacing: -0.05em;
       line-height: 0.92;
       overflow-wrap: anywhere;
+    }
+
+    .qty-sku::before {
+      content: "·";
+      margin-right: 0.08em;
     }
 
     .slot {
@@ -505,7 +502,7 @@
       <div class="hud-row">
         <div class="hud-copy hidden" id="hud-copy">
           <p class="qty-group">
-            <span class="qty" id="qty">10</span><span class="qty-mid" aria-hidden="true">·</span><span class="qty-sku" id="hud-sku">TOALHA-220</span>
+            <span class="qty" id="qty">10</span><span class="qty-sku" id="hud-sku">TOALHA-220</span>
           </p>
           <p class="slot" id="slot">A-01</p>
           <p class="depois" id="depois">depois C-02</p>
