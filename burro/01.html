@@ -245,7 +245,7 @@
       padding: 6px 4px;
     }
 
-    .speak {
+    .sku-card {
       display: block;
       width: min(28rem, 100%);
       margin: 0 auto 12px;
@@ -261,31 +261,86 @@
       pointer-events: auto;
     }
 
-    .speak-kicker {
+    .sku-kicker {
       margin: 0;
       color: var(--mute);
       font-size: 11px;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
     }
 
-    .speak-line {
+    .sku-line {
       margin: 4px 0 0;
-      font-size: 15px;
-      font-weight: 620;
-      letter-spacing: -0.02em;
+      font-size: 18px;
+      font-weight: 650;
+      letter-spacing: -0.03em;
     }
 
-    .speak-more {
+    .sku-more {
       margin-top: 10px;
       padding-top: 10px;
       border-top: 1px solid #eceae4;
     }
 
-    .speak-more p {
+    .sku-more p {
       margin: 0 0 4px;
       color: var(--ink-2);
       font-size: 14px;
+    }
+
+    .chooser {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      top: 18%;
+      z-index: 6;
+      border-radius: 22px;
+      background: var(--white);
+      box-shadow: var(--shadow);
+      padding: 22px 18px 18px;
+    }
+
+    .chooser h1 {
+      margin: 0 0 14px;
+      font-size: 24px;
+      letter-spacing: -0.04em;
+      text-align: center;
+    }
+
+    .choice {
+      display: block;
+      width: 100%;
+      margin: 0 0 10px;
+      border: 0;
+      border-radius: 16px;
+      background: #f3f1eb;
+      color: var(--ink);
+      font: 650 17px/1.2 "SF Pro Text", system-ui, sans-serif;
+      letter-spacing: -0.03em;
+      padding: 16px;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .choice strong {
+      display: block;
+      font-size: 18px;
+    }
+
+    .choice span {
+      display: block;
+      margin-top: 4px;
+      color: var(--mute);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .eco {
+      margin: 8px 0 0;
+      color: var(--ink-2);
+      font-size: 15px;
+      font-weight: 620;
+      letter-spacing: -0.02em;
     }
 
     .empty {
@@ -384,24 +439,36 @@
     <div class="map" id="map" role="img" aria-label="Mapa do galpão"></div>
     <div class="chrome">
       <p class="count" id="count"></p>
+      <section class="chooser" id="chooser">
+        <h1>Onda 14</h1>
+        <button type="button" class="choice" id="pick-rich">
+          <strong>Rich run</strong>
+          <span>Progresso e próxima parada</span>
+        </button>
+        <button type="button" class="choice" id="pick-burro">
+          <strong>burro run</strong>
+          <span>Só a parada atual</span>
+        </button>
+      </section>
       <section class="zen hidden" id="zen">
         <p class="zen-kicker">Corrida</p>
         <h1>Feita</h1>
+        <p class="eco" id="zen-eco">tempo economizado 0:48</p>
         <div class="stats">
-          <p class="stat"><b id="zen-time">0:00</b><span>tempo</span></p>
+          <p class="stat"><b id="zen-time">0:00</b><span>DURAÇÃO</span></p>
           <p class="stat"><b id="zen-qty">0 un.</b><span>quantidade</span></p>
           <p class="stat"><b id="zen-kg">0 kg</b><span>peso</span></p>
           <p class="stat"><b id="zen-m3">0 m³</b><span>volume</span></p>
         </div>
         <p class="depois" id="zen-latency">aceite 0,0 s</p>
-        <button type="button" class="again hidden" id="again">Começar de novo</button>
+        <button type="button" class="again hidden" id="again">Próxima corrida</button>
       </section>
     </div>
     <div class="hud" id="hud">
-      <button type="button" class="speak hidden" id="speak" aria-expanded="false">
-        <p class="speak-kicker">Falar</p>
-        <p class="speak-line" id="speak-line"></p>
-        <div class="speak-more hidden" id="speak-more"></div>
+      <button type="button" class="sku-card hidden" id="sku-card" aria-expanded="false">
+        <p class="sku-kicker">SKU</p>
+        <p class="sku-line" id="sku-line"></p>
+        <div class="sku-more hidden" id="sku-more"></div>
       </button>
       <p class="empty hidden" id="empty">Todos pegos</p>
       <div class="hud-row">
@@ -428,6 +495,7 @@
       const BOT = 16.65;
       const NS = "http://www.w3.org/2000/svg";
       const STORE = "pisoly-onda14-claimed";
+      const SKIN_STORE = "pisoly-onda14-skin";
       const FULL_VB = [-0.15, -0.2, 9.85, 17.9];
 
       const RUNS = [
@@ -594,17 +662,27 @@
       const qtyEl = document.getElementById("qty");
       const slotEl = document.getElementById("slot");
       const depoisEl = document.getElementById("depois");
-      const speakEl = document.getElementById("speak");
-      const speakLine = document.getElementById("speak-line");
-      const speakMore = document.getElementById("speak-more");
+      const skuCard = document.getElementById("sku-card");
+      const skuLine = document.getElementById("sku-line");
+      const skuMore = document.getElementById("sku-more");
       const emptyEl = document.getElementById("empty");
       const goEl = document.getElementById("go");
       const feitoEl = document.getElementById("feito");
       const skipEl = document.getElementById("skip");
       const zenEl = document.getElementById("zen");
       const againEl = document.getElementById("again");
+      const chooserEl = document.getElementById("chooser");
 
-      let mode = "overview";
+      function readSkin() {
+        const query = new URLSearchParams(location.search).get("mode");
+        const hash = (location.hash || "").replace("#", "");
+        const raw = query || hash || sessionStorage.getItem(SKIN_STORE) || "";
+        if (raw === "rich" || raw === "burro") return raw;
+        return "";
+      }
+
+      let skin = readSkin();
+      let mode = skin ? "overview" : "choose";
       let claimed = loadClaimed();
       let runIndex = -1;
       let here = 0;
@@ -612,9 +690,21 @@
       let openedAt = Date.now();
       let acceptMs = 0;
       let pickStartedAt = 0;
-      let speakOpen = false;
+      let skuOpen = false;
       let viewBox = FULL_VB.slice();
       let vbTimer = 0;
+
+      function isRich() {
+        return skin === "rich";
+      }
+
+      function setSkin(next) {
+        skin = next;
+        sessionStorage.setItem(SKIN_STORE, next);
+        const url = new URL(location.href);
+        url.searchParams.set("mode", next);
+        history.replaceState(null, "", url.pathname + url.search);
+      }
 
       function freeIndexes() {
         return tours.map(function (_, i) { return i; }).filter(function (i) {
@@ -732,7 +822,7 @@
           }));
         });
 
-        if (mode === "overview" || mode === "empty") {
+        if (mode === "overview" || mode === "empty" || mode === "choose") {
           const nextFree = freeIndexes()[0];
           setRun(COLORS[nextFree] || COLORS[0]);
           tours.forEach(function (tour, i) {
@@ -820,31 +910,39 @@
         startMarch();
       }
 
-      function paintSpeak() {
+      function paintSku() {
         const tour = currentTour();
         if (!tour) return;
         const stop = tour.stops[here];
         const loc = cleanLoc(stop.code);
-        speakLine.textContent = stop.qty + " · " + stop.sku + " · " + loc;
-        speakMore.innerHTML =
-          "<p><strong>" + stop.sku + "</strong></p>" +
+        skuLine.textContent = stop.sku;
+        skuMore.innerHTML =
           "<p>" + stop.qty + " un. · " + loc + "</p>" +
           "<p>" + stop.speak + "</p>";
-        hide(speakMore, !speakOpen);
-        speakEl.setAttribute("aria-expanded", speakOpen ? "true" : "false");
+        hide(skuMore, !skuOpen);
+        skuCard.setAttribute("aria-expanded", skuOpen ? "true" : "false");
       }
 
       function paintChrome() {
         const free = freeIndexes();
+        hide(chooserEl, mode !== "choose");
         hide(zenEl, mode !== "zen");
         hide(hudCopy, mode !== "pick");
-        hide(speakEl, mode !== "pick");
+        hide(skuCard, mode !== "pick");
         hide(emptyEl, mode !== "empty");
         hide(goEl, mode !== "overview");
         hide(feitoEl, mode !== "pick");
         hide(skipEl, mode !== "pick");
-        hide(againEl, !(mode === "zen" && free.length > 0));
-        document.getElementById("hud").classList.toggle("is-start", mode === "overview" || mode === "empty");
+        hide(depoisEl, !(mode === "pick" && isRich()));
+        const showCount = (mode === "pick" && isRich()) || (mode === "zen" && isRich());
+        hide(countEl, !showCount);
+        hide(againEl, mode !== "zen");
+        document.getElementById("hud").classList.toggle("is-start", mode === "overview" || mode === "empty" || mode === "choose");
+
+        if (mode === "choose") {
+          countEl.textContent = "";
+          setRun(COLORS[free[0]] || COLORS[0]);
+        }
 
         if (mode === "overview") {
           setRun(COLORS[free[0]] || COLORS[0]);
@@ -864,12 +962,13 @@
           slotEl.textContent = loc;
           depoisEl.textContent = next ? "depois " + cleanLoc(next.code) : "última parada";
           countEl.textContent = here + " de " + tour.stops.length;
-          paintSpeak();
+          paintSku();
         }
 
         if (mode === "zen") {
           const tour = currentTour();
           countEl.textContent = tour.stops.length + " de " + tour.stops.length;
+          againEl.textContent = free.length ? "Próxima corrida" : "Terminar";
         }
       }
 
@@ -877,7 +976,7 @@
         runIndex = index;
         here = 0;
         missed = {};
-        speakOpen = false;
+        skuOpen = false;
         mode = "pick";
         pickStartedAt = Date.now();
         paintChrome();
@@ -915,6 +1014,8 @@
         document.getElementById("zen-kg").textContent = fmtNum(kg, 1) + " kg";
         document.getElementById("zen-m3").textContent = fmtNum(m3, 2) + " m³";
         document.getElementById("zen-latency").textContent = "aceite " + fmtLat(acceptMs);
+        const saved = Math.max(12, Math.round((Date.now() - pickStartedAt) * 0.22));
+        document.getElementById("zen-eco").textContent = "tempo economizado " + fmtTime(saved * 1000);
         mode = "zen";
         paintChrome();
         paintMap(0, 0, true);
@@ -928,10 +1029,26 @@
         }
         const from = here;
         here += 1;
-        speakOpen = false;
+        skuOpen = false;
         paintChrome();
         paintMap(from, here, true);
       }
+
+      function enterOverview() {
+        mode = "overview";
+        paintChrome();
+        paintMap(0, 0, true);
+      }
+
+      document.getElementById("pick-rich").addEventListener("click", function () {
+        setSkin("rich");
+        enterOverview();
+      });
+
+      document.getElementById("pick-burro").addEventListener("click", function () {
+        setSkin("burro");
+        enterOverview();
+      });
 
       goEl.addEventListener("click", function () {
         claimFree();
@@ -947,13 +1064,19 @@
         advance();
       });
 
-      speakEl.addEventListener("click", function () {
-        speakOpen = !speakOpen;
-        paintSpeak();
+      skuCard.addEventListener("click", function () {
+        skuOpen = !skuOpen;
+        paintSku();
       });
 
       againEl.addEventListener("click", function () {
-        claimFree();
+        if (freeIndexes().length) {
+          claimFree();
+          return;
+        }
+        mode = "choose";
+        paintChrome();
+        paintMap(0, 0, true);
       });
 
       paintChrome();
