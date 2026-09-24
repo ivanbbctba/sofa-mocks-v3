@@ -1014,8 +1014,8 @@
         document.getElementById("zen-kg").textContent = fmtNum(kg, 1) + " kg";
         document.getElementById("zen-m3").textContent = fmtNum(m3, 2) + " m³";
         document.getElementById("zen-latency").textContent = "aceite " + fmtLat(acceptMs);
-        const saved = Math.max(12, Math.round((Date.now() - pickStartedAt) * 0.22));
-        document.getElementById("zen-eco").textContent = "tempo economizado " + fmtTime(saved * 1000);
+        const saved = Math.max(12000, Math.round((Date.now() - pickStartedAt) * 0.22));
+        document.getElementById("zen-eco").textContent = "tempo economizado " + fmtTime(saved);
         mode = "zen";
         paintChrome();
         paintMap(0, 0, true);
